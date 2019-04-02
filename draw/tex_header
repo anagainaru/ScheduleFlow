@@ -1,0 +1,22 @@
+\documentclass{beamer}
+\usepackage{tikz}
+\setbeamersize{text margin left=0mm,text margin right=0mm} 
+
+\newcommand{\xlegend}[2]{
+\draw[-, very thick] (#1, -0.5) -- (#1, -2.5) node [pos=1, below] {$\scriptstyle{#2}$};
+}
+
+\begin{document}
+\begin{frame}{}
+\resizebox{\columnwidth}{!}{
+\begin{tikzpicture}
+\begin{scope}[scale=1]
+\begin{scope}[xscale = 1/10, yscale=1/50]
+
+\begin{scope}[yshift=-100cm]
+
+\draw[->, very thick] (0,-2.5) -- (0,170) node [pos=1, left] {$\scriptstyle{\text{Procs}}$};
+\draw[->, very thick] (0,-1.5) -- (105,-1.5) node [pos=1, below] {$\scriptstyle{\text{Time}}$};
+
+\draw[-, very thick] (-1, 151) -- (1, 151) node [pos=0, left] {$\scriptstyle{10}$};
+\draw[ultra thin] (0.5,151) -- (105,151);
