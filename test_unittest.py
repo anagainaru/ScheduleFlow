@@ -1,9 +1,9 @@
 import unittest
 import numpy as np
 from EventQueue import EventQueue
-from Simulator import System
-from Simulator import ApplicationJob
-from Simulator import Runtime
+from Runtime import System
+from Runtime import ApplicationJob
+from Runtime import Runtime
 from Scheduler import Scheduler
 from Scheduler import OnlineScheduler
 from Scheduler import BatchScheduler

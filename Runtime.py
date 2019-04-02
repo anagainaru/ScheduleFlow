@@ -41,7 +41,7 @@ class System(object):
             jobid)
 
 
-class JobLogType(IntEnum):
+class JobChangeType(IntEnum):
     ''' Enumeration class to hold  '''
 
     SubmissionChange = 0
@@ -83,10 +83,10 @@ class ApplicationJob(object):
         self.job_id = job_id
         self.request_sequence = request_sequence[:]
 
-        # Entries in the execution log: (JobLogType, old_value)
+        # Entries in the execution log: (JobChangeType, old_value)
         self.__execution_log = []
         if len(self.request_sequence) > 0:
-            self.__execution_log.append((JobLogType.RequestSequenceOverwrite,
+            self.__execution_log.append((JobChangeType.RequestSequenceOverwrite,
                                          self.request_sequence[:]))
 
     def __str__(self):
@@ -117,7 +117,7 @@ class ApplicationJob(object):
             assert (request_sequence[0] > self.request_walltime),\
                 r'Request time sequence is not sorted in increasing order'
         self.request_sequence = request_sequence[:]
-        self.__execution_log.append((JobLogType.RequestSequenceOverwrite,
+        self.__execution_log.append((JobChangeType.RequestSequenceOverwrite,
                                      self.request_sequence[:]))
 
     def update_submission(self, factor, submission_time):
@@ -127,9 +127,9 @@ class ApplicationJob(object):
         assert (submission_time >= 0),\
             r'Negative submission time received: %d' % (
             submission_time)
-        self.__execution_log.append((JobLogType.SubmissionChange,
+        self.__execution_log.append((JobChangeType.SubmissionChange,
                                      self.submission_time))
-        self.__execution_log.append((JobLogType.RequestChange,
+        self.__execution_log.append((JobChangeType.RequestChange,
                                      self.request_walltime))
 
         self.submission_time = submission_time
@@ -146,22 +146,22 @@ class ApplicationJob(object):
     def free_wasted_space(self):
         ''' Method for marking that the job finished leaving a gap equal to
         the difference between the requested time and the walltime '''
-        self.__execution_log.append((JobLogType.RequestChange,
+        self.__execution_log.append((JobChangeType.RequestChange,
                                      self.request_walltime))
         self.request_walltime = self.walltime
 
     def restore_default_values(self):
         ''' Method for restoring the initial submission values '''
         restore = next((i for i in self.__execution_log if
-                        i[0] == JobLogType.RequestSequenceOverwrite), None)
+                        i[0] == JobChangeType.RequestSequenceOverwrite), None)
         if restore is not None:
             self.request_sequence = restore[1][:]
         restore = next((i for i in self.__execution_log if
-                        i[0] == JobLogType.SubmissionChange), None)
+                        i[0] == JobChangeType.SubmissionChange), None)
         if restore is not None:
             self.submission_time = restore[1]
         restore = next((i for i in self.__execution_log if
-                        i[0] == JobLogType.RequestChange), None)
+                        i[0] == JobChangeType.RequestChange), None)
         if restore is not None:
             self.request_walltime = restore[1]
 
