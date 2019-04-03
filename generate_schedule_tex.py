@@ -22,8 +22,8 @@ def get_job_runs(execution_list, job):
 
 
 def print_execution(execution, scale, outf, last_frame):
-    start = float(execution[0] / 3600) * scale[0]
-    end = float(execution[1] / 3600) * scale[0]
+    start = float(execution[0]) * scale[0]
+    end = float(execution[1]) * scale[0]
     procs = execution[2] * scale[1]
     offset = execution[6] * scale[1]
     job_id = execution[4]
@@ -43,10 +43,10 @@ def print_execution(execution, scale, outf, last_frame):
 
 
 def print_reservation(execution, scale, outf):
-    start = float(execution[0] / 3600) * scale[0]
+    start = float(execution[0]) * scale[0]
     procs = execution[2] * scale[1]
     offset = execution[6] * scale[1]
-    request = float(execution[3] / 3600) * scale[0]
+    request = float(execution[3]) * scale[0]
     if start < request:
         # requested walltime box
         outf.write(r'''\draw[-, thick, dashed] (%.1f,%d)
@@ -73,8 +73,8 @@ def print_execution_list(sliced_list, scale, step, outf):
 
 
 def print_current_execution_info(execution, scale, outf):
-    start = float(execution[0] / 3600)
-    request = start + float(execution[3] / 3600)
+    start = float(execution[0])
+    request = start + float(execution[3])
     plot_end = request * scale[0]
     if request-start < 15:
         plot_end += 5
@@ -87,7 +87,7 @@ def print_current_execution_info(execution, scale, outf):
 
 
 def print_makespan(value, scale, outf):
-    val = float(value / 3600)
+    val = float(value)
     outf.write(r'\xlegend{%.1f}{%.1f}' % (val * scale, val))
     outf.write("\n")
 
@@ -153,3 +153,4 @@ def generate_animation_files(workload, job_list, scale, filename):
         outf.writelines([l for l in
                          open("draw/tex_footer").readlines()])
         outf.close()
+
