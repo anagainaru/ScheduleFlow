@@ -164,7 +164,7 @@ class Simulator():
         for new_job in job_list:
             job_id_list = [job.job_id for job in self.__job_list]
             if new_job.job_id in job_id_list:
-                new_id = max(job_id_list) + 1
+                new_id = max(job_id_list) + len(job_list)
                 self.logger.warning("Jobs cannot share the same ID. \
                                      Updated job %d with ID %d." % (
                     new_job.job_id, new_id))
@@ -264,7 +264,7 @@ class Simulator():
                     continue
 
             self.stats.set_execution_output(self.__execution_log)
-            print(self.stats)
+            self.logger.info(self.stats)
             if self.__fp is not None:
                 self.stats.print_to_file(self.__fp, self.__scenario_name)
 

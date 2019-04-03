@@ -5,7 +5,6 @@ import Simulator
 
 
 def run_scenario(procs):
-    sch = BatchScheduler(System(procs))
     apl = set()
     apl.add(ApplicationJob(2, 0, 130, 130, 5))
     apl.add(ApplicationJob(3, 0, 68, 72, 1))
@@ -14,6 +13,7 @@ def run_scenario(procs):
     apl.add(ApplicationJob(3, 52, 6, 6, 4))
     apl.add(ApplicationJob(5, 51, 58, 58, 6))
     simulator = Simulator.Simulator(generate_gif=True)
+    sch = BatchScheduler(System(procs))
     simulator.create_scenario("test", sch, job_list=apl)
     simulator.run()
 
