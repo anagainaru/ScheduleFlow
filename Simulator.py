@@ -1,4 +1,6 @@
-import logger
+import logging
+import VizEngine
+import Runtime
 
 class StatsEngine():
     def __init__(self, total_nodes):
@@ -138,8 +140,8 @@ class Simulator():
         if generate_gif:
             self.horizontal_ax = -1
             if self.__loops != 1:
-                self.logger.warning("Number of loops in the Simulator needs
-                                     to be 1 if the create_gif option is
+                self.logger.warning("Number of loops in the Simulator needs \
+                                     to be 1 if the create_gif option is \
                                      True. Updated number of loops to 1.")
             self.__loops = 1
 
@@ -163,7 +165,7 @@ class Simulator():
             job_id_list = [job.job_id for job in self.__job_list]
             if new_job.job_id in job_id_list:
                 new_id = max(job_id_list) + 1
-                self.logger.warning("Jobs cannot share the same ID.
+                self.logger.warning("Jobs cannot share the same ID. \
                                      Updated job %d with ID %d." % (
                     new_job.job_id, new_id))
                 change_log.append((new_job.get_id, new_id))
@@ -251,7 +253,7 @@ class Simulator():
     def run(self):
         check = 0
         for i in range(self.__loops):
-            runtime = Runtime(self.__job_list, 1.5)
+            runtime = Runtime.Runtime(self.__job_list, 1.5)
             runtime(self.__scheduler)
             self.__execution_log = runtime.get_stats()
 
