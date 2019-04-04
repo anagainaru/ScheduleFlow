@@ -2,22 +2,34 @@ from Runtime import System
 from Runtime import ApplicationJob
 from Scheduler import BatchScheduler
 import Simulator
+import sys
+import numpy as np
 
 
-def run_scenario(procs):
-    apl = set()
-    apl.add(ApplicationJob(2, 0, 130, 130, 5))
-    apl.add(ApplicationJob(3, 0, 68, 72, 1))
-    apl.add(ApplicationJob(5, 0, 55, 55, 2))
-    apl.add(ApplicationJob(3, 50, 72, 72, 3))
-    apl.add(ApplicationJob(3, 52, 6, 6, 4))
-    apl.add(ApplicationJob(5, 51, 58, 58, 6))
-    simulator = Simulator.Simulator(generate_gif=True)
+def run_scenario(procs, apl):
+    simulator = Simulator.Simulator(check_correctness=True,
+                                    generate_gif=True,
+                                    output_file_handler=sys.stdout)
     sch = BatchScheduler(System(procs))
     simulator.create_scenario("test", sch, job_list=apl)
     simulator.run()
 
+
 if __name__ == '__main__':
     procs = 10
-    execution_log = run_scenario(procs)
+    apl = set()
+    for i in range(10):
+        execution_time = np.random.randint(11, 100)
+        apl.add(ApplicationJob(np.random.randint(1, 11),
+                               0,
+                               execution_time,
+                               execution_time + int(i / 2) * 10,
+                               i))
+    apl.add(ApplicationJob(np.random.randint(9, 11), 0, 100, 90, 10))
+
+    print("Scenario : makespan : utilization : average_job_utilization : " \
+          "average_job_response_time : average_job_stretch : " \
+          "average_job_wait_time : failures")
+
+    execution_log = run_scenario(procs, apl)
 
