@@ -1,4 +1,6 @@
 import logging
+import math
+import numpy as np
 import VizEngine
 import Runtime
 
@@ -140,9 +142,10 @@ class Simulator():
         if generate_gif:
             self.horizontal_ax = -1
             if self.__loops != 1:
-                self.logger.warning("Number of loops in the Simulator needs \
-                                     to be 1 if the create_gif option is \
-                                     True. Updated number of loops to 1.")
+                self.logger.warning("Number of loops in the Simulator " \
+                                    "needs to be 1 if the generate_gif " \
+                                    "option is True. Updated number of " \
+                                    "loops to 1.")
             self.__loops = 1
 
     def create_scenario(self, scenario_name, scheduler, job_list=[]):
@@ -165,11 +168,11 @@ class Simulator():
             job_id_list = [job.job_id for job in self.__job_list]
             if new_job.job_id in job_id_list:
                 new_id = max(job_id_list) + len(job_list)
-                self.logger.warning("Jobs cannot share the same ID. \
-                                     Updated job %d with ID %d." % (
+                self.logger.warning("Jobs cannot share the same ID. " \
+                                    "Updated job %d with ID %d." % (
                     new_job.job_id, new_id))
-                change_log.append((new_job.get_id, new_id))
-                new_job.job_id = newid
+                change_log.append((new_job.job_id, new_id))
+                new_job.job_id = new_id
             self.__job_list.append(new_job)
         return change_log
 
