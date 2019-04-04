@@ -27,7 +27,7 @@ class StatsEngine():
     def set_execution_output(self, execution_log):
         self.__execution_log = execution_log
         self.__makespan = max([max([i[1] for i in self.__execution_log[job]])
-                               for job in self.__execution_log]) * 1. / 3600
+                               for job in self.__execution_log]) 
 
     def total_makespan(self):
         if len(self.__execution_log) == 0:
@@ -46,7 +46,7 @@ class StatsEngine():
             return -1
         total_runtime = sum([job.walltime * job.nodes for job in
                              self.__execution_log])
-        return total_runtime / (3600. * self.__makespan * self.__total_nodes)
+        return total_runtime / (self.__makespan * self.__total_nodes)
 
     def average_job_wait_time(self):
         if len(self.__execution_log) == 0:
@@ -61,7 +61,7 @@ class StatsEngine():
                 submission = instance[1]
             total_wait += apl_wait
             total_runs += len(self.__execution_log[job])
-        return total_wait / (3600 * total_runs)
+        return total_wait / total_runs
 
     def __get_last_request_time(self, job):
         if len(self.__execution_log[job]) == 1:
@@ -100,7 +100,7 @@ class StatsEngine():
         for job in self.__execution_log:
             runs = self.__execution_log[job]
             makespan += (runs[len(runs) - 1][1] - job.submission_time)
-        return makespan / (3600 * len(self.__execution_log))
+        return makespan / len(self.__execution_log)
 
     def average_job_stretch(self):
         if len(self.__execution_log) == 0:
