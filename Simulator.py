@@ -1,4 +1,6 @@
 import logging
+import math
+import numpy as np
 import VizEngine
 import Runtime
 
@@ -25,7 +27,7 @@ class StatsEngine():
     def set_execution_output(self, execution_log):
         self.__execution_log = execution_log
         self.__makespan = max([max([i[1] for i in self.__execution_log[job]])
-                               for job in self.__execution_log]) * 1. / 3600
+                               for job in self.__execution_log]) 
 
     def total_makespan(self):
         if len(self.__execution_log) == 0:
@@ -44,7 +46,7 @@ class StatsEngine():
             return -1
         total_runtime = sum([job.walltime * job.nodes for job in
                              self.__execution_log])
-        return total_runtime / (3600. * self.__makespan * self.__total_nodes)
+        return total_runtime / (self.__makespan * self.__total_nodes)
 
     def average_job_wait_time(self):
         if len(self.__execution_log) == 0:
@@ -59,7 +61,7 @@ class StatsEngine():
                 submission = instance[1]
             total_wait += apl_wait
             total_runs += len(self.__execution_log[job])
-        return total_wait / (3600 * total_runs)
+        return total_wait / total_runs
 
     def __get_last_request_time(self, job):
         if len(self.__execution_log[job]) == 1:
@@ -98,7 +100,7 @@ class StatsEngine():
         for job in self.__execution_log:
             runs = self.__execution_log[job]
             makespan += (runs[len(runs) - 1][1] - job.submission_time)
-        return makespan / (3600 * len(self.__execution_log))
+        return makespan / len(self.__execution_log)
 
     def average_job_stretch(self):
         if len(self.__execution_log) == 0:
@@ -140,9 +142,10 @@ class Simulator():
         if generate_gif:
             self.horizontal_ax = -1
             if self.__loops != 1:
-                self.logger.warning("Number of loops in the Simulator needs \
-                                     to be 1 if the create_gif option is \
-                                     True. Updated number of loops to 1.")
+                self.logger.warning("Number of loops in the Simulator " \
+                                    "needs to be 1 if the generate_gif " \
+                                    "option is True. Updated number of " \
+                                    "loops to 1.")
             self.__loops = 1
 
     def create_scenario(self, scenario_name, scheduler, job_list=[]):
@@ -164,12 +167,12 @@ class Simulator():
         for new_job in job_list:
             job_id_list = [job.job_id for job in self.__job_list]
             if new_job.job_id in job_id_list:
-                new_id = max(job_id_list) + 1
-                self.logger.warning("Jobs cannot share the same ID. \
-                                     Updated job %d with ID %d." % (
+                new_id = max(job_id_list) + len(job_list)
+                self.logger.warning("Jobs cannot share the same ID. " \
+                                    "Updated job %d with ID %d." % (
                     new_job.job_id, new_id))
-                change_log.append((new_job.get_id, new_id))
-                new_job.job_id = newid
+                change_log.append((new_job.job_id, new_id))
+                new_job.job_id = new_id
             self.__job_list.append(new_job)
         return change_log
 
@@ -264,7 +267,7 @@ class Simulator():
                     continue
 
             self.stats.set_execution_output(self.__execution_log)
-            print(self.stats)
+            self.logger.info(self.stats)
             if self.__fp is not None:
                 self.stats.print_to_file(self.__fp, self.__scenario_name)
 
