@@ -1,6 +1,6 @@
 from Runtime import System
 from Runtime import ApplicationJob
-from Scheduler import BatchScheduler
+import Scheduler
 import Simulator
 import sys
 import numpy as np
@@ -10,10 +10,13 @@ def run_scenario(procs, apl):
     simulator = Simulator.Simulator(check_correctness=True,
                                     generate_gif=True,
                                     output_file_handler=sys.stdout)
-    sch = BatchScheduler(System(procs))
-    simulator.create_scenario("test", sch, job_list=apl)
+    sch = Scheduler.BatchScheduler(System(procs))
+    simulator.create_scenario("test_batch", sch, job_list=apl)
     simulator.run()
 
+    sch = Scheduler.OnlineScheduler(System(procs))
+    simulator.create_scenario("test_online", sch, job_list=apl)
+    simulator.run()
 
 if __name__ == '__main__':
     procs = 10
