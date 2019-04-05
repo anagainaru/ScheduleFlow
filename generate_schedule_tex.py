@@ -118,39 +118,3 @@ def get_sliced_list(run_list):
                  run_list[idx][5], starty))
             starty += run_list[idx][2]
     return sliced_list
-
-
-def generate_animation_files(workload, job_list, scale, filename):
-    ''' Generate a temp list of (start, end, procs,
-    requested walltime, job_id, color) used to create
-    the tex file '''
-    run_list = []
-    for job in workload:
-        job_info = [j for j in job_list if j.job_id == job.job_id]
-        if len(job_info) != 1:
-            print(r"ERR inexisting job in the list %s .. \
-                  cannot continue" % (job))
-            return []
-        run_list += get_job_runs(workload[job], job_info[0])
-    run_list.sort()
-    sliced_list = get_sliced_list(run_list)
-
-    for i in range(len(run_list) + 1):
-        outf = open(r'draw/%s_%d.tex' % (filename, i), 'w')
-        # write header
-        outf.writelines([l for l in
-                         open("draw/tex_header").readlines()])
-        print_execution_list(sliced_list, (scale[0], scale[1]),
-                             i + 1, outf)
-        if i < len(run_list):
-            # write last job start and end times
-            print_current_execution_info(
-                run_list[i], (scale[0], scale[1]), outf)
-        else:
-            print_makespan(max([r[1] for r in run_list]),
-                           scale[0], outf)
-        # write footer
-        outf.writelines([l for l in
-                         open("draw/tex_footer").readlines()])
-        outf.close()
-

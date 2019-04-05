@@ -31,11 +31,39 @@ class VizualizationEngine():
         assert (len(self.__execution_log) > 0),\
             'ERR - Trying to create an animation for an empty execution log'
 
-        generate_schedule_tex.generate_animation_files(
-            self.__execution_log, [job for job in self.__execution_log],
-            (self.__scalex, self.__scaley), name_scenario)
+        self.__generate_animation_files(name_scenario)
         subprocess.call(["./create_animation.sh",
                          name_scenario,
                          "delete"])
         return self.__limitx
 
+    def __generate_animation_files(self, filename):
+        ''' Generate a temp list of (start, end, procs,
+        requested walltime, job_id, color) used to create
+        the tex file '''
+        run_list = []
+        for job in self.__execution_log:
+            run_list += generate_schedule_tex.get_job_runs(
+                self.__execution_log[job], job)
+        run_list.sort()
+        sliced_list = generate_schedule_tex.get_sliced_list(
+            run_list)
+
+        for i in range(len(run_list) + 1):
+            outf = open(r'draw/%s_%d.tex' % (filename, i), 'w')
+            # write header
+            outf.writelines([l for l in
+                             open("draw/tex_header").readlines()])
+            generate_schedule_tex.print_execution_list(
+                sliced_list, (self.__scalex, self.__scaley), i + 1, outf)
+            if i < len(run_list):
+                # write last job start and end times
+                generate_schedule_tex.print_current_execution_info(
+                    run_list[i], (self.__scalex, self.__scaley), outf)
+            else:
+                generate_schedule_tex.print_makespan(
+                    max([r[1] for r in run_list]), self.__scalex, outf)
+            # write footer
+            outf.writelines([l for l in
+                             open("draw/tex_footer").readlines()])
+            outf.close()
