@@ -18,6 +18,7 @@ def run_scenario(procs, apl):
     simulator.create_scenario("test_online", sch, 1.5, job_list=apl)
     simulator.run()
 
+
 if __name__ == '__main__':
     procs = 10
     apl = set()
@@ -30,9 +31,8 @@ if __name__ == '__main__':
                                i))
     apl.add(ApplicationJob(np.random.randint(9, 11), 0, 100, 90, 10))
 
-    print("Scenario : makespan : utilization : average_job_utilization : " \
-          "average_job_response_time : average_job_stretch : " \
+    print("Scenario : makespan : utilization : average_job_utilization : "
+          "average_job_response_time : average_job_stretch : "
           "average_job_wait_time : failures")
 
     execution_log = run_scenario(procs, apl)
-
