@@ -5,9 +5,10 @@ import VizEngine
 import Runtime
 
 class StatsEngine():
-    def __init__(self, total_nodes):
+    def __init__(self, total_nodes, resubmission_factor):
         self.__execution_log = {}
         self.__total_nodes = total_nodes
+        self.__factor = resubmission_factor
 
     def __str__(self):
         if len(self.__execution_log) == 0:
@@ -63,21 +64,6 @@ class StatsEngine():
             total_runs += len(self.__execution_log[job])
         return total_wait / total_runs
 
-    def __get_last_request_time(self, job):
-        if len(self.__execution_log[job]) == 1:
-            return job.request_walltime
-        if len(job.request_sequence) == 0:
-            return job.request_walltime * np.power(
-                        1.5,
-                        len(self.__execution_log[job]) - 1)
-        step = len(self.__execution_log[job])-2
-        if len(job.request_sequence) > step:
-            return job.request_sequence[step]
-
-        seq_len = len(job.request_sequence) - 1
-        return job.request_sequence[seq_len] * np.power(
-            1.5, step - seq_len)
-
     def average_job_utilization(self):
         if len(self.__execution_log) == 0:
             return -1
@@ -88,7 +74,9 @@ class StatsEngine():
                 instance = self.__execution_log[job][i]
                 apl_total += instance[1] - instance[0]
 
-            request = self.__get_last_request_time(job)
+            request = job.get_request_time(
+                          len(self.__execution_log[job]) + 1,
+                          self.__factor)
             apl_total = 1. * job.walltime / (apl_total + request)
             total += apl_total
         return total / len(self.__execution_log)
@@ -148,17 +136,20 @@ class Simulator():
                                     "loops to 1.")
             self.__loops = 1
 
-    def create_scenario(self, scenario_name, scheduler, job_list=[]):
+    def create_scenario(self, scenario_name, scheduler,
+                        resubmission_factor, job_list=[]):
         self.__scheduler = scheduler
         self.__system = scheduler.system
         self.__job_list = []
         self.__execution_log = {}
         self.__scenario_name = scenario_name
+        self.__factor = resubmission_factor
 
-        self.stats = StatsEngine(self.__system.get_total_nodes())
+        self.stats = StatsEngine(self.__system.get_total_nodes(),
+                                 self.__factor)
         if self.__generate_gif:
             self.__viz_handler = VizEngine.VizualizationEngine(
-                    self.__system.get_total_nodes())
+                    self.__system.get_total_nodes(), self.__factor)
 
         return self.add_applications(job_list)
 
@@ -192,11 +183,8 @@ class Simulator():
             if not math.isclose(end-start, requested_time,
                                 rel_tol=1e-3):
                 return False
-            if len(job.request_sequence) > i:
-                requested_time = job.request_sequence[i]
-            else:
-                requested_time = int(1.5 * requested_time)
-
+            job.get_request_time(i, self.__factor)
+            
         # check len of succesful execution (last)
         start = execution_list[len(execution_list)-1][0]
         end = execution_list[len(execution_list)-1][1]
@@ -256,7 +244,7 @@ class Simulator():
     def run(self):
         check = 0
         for i in range(self.__loops):
-            runtime = Runtime.Runtime(self.__job_list, 1.5)
+            runtime = Runtime.Runtime(self.__job_list, self.__factor)
             runtime(self.__scheduler)
             self.__execution_log = runtime.get_stats()
 
