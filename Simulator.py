@@ -1,8 +1,8 @@
 import logging
 import math
-import numpy as np
 import VizEngine
 import Runtime
+
 
 class StatsEngine():
     def __init__(self, total_nodes, resubmission_factor):
@@ -28,7 +28,7 @@ class StatsEngine():
     def set_execution_output(self, execution_log):
         self.__execution_log = execution_log
         self.__makespan = max([max([i[1] for i in self.__execution_log[job]])
-                               for job in self.__execution_log]) 
+                               for job in self.__execution_log])
 
     def total_makespan(self):
         if len(self.__execution_log) == 0:
@@ -117,22 +117,22 @@ class StatsEngine():
 class Simulator():
     def __init__(self, loops=1, generate_gif=False, check_correctness=False,
                  output_file_handler=None):
-        assert (loops>0), "Number of loops has to be a positive integer"
+        assert (loops > 0), "Number of loops has to be a positive integer"
 
         self.__loops = loops
         self.__generate_gif = generate_gif
         self.__check_correctness = check_correctness
         self.__execution_log = {}
         self.logger = logging.getLogger(__name__)
-        
+ 
         self.__fp = output_file_handler
 
         if generate_gif:
             self.horizontal_ax = -1
             if self.__loops != 1:
-                self.logger.warning("Number of loops in the Simulator " \
-                                    "needs to be 1 if the generate_gif " \
-                                    "option is True. Updated number of " \
+                self.logger.warning("Number of loops in the Simulator "
+                                    "needs to be 1 if the generate_gif "
+                                    "option is True. Updated number of "
                                     "loops to 1.")
             self.__loops = 1
 
@@ -159,9 +159,9 @@ class Simulator():
             job_id_list = [job.job_id for job in self.__job_list]
             if new_job.job_id in job_id_list:
                 new_id = max(job_id_list) + len(job_list)
-                self.logger.warning("Jobs cannot share the same ID. " \
+                self.logger.warning("Jobs cannot share the same ID. "
                                     "Updated job %d with ID %d." % (
-                    new_job.job_id, new_id))
+                                    new_job.job_id, new_id))
                 change_log.append((new_job.job_id, new_id))
                 new_job.job_id = new_id
             self.__job_list.append(new_job)
@@ -184,7 +184,7 @@ class Simulator():
                                 rel_tol=1e-3):
                 return False
             job.get_request_time(i, self.__factor)
-            
+ 
         # check len of succesful execution (last)
         start = execution_list[len(execution_list)-1][0]
         end = execution_list[len(execution_list)-1][1]
@@ -226,7 +226,7 @@ class Simulator():
         information, workload contains execution information for each
         job '''
         assert (len(self.__execution_log) > 0), \
-                "ERR - Trying to test correctness on an empty execution log"
+            "ERR - Trying to test correctness on an empty execution log"
 
         check_fail = 0
         for job in self.__execution_log:
@@ -234,7 +234,7 @@ class Simulator():
                 self.__execution_log[job], job)
             if not pass_check:
                 self.logger.error("%s did not pass the sanity check: %s" %
-                      (job, self.__execution_log[job]))
+                                  (job, self.__execution_log[job]))
                 check_fail += 1
                 continue
 
@@ -271,4 +271,3 @@ class Simulator():
                 self.__scenario_name)
             self.logger.info(r"GIF generated draw/%s" % (self.__scenario_name))
         return check
-
