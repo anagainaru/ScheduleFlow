@@ -124,7 +124,7 @@ class Simulator():
         self.__check_correctness = check_correctness
         self.__execution_log = {}
         self.logger = logging.getLogger(__name__)
- 
+
         self.__fp = output_file_handler
 
         if generate_gif:
@@ -160,8 +160,8 @@ class Simulator():
             if new_job.job_id in job_id_list:
                 new_id = max(job_id_list) + len(job_list)
                 self.logger.warning("Jobs cannot share the same ID. "
-                                    "Updated job %d with ID %d." % (
-                                    new_job.job_id, new_id))
+                                    "Updated job %d with ID %d." %
+                                    (new_job.job_id, new_id))
                 change_log.append((new_job.job_id, new_id))
                 new_job.job_id = new_id
             self.__job_list.append(new_job)
@@ -184,7 +184,7 @@ class Simulator():
                                 rel_tol=1e-3):
                 return False
             job.get_request_time(i, self.__factor)
- 
+
         # check len of succesful execution (last)
         start = execution_list[len(execution_list)-1][0]
         end = execution_list[len(execution_list)-1][1]
