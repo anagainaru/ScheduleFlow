@@ -43,8 +43,7 @@ class VizualizationEngine():
         the tex file '''
         run_list = []
         for job in self.__execution_log:
-            run_list += generate_schedule_tex.get_job_runs(
-                self.__execution_log[job], job)
+            run_list += self.__get_job_runs(self.__execution_log[job], job)
         run_list.sort()
         sliced_list = generate_schedule_tex.get_sliced_list(
             run_list)
@@ -67,3 +66,27 @@ class VizualizationEngine():
             outf.writelines([l for l in
                              open("draw/tex_footer").readlines()])
             outf.close()
+
+    def __get_job_runs(self, execution_list, job):
+        run_list = []
+        requested_time = job.request_walltime
+        for i in range(len(execution_list) - 1):
+            # check failed executions
+            start = execution_list[i][0]
+            end = execution_list[i][1]
+            run_list.append((start, end, job.nodes,
+                             requested_time, job.job_id,
+                             i + 1))
+            # TODO - this will give an error if the sequence
+            # list is not long enough
+            if len(job.request_sequence) > i:
+                requested_time = job.request_sequence[i]
+            else:
+                requested_time *= 1.5
+
+        # check succesful execution (last run)
+        start = execution_list[len(execution_list) - 1][0]
+        end = execution_list[len(execution_list) - 1][1]
+        run_list.append((start, end, job.nodes,
+                         requested_time, job.job_id, 0))
+        return run_list

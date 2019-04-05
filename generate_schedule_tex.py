@@ -1,24 +1,4 @@
-def get_job_runs(execution_list, job):
-    run_list = []
-    requested_time = job.request_walltime
-    for i in range(len(execution_list) - 1):
-        # check failed executions
-        start = execution_list[i][0]
-        end = execution_list[i][1]
-        run_list.append((start, end, job.nodes,
-                         requested_time, job.job_id,
-                         i + 1))
-        if len(job.request_sequence) > i:
-            requested_time = job.request_sequence[i]
-        else:
-            requested_time *= 1.5
 
-    # check succesful execution (last run)
-    start = execution_list[len(execution_list) - 1][0]
-    end = execution_list[len(execution_list) - 1][1]
-    run_list.append((start, end, job.nodes,
-                     requested_time, job.job_id, 0))
-    return run_list
 
 
 def print_execution(execution, scale, outf, last_frame):
