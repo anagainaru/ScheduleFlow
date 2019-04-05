@@ -116,7 +116,7 @@ class VizualizationEngine():
             self.__scalex = 90 / self.__limitx
 
     def set_execution_log(self, execution_log):
-        self.__execution_log = execution_log 
+        self.__execution_log = execution_log
         self.__set_scalex(execution_log)
 
     def set_horizontal_ax_limit(self, horizontal_ax_limit):

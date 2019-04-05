@@ -87,8 +87,9 @@ class ApplicationJob(object):
         # Entries in the execution log: (JobChangeType, old_value)
         self.__execution_log = []
         if len(self.request_sequence) > 0:
-            self.__execution_log.append((JobChangeType.RequestSequenceOverwrite,
-                                         self.request_sequence[:]))
+            self.__execution_log.append(
+                    (JobChangeType.RequestSequenceOverwrite,
+                     self.request_sequence[:]))
 
     def __str__(self):
         return r"""Job %d: %d nodes; %3.1f submission time; %3.1f total
