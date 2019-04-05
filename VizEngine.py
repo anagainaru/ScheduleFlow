@@ -1,5 +1,100 @@
 import subprocess
-import generate_schedule_tex
+
+
+class TexGenerator():
+    def __init__(self, execution_slices_list, execution_job_list,
+                 scalex, scaley):
+        self.__scalex = scalex
+        self.__scaley = scaley
+        self.__slices = execution_slices_list
+        self.__run_list = execution_job_list
+        self.__total_runs = len(execution_job_list)
+
+    def write_to_file(self, filename):
+        # create a file for each step of the simulation
+        for i in range(self.__total_runs + 1):
+            outf = open(r'draw/%s_%d.tex' % (filename, i), 'w')
+            # write header
+            outf.writelines([l for l in
+                             open("draw/tex_header").readlines()])
+            self.__print_execution_list(i + 1, outf)
+            if i < self.__total_runs:
+                # write last job start and end times
+                self.__print_current_execution_info(self.__run_list[i],
+                                                    outf)
+            else:
+                # last step in the simulation
+                self.__print_makespan(max([r[1] for r in self.__run_list]),
+                                      outf)
+            # write footer
+            outf.writelines([l for l in
+                             open("draw/tex_footer").readlines()])
+            outf.close()
+
+    def __print_current_execution_info(self, execution, outf):
+        start = float(execution[0])
+        request = start + float(execution[3])
+        plot_end = request * self.__scalex
+        if request-start < 15:
+            plot_end += 5
+        if start > 0.7:
+            outf.write(r'\xlegend{%.1f}{%.1f}' % (start * self.__scalex,
+                                                  start))
+            outf.write("\n")
+        outf.write(r'\xlegend{%.1f}{%.1f}' % (plot_end, request))
+        outf.write("\n")
+
+    def __print_makespan(self, value, outf):
+        val = float(value)
+        outf.write(r'\xlegend{%.1f}{%.1f}' % (val * self.__scalex, val))
+        outf.write("\n")
+
+    def __print_execution(self, execution, outf, last_frame):
+        start = float(execution[0]) * self.__scalex
+        end = float(execution[1]) * self.__scalex
+        procs = execution[2] * self.__scaley
+        offset = execution[6] * self.__scaley
+        job_id = execution[4]
+        color = 2 * min(execution[5], 5)
+        color_text = r"{rgb:red,%d;yellow,%d}" % (
+            color, 10 - color)
+        if last_frame and color != 0:
+            color_text = "white"
+            job_id = ' '
+        if start != end:
+            # walltime box
+            outf.write(r'''\draw[-, thick,fill=%s] (%.1f,%d)
+                       rectangle node{$\scriptstyle{%s}$} (%.1f, %d);
+                        ''' % (color_text, start, offset,
+                               job_id, end, offset + procs))
+            outf.write("\n")
+
+    def __print_reservation(self, execution, outf):
+        start = float(execution[0]) * self.__scalex
+        procs = execution[2] * self.__scaley
+        offset = execution[6] * self.__scaley
+        request = float(execution[3]) * self.__scalex
+        if start < request:
+            # requested walltime box
+            outf.write(r'''\draw[-, thick, dashed] (%.1f,%d)
+                       rectangle (%.1f,%d) ;''' % (
+                start, offset, request, offset + procs))
+            outf.write("\n")
+
+    def __print_execution_list(self, step, outf):
+        # check if it is the last frame
+        last_frame = False
+        if step == len(self.__slices) + 1:
+            last_frame = True
+            step = step - 1
+        for i in range(step):
+            execution_list = self.__slices[i]
+            # print all sliced of the current execution
+            for execution in execution_list:
+                self.__print_execution(execution, outf, last_frame)
+            if not last_frame:
+                self.__print_reservation(
+                    execution_list[len(execution_list)-1], outf)
 
 
 class VizualizationEngine():
@@ -47,24 +142,9 @@ class VizualizationEngine():
         run_list.sort()
         sliced_list = self.__get_sliced_list(run_list)
 
-        for i in range(len(run_list) + 1):
-            outf = open(r'draw/%s_%d.tex' % (filename, i), 'w')
-            # write header
-            outf.writelines([l for l in
-                             open("draw/tex_header").readlines()])
-            generate_schedule_tex.print_execution_list(
-                sliced_list, (self.__scalex, self.__scaley), i + 1, outf)
-            if i < len(run_list):
-                # write last job start and end times
-                generate_schedule_tex.print_current_execution_info(
-                    run_list[i], (self.__scalex, self.__scaley), outf)
-            else:
-                generate_schedule_tex.print_makespan(
-                    max([r[1] for r in run_list]), self.__scalex, outf)
-            # write footer
-            outf.writelines([l for l in
-                             open("draw/tex_footer").readlines()])
-            outf.close()
+        tex_generator = TexGenerator(sliced_list, run_list,
+                                     self.__scalex, self.__scaley)
+        tex_generator.write_to_file(filename)
 
     def __find_running_jobs(self, run_list, start, end):
         return [i for i in range(len(run_list)) if
