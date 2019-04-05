@@ -11,11 +11,11 @@ def run_scenario(procs, apl):
                                     generate_gif=True,
                                     output_file_handler=sys.stdout)
     sch = Scheduler.BatchScheduler(System(procs))
-    simulator.create_scenario("test_batch", sch, job_list=apl)
+    simulator.create_scenario("test_batch", sch, 1.5, job_list=apl)
     simulator.run()
 
     sch = Scheduler.OnlineScheduler(System(procs))
-    simulator.create_scenario("test_online", sch, job_list=apl)
+    simulator.create_scenario("test_online", sch, 1.5, job_list=apl)
     simulator.run()
 
 if __name__ == '__main__':
