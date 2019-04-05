@@ -45,8 +45,7 @@ class VizualizationEngine():
         for job in self.__execution_log:
             run_list += self.__get_job_runs(self.__execution_log[job], job)
         run_list.sort()
-        sliced_list = generate_schedule_tex.get_sliced_list(
-            run_list)
+        sliced_list = self.__get_sliced_list(run_list)
 
         for i in range(len(run_list) + 1):
             outf = open(r'draw/%s_%d.tex' % (filename, i), 'w')
@@ -66,6 +65,32 @@ class VizualizationEngine():
             outf.writelines([l for l in
                              open("draw/tex_footer").readlines()])
             outf.close()
+
+    def __find_running_jobs(self, run_list, start, end):
+        return [i for i in range(len(run_list)) if
+                run_list[i][0] <= start and
+                run_list[i][1] >= end]
+
+    def __get_sliced_list(self, run_list):
+        ''' Generate a list of (start, end, procs, request_end,
+        job_id, color, starty) '''
+        event_list = list(set([i[0] for i in run_list] +
+                              [i[1] for i in run_list]))
+        event_list.sort()
+        sliced_list = [[] for i in run_list]
+        for i in range(len(event_list)-1):
+            idx_list = self.__find_running_jobs(
+                run_list, event_list[i], event_list[i + 1])
+            idx_list.sort()
+            starty = 0
+            for idx in idx_list:
+                sliced_list[idx].append(
+                    (event_list[i], event_list[i + 1],
+                     run_list[idx][2], run_list[idx][3] +
+                     run_list[idx][0], run_list[idx][4],
+                     run_list[idx][5], starty))
+                starty += run_list[idx][2]
+        return sliced_list
 
     def __get_job_runs(self, execution_list, job):
         run_list = []

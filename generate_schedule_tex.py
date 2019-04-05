@@ -1,6 +1,3 @@
-
-
-
 def print_execution(execution, scale, outf, last_frame):
     start = float(execution[0]) * scale[0]
     end = float(execution[1]) * scale[0]
@@ -70,31 +67,3 @@ def print_makespan(value, scale, outf):
     val = float(value)
     outf.write(r'\xlegend{%.1f}{%.1f}' % (val * scale, val))
     outf.write("\n")
-
-
-def find_running_jobs(run_list, start, end):
-    return [i for i in range(len(run_list)) if
-            run_list[i][0] <= start and
-            run_list[i][1] >= end]
-
-
-def get_sliced_list(run_list):
-    ''' Generate a list of (start, end, procs, request_end,
-    job_id, color, starty) '''
-    event_list = list(set([i[0] for i in run_list] +
-                          [i[1] for i in run_list]))
-    event_list.sort()
-    sliced_list = [[] for i in run_list]
-    for i in range(len(event_list)-1):
-        idx_list = find_running_jobs(run_list, event_list[i],
-                                     event_list[i + 1])
-        idx_list.sort()
-        starty = 0
-        for idx in idx_list:
-            sliced_list[idx].append(
-                (event_list[i], event_list[i + 1],
-                 run_list[idx][2], run_list[idx][3] +
-                 run_list[idx][0], run_list[idx][4],
-                 run_list[idx][5], starty))
-            starty += run_list[idx][2]
-    return sliced_list
