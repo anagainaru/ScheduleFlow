@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 from enum import IntEnum
 from EventQueue import EventQueue
 from EventQueue import EventType
@@ -86,8 +87,9 @@ class ApplicationJob(object):
         # Entries in the execution log: (JobChangeType, old_value)
         self.__execution_log = []
         if len(self.request_sequence) > 0:
-            self.__execution_log.append((JobChangeType.RequestSequenceOverwrite,
-                                         self.request_sequence[:]))
+            self.__execution_log.append(
+                    (JobChangeType.RequestSequenceOverwrite,
+                     self.request_sequence[:]))
 
     def __str__(self):
         return r"""Job %d: %d nodes; %3.1f submission time; %3.1f total
@@ -104,6 +106,19 @@ class ApplicationJob(object):
 
     def __lt__(self, apl):
         return self.job_id < apl.job_id
+
+    def get_request_time(self, step, factor):
+        if step == 0:
+            return self.request_walltime
+        if len(self.request_sequence) == 0:
+            return self.request_walltime * np.power(factor, step)
+
+        if len(self.request_sequence) > step-1:
+            return self.request_sequence[step-1]
+
+        seq_len = len(self.request_sequence)
+        return self.request_sequence[seq_len - 1] * np.power(
+            factor, step - seq_len)
 
     def overwrite_request_sequence(self, request_sequence):
         ''' Method for overwriting the sequence of future walltime
