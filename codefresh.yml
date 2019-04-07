@@ -1,0 +1,9 @@
+version: '1.0'
+
+steps:
+  run_unit_tests:
+    image: python:3
+    description: Run unit tests
+    commands:
+        - pip install --no-cache-dir -r requirements.txt
+        - python -m unittest discover --verbose
