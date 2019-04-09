@@ -10,17 +10,17 @@ def run_scenario(num_procssing_units, job_list):
     simulator = Simulator.Simulator(check_correctness=True,
                                     generate_gif=True,
                                     output_file_handler=sys.stdout)
-    sch = Scheduler.BatchScheduler(System(procs))
+    sch = Scheduler.BatchScheduler(System(num_processing_units))
     simulator.create_scenario("test_batch", sch, 1.5, job_list=job_list)
     simulator.run()
 
-    sch = Scheduler.OnlineScheduler(System(procs))
+    sch = Scheduler.OnlineScheduler(System(num_processing_units))
     simulator.create_scenario("test_online", sch, 1.5, job_list=job_list)
     simulator.run()
 
 
 if __name__ == '__main__':
-    num_procssing_units = 10
+    num_processing_units = 10
     job_list = set()
     for i in range(10):
         execution_time = np.random.randint(11, 100)
@@ -29,14 +29,14 @@ if __name__ == '__main__':
             1, num_processing_units + 1)
         submission_time = 0
         job_list.add(ApplicationJob(processing_units,
-                               submission_time,
-                               execution_time,
-                               request_time,
-                               i))
+                                    submission_time,
+                                    execution_time,
+                                    request_time,
+                                    i))
     job_list.add(ApplicationJob(np.random.randint(9, 11), 0, 100, 90, 10))
 
     print("Scenario : makespan : utilization : average_job_utilization : "
           "average_job_response_time : average_job_stretch : "
           "average_job_wait_time : failures")
 
-    run_scenario(num_procssing_units, job_list)
+    run_scenario(num_processing_units, job_list)

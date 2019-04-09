@@ -128,7 +128,7 @@ class VizualizationEngine():
             'ERR - Trying to create an animation for an empty execution log'
 
         self.__generate_animation_files(name_scenario)
-        subprocess.call(["./create_animation.sh",
+        subprocess.call(["./draw/create_animation.sh",
                          name_scenario,
                          "delete"])
         return self.__limitx
