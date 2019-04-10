@@ -6,6 +6,5 @@ steps:
     description: Run unit tests
     commands:
         - pip install --no-cache-dir -r requirements.txt
-        - pip install pylama, coverage, eradicate
+        - pip install coverage
         - coverage run -m unittest discover --verbose
-        - pylama
