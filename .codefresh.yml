@@ -1,0 +1,11 @@
+version: '1.0'
+
+steps:
+  run_unit_tests:
+    image: python:3
+    description: Run unit tests
+    commands:
+        - pip install --no-cache-dir -r requirements.txt
+        - pip install codecov
+        - coverage run -m unittest discover --verbose
+        - codecov --token=de929ab0-78d6-416b-ab2d-587cbdae85bb

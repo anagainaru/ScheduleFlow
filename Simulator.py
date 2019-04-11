@@ -75,7 +75,7 @@ class StatsEngine():
                 apl_total += instance[1] - instance[0]
 
             request = job.get_request_time(
-                          len(self.__execution_log[job]) + 1,
+                          len(self.__execution_log[job]) - 1,
                           self.__factor)
             apl_total = 1. * job.walltime / (apl_total + request)
             total += apl_total
