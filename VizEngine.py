@@ -33,20 +33,18 @@ class TexGenerator():
 
     def __print_current_execution_info(self, execution, outf):
         start = float(execution[0])
-        request = start + float(execution[3])
-        plot_end = request * self.__scalex
-        if request-start < 15:
-            plot_end += 5
-        if start > 0.7:
-            outf.write(r'\xlegend{%.1f}{%.1f}' % (start * self.__scalex,
-                                                  start))
-            outf.write("\n")
-        outf.write(r'\xlegend{%.1f}{%.1f}' % (plot_end, request))
-        outf.write("\n")
+        end = float(execution[1]) - start
+        request = float(execution[3])
+        outf.write(r'\legend{17}{-0.5}{%s}' % ('Start:\ %.1f' % (start)))
+        outf.write('\n')
+        outf.write(r'\legend{40}{-0.5}{%s}' % ('Duration:\ %.1f' % (end)))
+        outf.write('\n')
+        outf.write(r'\legend{65}{-0.5}{%s}' % ('Request:\ %.1f' % (request)))
+        outf.write('\n')
 
     def __print_makespan(self, value, outf):
         val = float(value)
-        outf.write(r'\xlegend{%.1f}{%.1f}' % (val * self.__scalex, val))
+        outf.write(r'\legend{%.1f}{-0.5}{%.1f}' % (val * self.__scalex, val))
         outf.write("\n")
 
     def __print_execution(self, execution, outf, last_frame):
