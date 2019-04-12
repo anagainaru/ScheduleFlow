@@ -2,8 +2,8 @@
 \usepackage{tikz}
 \setbeamersize{text margin left=0mm,text margin right=0mm} 
 
-\newcommand{\xlegend}[2]{
-\draw[-, very thick] (#1, -0.5) -- (#1, -2.5) node [pos=1, below] {$\scriptstyle{#2}$};
+\newcommand{\legend}[3]{
+\draw[-, very thick] (#1, #2) -- (#1, #2) node [pos=1, below] {$\scriptstyle{#3}$};
 }
 
 \begin{document}
