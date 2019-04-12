@@ -1,5 +1,5 @@
 
-<img src="./docs/logo.png" align="right" alt="Logo" width="200"/>
+<img src="./docs/logo.png" align="right" alt="Logo" width="300"/>
 
 # Simulator for HPC schedulers
 
