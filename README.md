@@ -26,11 +26,13 @@ Description
 <sup>* Tested with python 3</sup>
 
 **Requirements** 
-> Running the script requires **numpy**, **scipy**.
->
-> For the GIF generation, **pdflatex** and **convert** from ImageMagick are required.
+
+Running the script requires **numpy**, **scipy**.
+
+For the GIF generation, **pdflatex** and **convert** from ImageMagick are required.
 
 **Details**
+
 The script simulates the execution of 11 jobs submitted to 
 a reservation-based scheduler and an online scheduler.
 
