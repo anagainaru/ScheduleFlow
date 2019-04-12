@@ -23,13 +23,14 @@ Description
 
 `python run_simple_example.py`
 
-<sup>Tested with python 3</sup>
+<sup>* Tested with python 3</sup>
 
-**Requirements:** 
+**Requirements** 
 > Running the script requires **numpy**, **scipy**.
 >
 > For the GIF generation, **pdflatex** and **convert** from ImageMagick are required.
 
+**Details**
 The script simulates the execution of 11 jobs submitted to 
 a reservation-based scheduler and an online scheduler.
 
@@ -81,6 +82,8 @@ The GIF generation is controled by the VizEngine class. It uses the
 generate tex files for every step of the animation. Pdflatex is used
 fo create PDF files which are used by ImageMagick to generate the GIF.
 
+**Output**
+
 If successfuly ran, the `run_simple_example.py` script will output:
 
 > Scenario : makespan : utilization : average_job_utilization : average_job_response_time : average_job_stretch : average_job_wait_time : failures
@@ -101,6 +104,6 @@ Reservation-based scheduler simulation
 
 ![Batch scheduler](./docs/online.png)
 
-<sup>Depeding on the requirements of the jobs, the scheduler will give
+<sup>* Depeding on the requirements of the jobs, the scheduler will give
 another execution order for all submitted jobs.</sup>
 
