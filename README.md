@@ -14,9 +14,10 @@
 
 **Requirements** 
 
-Running the script requires **numpy**, **scipy**.
-
-For the GIF generation, **pdflatex** and **convert** from ImageMagick are required.
+<pre>
+Running the script requires <b>numpy, scipy</b>
+For the GIF generation, <b>pdflatex</b> and <b>convert</b> from ImageMagick are required.
+</pre>
 
 **Details**
 
