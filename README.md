@@ -6,14 +6,12 @@
 [![Codefresh build status]( https://g.codefresh.io/api/badges/pipeline/anagainaru_marketplace/anagainaru%2FSchedulerSimulator%2FSchedulerSimulator?type=cf-1)]( https://g.codefresh.io/public/accounts/anagainaru_marketplace/pipelines/anagainaru/SchedulerSimulator/SchedulerSimulator)
 [![codecov](https://codecov.io/gh/anagainaru/SchedulerSimulator/branch/master/graph/badge.svg)](https://codecov.io/gh/anagainaru/SchedulerSimulator)
 
-1. [ Description. ](#desc)
+1. [ Description ](#desc)
 2. [ Usage ](#usage)
 
 <a name="desc"></a>
-## 1. Description
+### Description
 
-sometext
-Description
 - class description and diagrams
 - simulator flow
 - link to more information
@@ -24,6 +22,10 @@ Description
 `python run_simple_example.py`
 
 <sup>Tested with python 3</sup>
+
+**Requirements:** Running the script requires `numpy`, `scipy`.
+For the GIF generation, `pdflatex` and `convert` from ImageMagick
+are required.
 
 The script simulates the execution of 11 jobs submitted to 
 a reservation-based scheduler and an online scheduler.
@@ -66,14 +68,20 @@ The scenario uses a scheduler and a list of jobs that need to be
 simulated. In addition, jobs can be added to a scenario by using
 the `simulator.add_jobs(job_list)` method.
 
-The scenario name is used to create the animation gif filenames
+The scenario name is used to create the animation GIF filenames
 and for debugging purposes. The resubmit factor indicates that 
 failed jobs need to be resubmitted with an execution time increase
 given by the facor. By default, failed jobs are not resubmitted.
 
+The GIF generation is controled by the VizEngine class. It uses the
+`tex_header` and `tex_footer` files in the ./draw directory to 
+generate tex files for every step of the animation. Pdflatex is used
+fo create PDF files which are used by ImageMagick to generate the GIF.
 
+If successfuly ran, the `run_simple_example.py` script will output:
 
-- example gif
+> Scenario : makespan : utilization : average_job_utilization : average_job_response_time : average_job_stretch : average_job_wait_time : failures
+> test_batch : 526.00 : 0.54 : 0.70 : 291.55 : 8.76 : 209.50 : 1
+> test_online : 421.00 : 0.67 : 0.70 : 285.91 : 8.96 : 204.33 : 1
+> GIFs generated in ./draw/test_{batch, online}.gif
 
-
-How to cite
