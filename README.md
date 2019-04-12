@@ -93,6 +93,6 @@ Reservation-based scheduler simulation
 
 ![Batch scheduler](./docs/online.png)
 
-<sup>* Depeding on the requirements of the jobs, the scheduler will give
-another execution order for all submitted jobs.</sup>
+<sup>* Depeding on the requirements of the jobs, the scheduler might give
+other execution orders for the submitted jobs.</sup>
 
