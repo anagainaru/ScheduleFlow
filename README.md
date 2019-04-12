@@ -81,7 +81,10 @@ fo create PDF files which are used by ImageMagick to generate the GIF.
 If successfuly ran, the `run_simple_example.py` script will output:
 
 > Scenario : makespan : utilization : average_job_utilization : average_job_response_time : average_job_stretch : average_job_wait_time : failures
+>
 > test_batch : 526.00 : 0.54 : 0.70 : 291.55 : 8.76 : 209.50 : 1
+>
 > test_online : 421.00 : 0.67 : 0.70 : 285.91 : 8.96 : 204.33 : 1
+>
 > GIFs generated in ./draw/test_{batch, online}.gif
 
