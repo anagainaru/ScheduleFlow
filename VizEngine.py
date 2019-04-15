@@ -36,11 +36,11 @@ class TexGenerator():
         start = float(execution[0])
         end = float(execution[1]) - start
         request = float(execution[3])
-        outf.write(r'\legend{17}{-0.5}{%s}' % ('Start:\ %.1f' % (start)))
+        outf.write(r'\legend{17}{-0.5}{Start:\ %.1f}' % (start))
         outf.write('\n')
-        outf.write(r'\legend{40}{-0.5}{%s}' % ('Duration:\ %.1f' % (end)))
+        outf.write(r'\legend{40}{-0.5}{Duration:\ %.1f}' % (end))
         outf.write('\n')
-        outf.write(r'\legend{65}{-0.5}{%s}' % ('Request:\ %.1f' % (request)))
+        outf.write(r'\legend{65}{-0.5}{Request:\ %.1f}' % (request))
         outf.write('\n')
 
     def __print_makespan(self, value, outf):
@@ -108,9 +108,9 @@ class VizualizationEngine():
 
         # check if pdflatex and convert from ImageMagik are installed
         assert (find_executable('pdflatex')), \
-                'Pdflatex needs to be installed to create GIFs'
+            'Pdflatex needs to be installed to create GIFs'
         assert (find_executable('convert')), \
-                'Convert from ImageMagik needs to be installed to create GIFs'
+            'Convert from ImageMagik needs to be installed to create GIFs'
 
     def __set_scalex(self, execution_log):
         if len(execution_log) > 0:
@@ -189,7 +189,7 @@ class VizualizationEngine():
                              requested_time, job.job_id,
                              i + 1))
             requested_time = job.get_request_time(
-                    i + 1, resubmission_factor = self.__factor)
+                    i + 1, resubmission_factor=self.__factor)
 
         # check succesful execution (last run)
         start = execution_list[len(execution_list) - 1][0]
