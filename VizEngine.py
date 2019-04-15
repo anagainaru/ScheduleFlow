@@ -188,7 +188,8 @@ class VizualizationEngine():
             run_list.append((start, end, job.nodes,
                              requested_time, job.job_id,
                              i + 1))
-            requested_time = job.get_request_time(i + 1, self.__factor)
+            requested_time = job.get_request_time(
+                    i + 1, resubmission_factor = self.__factor)
 
         # check succesful execution (last run)
         start = execution_list[len(execution_list) - 1][0]
