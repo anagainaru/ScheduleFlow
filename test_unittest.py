@@ -80,6 +80,18 @@ class TestSystem(unittest.TestCase):
 
 # test the application class
 class TestApplicationJob(unittest.TestCase):
+    def test_get_request_time(self):
+        apl = ApplicationJob(10, 0, 200, 100, 1)
+        self.assertEqual(apl.get_request_time(0), 100)
+        self.assertEqual(apl.get_request_time(2, 1.5), 225)
+
+    def test_get_request_complex(self):
+        apl = ApplicationJob(10, 0, 200, 100, 1,
+                             request_sequence=[200, 300])
+        self.assertEqual(apl.get_request_time(1), 200)
+        self.assertEqual(apl.get_request_time(4), 300)
+        self.assertEqual(apl.get_request_time(4, 1.5), 675)
+
     def test_invalid_job(self):
         with self.assertRaises(AssertionError):
             ApplicationJob(0, 0, 10, 11, 1)
