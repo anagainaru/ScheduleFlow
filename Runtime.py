@@ -107,6 +107,12 @@ class ApplicationJob(object):
         return self.job_id < apl.job_id
 
     def get_request_time(self, step, resubmission_factor = 1):
+        ''' Method for descovering the request time that the job will use
+        for its consecutive "step"-th submission. First submission will use
+        the provided request time. Following submissions will either use the
+        values provided in the request sequence or will increase the last
+        value by the resubmission factor. '''
+
         if step == 0:
             return self.request_walltime
         if len(self.request_sequence) == 0:

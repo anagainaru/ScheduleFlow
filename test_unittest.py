@@ -92,6 +92,15 @@ class TestApplicationJob(unittest.TestCase):
         self.assertEqual(apl.get_request_time(4), 300)
         self.assertEqual(apl.get_request_time(4, 1.5), 675)
 
+    def test_sequence_overwrite(self):
+        apl = ApplicationJob(10, 0, 200, 100, 1)
+        with self.assertRaises(AssertionError):
+            apl.overwrite_request_sequence([100, 150])
+        with self.assertRaises(AssertionError):
+            apl.overwrite_request_sequence([200, 150])
+        apl.overwrite_request_sequence([190, 200])
+        self.assertEqual(apl.get_request_time(1), 190)
+
     def test_invalid_job(self):
         with self.assertRaises(AssertionError):
             ApplicationJob(0, 0, 10, 11, 1)
