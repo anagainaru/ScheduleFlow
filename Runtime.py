@@ -1,5 +1,4 @@
 import logging
-import numpy as np
 from enum import IntEnum
 from EventQueue import EventQueue
 from EventQueue import EventType
@@ -111,13 +110,13 @@ class ApplicationJob(object):
         if step == 0:
             return self.request_walltime
         if len(self.request_sequence) == 0:
-            return self.request_walltime * np.power(factor, step)
+            return self.request_walltime * pow(factor, step)
 
         if len(self.request_sequence) > step-1:
             return self.request_sequence[step-1]
 
         seq_len = len(self.request_sequence)
-        return self.request_sequence[seq_len - 1] * np.power(
+        return self.request_sequence[seq_len - 1] * pow(
             factor, step - seq_len)
 
     def overwrite_request_sequence(self, request_sequence):
