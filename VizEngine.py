@@ -1,4 +1,5 @@
 import subprocess
+from distutils.spawn import find_executable
 
 
 class TexGenerator():
@@ -104,6 +105,12 @@ class VizualizationEngine():
         self.__keep_pdf = keep_intermediate_pdf
         self.__set_scalex(execution_log)
         self.__factor = resubmission_factor
+
+        # check if pdflatex and convert from ImageMagik are installed
+        assert (find_executable('pdflatex')), \
+                'Pdflatex needs to be installed to create GIFs'
+        assert (find_executable('convert')), \
+                'Convert from ImageMagik needs to be installed to create GIFs'
 
     def __set_scalex(self, execution_log):
         if len(execution_log) > 0:
