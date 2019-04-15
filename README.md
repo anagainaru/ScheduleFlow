@@ -1,5 +1,5 @@
 
-<img src="./docs/logo.png" align="right" alt="Logo" width="200"/>
+<img src="./docs/logo.png" align="right" alt="Logo" width="250"/>
 
 # Simulator for HPC schedulers
 
@@ -15,8 +15,7 @@
 **Requirements** 
 
 <pre>
-Running the script requires <b>numpy, scipy</b>
-For the GIF generation, <b>pdflatex</b> and <b>convert</b> from ImageMagick are required.
+Generating GIFs for simulations requires <b>pdflatex</b> and <b>convert</b> from ImageMagick.
 </pre>
 
 **Details**

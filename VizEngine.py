@@ -1,4 +1,5 @@
 import subprocess
+from distutils.spawn import find_executable
 
 
 class TexGenerator():
@@ -105,6 +106,12 @@ class VizualizationEngine():
         self.__set_scalex(execution_log)
         self.__factor = resubmission_factor
 
+        # check if pdflatex and convert from ImageMagik are installed
+        assert (find_executable('pdflatex')), \
+                'Pdflatex needs to be installed to create GIFs'
+        assert (find_executable('convert')), \
+                'Convert from ImageMagik needs to be installed to create GIFs'
+
     def __set_scalex(self, execution_log):
         if len(execution_log) > 0:
             limitx = max([execution_log[job][len(execution_log[job]) - 1][1]
@@ -181,7 +188,8 @@ class VizualizationEngine():
             run_list.append((start, end, job.nodes,
                              requested_time, job.job_id,
                              i + 1))
-            requested_time = job.get_request_time(i + 1, self.__factor)
+            requested_time = job.get_request_time(
+                    i + 1, resubmission_factor = self.__factor)
 
         # check succesful execution (last run)
         start = execution_list[len(execution_list) - 1][0]
