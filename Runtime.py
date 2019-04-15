@@ -106,18 +106,24 @@ class ApplicationJob(object):
     def __lt__(self, apl):
         return self.job_id < apl.job_id
 
-    def get_request_time(self, step, factor):
+    def get_request_time(self, step, resubmission_factor=1):
+        ''' Method for descovering the request time that the job will use
+        for its consecutive "step"-th submission. First submission will use
+        the provided request time. Following submissions will either use the
+        values provided in the request sequence or will increase the last
+        value by the resubmission factor. '''
+
         if step == 0:
             return self.request_walltime
         if len(self.request_sequence) == 0:
-            return self.request_walltime * pow(factor, step)
+            return self.request_walltime * pow(resubmission_factor, step)
 
         if len(self.request_sequence) > step-1:
             return self.request_sequence[step-1]
 
         seq_len = len(self.request_sequence)
         return self.request_sequence[seq_len - 1] * pow(
-            factor, step - seq_len)
+            resubmission_factor, step - seq_len)
 
     def overwrite_request_sequence(self, request_sequence):
         ''' Method for overwriting the sequence of future walltime

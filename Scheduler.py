@@ -15,11 +15,6 @@ class Scheduler(object):
         return r'Scheduler: %s; %d jobs in queue; %d jobs running' % (
             self.system, len(self.wait_queue), len(self.running_jobs))
 
-    def print_waiting_jobs(self):
-        print(self.system)
-        for job in self.wait_queue:
-            print(job)
-
     def submit_job(self, job):
         ''' Base method to add a job in the waiting queue '''
 
