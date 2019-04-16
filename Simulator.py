@@ -122,7 +122,7 @@ class Simulator():
         self.__loops = loops
         self.__generate_gif = generate_gif
         self.__check_correctness = check_correctness
-        self.__execution_log = {}
+        self.execution_log = {}
         self.logger = logging.getLogger(__name__)
 
         self.__fp = output_file_handler
@@ -141,7 +141,7 @@ class Simulator():
         self.__scheduler = scheduler
         self.__system = scheduler.system
         self.__job_list = []
-        self.__execution_log = {}
+        self.execution_log = {}
         self.__scenario_name = scenario_name
         self.__factor = resubmission_factor
 
@@ -225,20 +225,20 @@ class Simulator():
         given list of jobs. Job list contains the jobs with their initial
         information, workload contains execution information for each
         job '''
-        assert (len(self.__execution_log) > 0), \
+        assert (len(self.execution_log) > 0), \
             "ERR - Trying to test correctness on an empty execution log"
 
         check_fail = 0
-        for job in self.__execution_log:
+        for job in self.execution_log:
             pass_check = self.__sanity_check_job_execution(
-                self.__execution_log[job], job)
+                self.execution_log[job], job)
             if not pass_check:
                 self.logger.error("%s did not pass the sanity check: %s" %
-                                  (job, self.__execution_log[job]))
+                                  (job, self.execution_log[job]))
                 check_fail += 1
                 continue
 
-        check_fail += self.__sainity_check_schedule(self.__execution_log)
+        check_fail += self.__sainity_check_schedule(self.execution_log)
         return check_fail
 
     def run(self):
@@ -246,7 +246,7 @@ class Simulator():
         for i in range(self.__loops):
             runtime = Runtime.Runtime(self.__job_list, self.__factor)
             runtime(self.__scheduler)
-            self.__execution_log = runtime.get_stats()
+            self.execution_log = runtime.get_stats()
 
             if self.__check_correctness:
                 check += self.test_correctness()
@@ -254,7 +254,7 @@ class Simulator():
                     self.logger.debug("FAIL correctness test (loop %d)" % (i))
                     continue
 
-            self.stats.set_execution_output(self.__execution_log)
+            self.stats.set_execution_output(self.execution_log)
             self.logger.info(self.stats)
             if self.__fp is not None:
                 self.stats.print_to_file(self.__fp, self.__scenario_name)
@@ -266,7 +266,7 @@ class Simulator():
             if self.horizontal_ax != -1:
                 self.__viz_handler.set_horizontal_ax_limit(
                     self.horizontal_ax)
-            self.__viz_handler.set_execution_log(self.__execution_log)
+            self.__viz_handler.set_execution_log(self.execution_log)
             self.horizontal_ax = self.__viz_handler.generate_scenario_gif(
                 self.__scenario_name)
             self.logger.info(r"GIF generated draw/%s" % (self.__scenario_name))
