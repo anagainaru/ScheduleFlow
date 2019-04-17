@@ -7,7 +7,7 @@ from Runtime import Runtime
 from Scheduler import Scheduler
 from Scheduler import OnlineScheduler
 from Scheduler import BatchScheduler
-
+import Simulator
 
 # test the event priority queue
 class TestEventQueue(unittest.TestCase):
@@ -666,6 +666,24 @@ class TestRuntime(unittest.TestCase):
                 for i in range(len(expected_start_job2)):
                     self.assertEqual(workload[job][i][0],
                                      expected_start_job2[i])
+
+# test the runtime class
+class TestSimulator(unittest.TestCase):
+    def test_stats_engine(self):
+        sch = BatchScheduler(System(10))
+        runtime = Runtime([ApplicationJob(6, 0, 500, 1000, 0),
+                           ApplicationJob(6, 0, 1000, 2000, 0)], 1.5)
+        runtime(sch)
+        workload = runtime.get_stats()
+        stats = Simulator.StatsEngine(10, 1.5)
+        stats.set_execution_output(workload)
+        self.assertEqual(stats.total_makespan(), 2500)
+        self.assertEqual(stats.system_utilization(), 0.36)
+        self.assertEqual(stats.average_job_utilization(), 0.5)
+        self.assertEqual(stats.average_job_wait_time(), 1000)
+        self.assertEqual(stats.average_job_response_time(), 1750)
+        self.assertEqual(stats.average_job_stretch(), 3)
+
 
 
 if __name__ == '__main__':
