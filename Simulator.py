@@ -183,7 +183,8 @@ class Simulator():
             if not math.isclose(end-start, requested_time,
                                 rel_tol=1e-3):
                 return False
-            job.get_request_time(i, resubmission_factor=self.__factor)
+            requested_time = job.get_request_time(
+                i + 1, resubmission_factor=self.__factor)
 
         # check len of succesful execution (last)
         start = execution_list[len(execution_list)-1][0]
