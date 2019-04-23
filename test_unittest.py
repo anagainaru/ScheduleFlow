@@ -717,6 +717,17 @@ class TestSimulator(unittest.TestCase):
         self.assertEqual(len(sim.job_list), 4)
         self.assertEqual(len(ret), 2)
 
+    def test_run_scenario(self):
+        sim = Simulator.Simulator()
+        ret = sim.run()
+        self.assertEqual(ret, -1)
+        apl = [ApplicationJob(6, 0, 500, 1000, 0),
+               ApplicationJob(6, 0, 500, 1000, 0)]
+        sim.create_scenario("test", BatchScheduler(System(10)), 1.5,
+                            job_list=apl)
+        ret = sim.run()
+        self.assertEqual(ret, 0)
+
 
 if __name__ == '__main__':
     unittest.main()
