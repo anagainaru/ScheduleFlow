@@ -729,8 +729,8 @@ class TestSimulator(unittest.TestCase):
         self.assertEqual(ret, 0)
 
     def test_simulation_correctness(self):
-        sim = Simulator.Simulator()
-        apl = [ApplicationJob(6, 0, 500, 1000, 0),
+        sim = Simulator.Simulator(check_correctness=True)
+        apl = [ApplicationJob(6, 0, 500, 200, 0),
                ApplicationJob(6, 0, 500, 1000, 0)]
         sim.create_scenario("test", BatchScheduler(System(10)), 1.5,
                             job_list=apl)
