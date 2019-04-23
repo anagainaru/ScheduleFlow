@@ -61,11 +61,9 @@ class StatsEngine():
     def average_job_utilization(self):
         total = 0
         for job in self.__execution_log:
-            apl_total = 0
-            for i in range(len(self.__execution_log[job])-1):
-                instance = self.__execution_log[job][i]
-                apl_total += instance[1] - instance[0]
-
+            apl_total = sum([self.__execution_log[job][i][1] -
+                             self.__execution_log[job][i][0] for i
+                             in range(len(self.__execution_log[job])-1)])
             request = job.get_request_time(
                           len(self.__execution_log[job]) - 1,
                           self.__factor)
@@ -111,6 +109,7 @@ class Simulator():
         self.__generate_gif = generate_gif
         self.__check_correctness = check_correctness
         self.__execution_log = {}
+        self.job_list = []
         self.logger = logging.getLogger(__name__)
 
         self.__fp = output_file_handler
@@ -128,7 +127,7 @@ class Simulator():
                         resubmission_factor, job_list=[]):
         self.__scheduler = scheduler
         self.__system = scheduler.system
-        self.__job_list = []
+        self.job_list = []
         self.__execution_log = {}
         self.__scenario_name = scenario_name
         self.__factor = resubmission_factor
@@ -147,15 +146,19 @@ class Simulator():
     def add_applications(self, job_list):
         change_log = []
         for new_job in job_list:
-            job_id_list = [job.job_id for job in self.__job_list]
+            if new_job in self.job_list:
+                self.logger.warning("Job %s is already included "
+                                    "in the sumlation." %(new_job))
+                continue
+            job_id_list = [job.job_id for job in self.job_list]
             if new_job.job_id in job_id_list:
-                new_id = max(job_id_list) + len(job_list)
+                new_id = max(job_id_list) + 1 #len(change_log) + 1
                 self.logger.warning("Jobs cannot share the same ID. "
                                     "Updated job %d with ID %d." %
                                     (new_job.job_id, new_id))
                 change_log.append((new_job.job_id, new_id))
                 new_job.job_id = new_id
-            self.__job_list.append(new_job)
+            self.job_list.append(new_job)
         return change_log
 
     def __sanity_check_job_execution(self, execution_list, job):
@@ -236,7 +239,7 @@ class Simulator():
     def run(self):
         check = 0
         for i in range(self.__loops):
-            runtime = Runtime.Runtime(self.__job_list, self.__factor)
+            runtime = Runtime.Runtime(self.job_list, self.__factor)
             runtime(self.__scheduler)
             self.__execution_log = runtime.get_stats()
 

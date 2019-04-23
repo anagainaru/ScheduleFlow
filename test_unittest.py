@@ -1,5 +1,6 @@
 import unittest
 import numpy as np
+import logging
 from EventQueue import EventQueue
 from Runtime import System
 from Runtime import ApplicationJob
@@ -684,6 +685,37 @@ class TestSimulator(unittest.TestCase):
         self.assertEqual(stats.average_job_response_time(), 1750)
         self.assertEqual(stats.average_job_stretch(), 3)
         self.assertEqual(stats.total_failures(), 0)
+
+    def test_create_scenario(self):
+        sim = Simulator.Simulator()
+        sim.logger.setLevel(logging.CRITICAL)
+        ret = sim.create_scenario("test", BatchScheduler(System(10)), 1.5)
+        self.assertEqual(len(sim.job_list), 0)
+        self.assertEqual(len(ret), 0)
+        apl = [ApplicationJob(6, 0, 500, 1000, 0),
+               ApplicationJob(6, 0, 500, 1000, 0)]
+        ret = sim.create_scenario("test", BatchScheduler(System(10)), 1.5,
+                                  job_list=apl)
+        self.assertEqual(len(sim.job_list), 2)
+        self.assertEqual(len(ret), 1)
+
+    def test_additional_jobs(self):
+        sim = Simulator.Simulator()
+        sim.logger.setLevel(logging.CRITICAL)
+        sim.create_scenario("test", BatchScheduler(System(10)), 1.5)
+        apl = [ApplicationJob(6, 0, 500, 1000, 10),
+               ApplicationJob(6, 0, 500, 1000, 10)]
+        ret = sim.add_applications(apl)
+        self.assertEqual(len(sim.job_list), 2)
+        self.assertEqual(len(ret), 1)
+        ret = sim.add_applications(apl)
+        self.assertEqual(len(sim.job_list), 2)
+        self.assertEqual(len(ret), 0)
+        apl = [ApplicationJob(6, 0, 500, 1000, 10),
+               ApplicationJob(6, 0, 500, 1000, 11)]
+        ret = sim.add_applications(apl)
+        self.assertEqual(len(sim.job_list), 4)
+        self.assertEqual(len(ret), 2)
 
 
 if __name__ == '__main__':
