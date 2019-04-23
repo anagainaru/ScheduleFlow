@@ -7,6 +7,7 @@ import Runtime
 class StatsEngine():
     def __init__(self, total_nodes, resubmission_factor):
         self.__execution_log = {}
+        self.__makespan = -1
         self.__total_nodes = total_nodes
         self.__factor = resubmission_factor
 
@@ -26,32 +27,25 @@ class StatsEngine():
                 self.total_failures())
 
     def set_execution_output(self, execution_log):
+        assert (len(execution_log)>0), "Simulation execution log is NULL"
         self.__execution_log = execution_log
         self.__makespan = max([max([i[1] for i in self.__execution_log[job]])
                                for job in self.__execution_log])
 
     def total_makespan(self):
-        if len(self.__execution_log) == 0:
-            return -1
         return self.__makespan
 
     def total_failures(self):
-        if len(self.__execution_log) == 0:
-            return -1
         total_failures = sum([len(self.__execution_log[job])-1 for job in
                               self.__execution_log])
         return total_failures
 
     def system_utilization(self):
-        if len(self.__execution_log) == 0:
-            return -1
         total_runtime = sum([job.walltime * job.nodes for job in
                              self.__execution_log])
         return total_runtime / (self.__makespan * self.__total_nodes)
 
     def average_job_wait_time(self):
-        if len(self.__execution_log) == 0:
-            return -1
         total_wait = 0
         total_runs = 0
         for job in self.__execution_log:
@@ -62,11 +56,9 @@ class StatsEngine():
                 submission = instance[1]
             total_wait += apl_wait
             total_runs += len(self.__execution_log[job])
-        return total_wait / total_runs
+        return total_wait / max(1, total_runs)
 
     def average_job_utilization(self):
-        if len(self.__execution_log) == 0:
-            return -1
         total = 0
         for job in self.__execution_log:
             apl_total = 0
@@ -79,26 +71,22 @@ class StatsEngine():
                           self.__factor)
             apl_total = 1. * job.walltime / (apl_total + request)
             total += apl_total
-        return total / len(self.__execution_log)
+        return total / max(1, len(self.__execution_log))
 
     def average_job_response_time(self):
-        if len(self.__execution_log) == 0:
-            return -1
         makespan = 0
         for job in self.__execution_log:
             runs = self.__execution_log[job]
             makespan += (runs[len(runs) - 1][1] - job.submission_time)
-        return makespan / len(self.__execution_log)
+        return makespan / max(1, len(self.__execution_log))
 
     def average_job_stretch(self):
-        if len(self.__execution_log) == 0:
-            return -1
         stretch = 0
         for job in self.__execution_log:
             runs = self.__execution_log[job]
             stretch += ((runs[len(runs) - 1][1] - job.submission_time) /
                         job.walltime)
-        return stretch / len(self.__execution_log)
+        return stretch / max(1, len(self.__execution_log))
 
     def print_to_file(self, file_handler, scenario):
         if len(self.__execution_log) == 0:

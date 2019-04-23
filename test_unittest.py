@@ -683,7 +683,7 @@ class TestSimulator(unittest.TestCase):
         self.assertEqual(stats.average_job_wait_time(), 1000)
         self.assertEqual(stats.average_job_response_time(), 1750)
         self.assertEqual(stats.average_job_stretch(), 3)
-
+        self.assertEqual(stats.total_failures(), 0)
 
 
 if __name__ == '__main__':
