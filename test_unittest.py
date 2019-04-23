@@ -719,14 +719,23 @@ class TestSimulator(unittest.TestCase):
 
     def test_run_scenario(self):
         sim = Simulator.Simulator()
-        ret = sim.run()
-        self.assertEqual(ret, -1)
+        with self.assertRaises(AssertionError):
+            ret = sim.run()
         apl = [ApplicationJob(6, 0, 500, 1000, 0),
                ApplicationJob(6, 0, 500, 1000, 0)]
         sim.create_scenario("test", BatchScheduler(System(10)), 1.5,
                             job_list=apl)
         ret = sim.run()
         self.assertEqual(ret, 0)
+
+    def test_simulation_correctness(self):
+        sim = Simulator.Simulator()
+        apl = [ApplicationJob(6, 0, 500, 1000, 0),
+               ApplicationJob(6, 0, 500, 1000, 0)]
+        sim.create_scenario("test", BatchScheduler(System(10)), 1.5,
+                            job_list=apl)
+        ret = sim.run()
+        self.assertEqual(sim.test_correctness(), 0)
 
 
 if __name__ == '__main__':

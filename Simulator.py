@@ -237,8 +237,7 @@ class Simulator():
         return check_fail
 
     def run(self):
-        if len(self.job_list)==0:
-            return -1
+        assert (len(self.job_list)>0), "Cannot run an empty scenario"
         check = 0
         for i in range(self.__loops):
             runtime = Runtime.Runtime(self.job_list, self.__factor)
