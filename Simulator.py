@@ -7,6 +7,7 @@ import Runtime
 class StatsEngine():
     def __init__(self, total_nodes, resubmission_factor):
         self.__execution_log = {}
+        self.__makespan = -1
         self.__total_nodes = total_nodes
         self.__factor = resubmission_factor
 
@@ -26,32 +27,25 @@ class StatsEngine():
                 self.total_failures())
 
     def set_execution_output(self, execution_log):
+        assert (len(execution_log)>0), "Simulation execution log is NULL"
         self.__execution_log = execution_log
         self.__makespan = max([max([i[1] for i in self.__execution_log[job]])
                                for job in self.__execution_log])
 
     def total_makespan(self):
-        if len(self.__execution_log) == 0:
-            return -1
         return self.__makespan
 
     def total_failures(self):
-        if len(self.__execution_log) == 0:
-            return -1
         total_failures = sum([len(self.__execution_log[job])-1 for job in
                               self.__execution_log])
         return total_failures
 
     def system_utilization(self):
-        if len(self.__execution_log) == 0:
-            return -1
         total_runtime = sum([job.walltime * job.nodes for job in
                              self.__execution_log])
         return total_runtime / (self.__makespan * self.__total_nodes)
 
     def average_job_wait_time(self):
-        if len(self.__execution_log) == 0:
-            return -1
         total_wait = 0
         total_runs = 0
         for job in self.__execution_log:
@@ -62,43 +56,35 @@ class StatsEngine():
                 submission = instance[1]
             total_wait += apl_wait
             total_runs += len(self.__execution_log[job])
-        return total_wait / total_runs
+        return total_wait / max(1, total_runs)
 
     def average_job_utilization(self):
-        if len(self.__execution_log) == 0:
-            return -1
         total = 0
         for job in self.__execution_log:
-            apl_total = 0
-            for i in range(len(self.__execution_log[job])-1):
-                instance = self.__execution_log[job][i]
-                apl_total += instance[1] - instance[0]
-
+            apl_total = sum([self.__execution_log[job][i][1] -
+                             self.__execution_log[job][i][0] for i
+                             in range(len(self.__execution_log[job])-1)])
             request = job.get_request_time(
                           len(self.__execution_log[job]) - 1,
                           self.__factor)
             apl_total = 1. * job.walltime / (apl_total + request)
             total += apl_total
-        return total / len(self.__execution_log)
+        return total / max(1, len(self.__execution_log))
 
     def average_job_response_time(self):
-        if len(self.__execution_log) == 0:
-            return -1
         makespan = 0
         for job in self.__execution_log:
             runs = self.__execution_log[job]
             makespan += (runs[len(runs) - 1][1] - job.submission_time)
-        return makespan / len(self.__execution_log)
+        return makespan / max(1, len(self.__execution_log))
 
     def average_job_stretch(self):
-        if len(self.__execution_log) == 0:
-            return -1
         stretch = 0
         for job in self.__execution_log:
             runs = self.__execution_log[job]
             stretch += ((runs[len(runs) - 1][1] - job.submission_time) /
                         job.walltime)
-        return stretch / len(self.__execution_log)
+        return stretch / max(1, len(self.__execution_log))
 
     def print_to_file(self, file_handler, scenario):
         if len(self.__execution_log) == 0:
@@ -123,6 +109,7 @@ class Simulator():
         self.__generate_gif = generate_gif
         self.__check_correctness = check_correctness
         self.__execution_log = {}
+        self.job_list = []
         self.logger = logging.getLogger(__name__)
 
         self.__fp = output_file_handler
@@ -140,7 +127,7 @@ class Simulator():
                         resubmission_factor, job_list=[]):
         self.__scheduler = scheduler
         self.__system = scheduler.system
-        self.__job_list = []
+        self.job_list = []
         self.__execution_log = {}
         self.__scenario_name = scenario_name
         self.__factor = resubmission_factor
@@ -153,18 +140,25 @@ class Simulator():
 
         return self.add_applications(job_list)
 
+    def get_execution_log(self):
+        return self.__execution_log
+
     def add_applications(self, job_list):
         change_log = []
         for new_job in job_list:
-            job_id_list = [job.job_id for job in self.__job_list]
+            if new_job in self.job_list:
+                self.logger.warning("Job %s is already included "
+                                    "in the sumlation." %(new_job))
+                continue
+            job_id_list = [job.job_id for job in self.job_list]
             if new_job.job_id in job_id_list:
-                new_id = max(job_id_list) + len(job_list)
+                new_id = max(job_id_list) + 1 #len(change_log) + 1
                 self.logger.warning("Jobs cannot share the same ID. "
                                     "Updated job %d with ID %d." %
                                     (new_job.job_id, new_id))
                 change_log.append((new_job.job_id, new_id))
                 new_job.job_id = new_id
-            self.__job_list.append(new_job)
+            self.job_list.append(new_job)
         return change_log
 
     def __sanity_check_job_execution(self, execution_list, job):
@@ -243,9 +237,10 @@ class Simulator():
         return check_fail
 
     def run(self):
+        assert (len(self.job_list)>0), "Cannot run an empty scenario"
         check = 0
         for i in range(self.__loops):
-            runtime = Runtime.Runtime(self.__job_list, self.__factor)
+            runtime = Runtime.Runtime(self.job_list, self.__factor)
             runtime(self.__scheduler)
             self.__execution_log = runtime.get_stats()
 

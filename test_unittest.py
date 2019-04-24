@@ -1,5 +1,6 @@
 import unittest
 import numpy as np
+import logging
 from EventQueue import EventQueue
 from Runtime import System
 from Runtime import ApplicationJob
@@ -7,7 +8,7 @@ from Runtime import Runtime
 from Scheduler import Scheduler
 from Scheduler import OnlineScheduler
 from Scheduler import BatchScheduler
-
+import Simulator
 
 # test the event priority queue
 class TestEventQueue(unittest.TestCase):
@@ -666,6 +667,75 @@ class TestRuntime(unittest.TestCase):
                 for i in range(len(expected_start_job2)):
                     self.assertEqual(workload[job][i][0],
                                      expected_start_job2[i])
+
+# test the runtime class
+class TestSimulator(unittest.TestCase):
+    def test_stats_engine(self):
+        sch = BatchScheduler(System(10))
+        runtime = Runtime([ApplicationJob(6, 0, 500, 1000, 0),
+                           ApplicationJob(6, 0, 1000, 2000, 0)], 1.5)
+        runtime(sch)
+        workload = runtime.get_stats()
+        stats = Simulator.StatsEngine(10, 1.5)
+        stats.set_execution_output(workload)
+        self.assertEqual(stats.total_makespan(), 2500)
+        self.assertEqual(stats.system_utilization(), 0.36)
+        self.assertEqual(stats.average_job_utilization(), 0.5)
+        self.assertEqual(stats.average_job_wait_time(), 1000)
+        self.assertEqual(stats.average_job_response_time(), 1750)
+        self.assertEqual(stats.average_job_stretch(), 3)
+        self.assertEqual(stats.total_failures(), 0)
+
+    def test_create_scenario(self):
+        sim = Simulator.Simulator()
+        sim.logger.setLevel(logging.CRITICAL)
+        ret = sim.create_scenario("test", BatchScheduler(System(10)), 1.5)
+        self.assertEqual(len(sim.job_list), 0)
+        self.assertEqual(len(ret), 0)
+        apl = [ApplicationJob(6, 0, 500, 1000, 0),
+               ApplicationJob(6, 0, 500, 1000, 0)]
+        ret = sim.create_scenario("test", BatchScheduler(System(10)), 1.5,
+                                  job_list=apl)
+        self.assertEqual(len(sim.job_list), 2)
+        self.assertEqual(len(ret), 1)
+
+    def test_additional_jobs(self):
+        sim = Simulator.Simulator()
+        sim.logger.setLevel(logging.CRITICAL)
+        sim.create_scenario("test", BatchScheduler(System(10)), 1.5)
+        apl = [ApplicationJob(6, 0, 500, 1000, 10),
+               ApplicationJob(6, 0, 500, 1000, 10)]
+        ret = sim.add_applications(apl)
+        self.assertEqual(len(sim.job_list), 2)
+        self.assertEqual(len(ret), 1)
+        ret = sim.add_applications(apl)
+        self.assertEqual(len(sim.job_list), 2)
+        self.assertEqual(len(ret), 0)
+        apl = [ApplicationJob(6, 0, 500, 1000, 10),
+               ApplicationJob(6, 0, 500, 1000, 11)]
+        ret = sim.add_applications(apl)
+        self.assertEqual(len(sim.job_list), 4)
+        self.assertEqual(len(ret), 2)
+
+    def test_run_scenario(self):
+        sim = Simulator.Simulator()
+        with self.assertRaises(AssertionError):
+            ret = sim.run()
+        apl = [ApplicationJob(6, 0, 500, 1000, 0),
+               ApplicationJob(6, 0, 500, 1000, 0)]
+        sim.create_scenario("test", BatchScheduler(System(10)), 1.5,
+                            job_list=apl)
+        ret = sim.run()
+        self.assertEqual(ret, 0)
+
+    def test_simulation_correctness(self):
+        sim = Simulator.Simulator(check_correctness=True)
+        apl = [ApplicationJob(6, 0, 500, 200, 0),
+               ApplicationJob(6, 0, 500, 1000, 0)]
+        sim.create_scenario("test", BatchScheduler(System(10)), 1.5,
+                            job_list=apl)
+        ret = sim.run()
+        self.assertEqual(sim.test_correctness(), 0)
 
 
 if __name__ == '__main__':
