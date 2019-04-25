@@ -82,19 +82,22 @@ class TestSystem(unittest.TestCase):
 # test the application class
 class TestApplicationJob(unittest.TestCase):
     def test_get_request_time(self):
-        apl = ApplicationJob(10, 0, 200, 100, 1)
+        apl = ApplicationJob(10, 0, 200, 100, 1,
+                             resubmit_factor=1.5)
         self.assertEqual(apl.get_request_time(0), 100)
         self.assertEqual(apl.get_request_time(2, 1.5), 225)
 
     def test_get_request_complex(self):
         apl = ApplicationJob(10, 0, 200, 100, 1,
-                             request_sequence=[200, 300])
+                             request_sequence=[200, 300],
+                             resubmit_factor=1.5)
         self.assertEqual(apl.get_request_time(1), 200)
         self.assertEqual(apl.get_request_time(4), 300)
         self.assertEqual(apl.get_request_time(4, 1.5), 675)
 
     def test_sequence_overwrite(self):
-        apl = ApplicationJob(10, 0, 200, 100, 1)
+        apl = ApplicationJob(10, 0, 200, 100, 1,
+                             resubmit_factor=1.5)
         with self.assertRaises(AssertionError):
             apl.overwrite_request_sequence([100, 150])
         with self.assertRaises(AssertionError):
@@ -355,7 +358,8 @@ class TestRuntime(unittest.TestCase):
             sch = SchedulerType(System(10))
             runtime = Runtime([ApplicationJob(
                 10, 0, 100, 80, 1,
-                request_sequence=[100, 120])], 1.5)
+                request_sequence=[100, 120],
+                resubmit_factor=1.5)], 1.5)
             runtime(sch)
             workload = runtime.get_stats()
             for job in workload:
@@ -405,7 +409,8 @@ class TestRuntime(unittest.TestCase):
                 start_time,
                 execution_time,
                 execution_time - 10,
-                1)], 1.5)
+                1,
+                resubmit_factor=1.5)], 1.5)
             runtime(sch)
             workload = runtime.get_stats()
             self.assertEqual(len(workload), 1)
@@ -485,8 +490,10 @@ class TestRuntime(unittest.TestCase):
         for i in range(10):
             execution_time = np.random.randint(11, 100)
             apl.add(ApplicationJob(np.random.randint(6, 11),
-                                   0, execution_time, execution_time, i))
-        fail_job = ApplicationJob(np.random.randint(1, 11), 0, 100, 90, 10)
+                                   0, execution_time, execution_time, i,
+                                   resubmit_factor=1.5))
+        fail_job = ApplicationJob(np.random.randint(1, 11), 0, 100, 90, 10,
+                                  resubmit_factor=1.5)
         apl.add(fail_job)
 
         sch = OnlineScheduler(System(10))
@@ -503,7 +510,8 @@ class TestRuntime(unittest.TestCase):
             execution_time = np.random.randint(11, 100)
             apl.add(ApplicationJob(np.random.randint(1, 11),
                                    0, execution_time, execution_time, i))
-        fail_job = ApplicationJob(np.random.randint(9, 11), 0, 100, 90, 10)
+        fail_job = ApplicationJob(np.random.randint(9, 11), 0, 100, 90, 10,
+                                  resubmit_factor=1.5)
         apl.add(fail_job)
 
         sch = BatchScheduler(System(10))
@@ -641,7 +649,8 @@ class TestRuntime(unittest.TestCase):
 
     def test_cascading_failures(self):
         sch = BatchScheduler(System(10))
-        runtime = Runtime([ApplicationJob(5, 0, 500, 100, 0)], 1.5)
+        runtime = Runtime([ApplicationJob(5, 0, 500, 100, 0,
+                                          resubmit_factor=1.5)], 1.5)
         runtime(sch)
         workload = runtime.get_stats()
         for job in workload:
@@ -655,9 +664,12 @@ class TestRuntime(unittest.TestCase):
         expected_start_job2 = [1200, 3650]
         for i in range(2):
             sch = BatchScheduler(System(10))
-            runtime = Runtime([ApplicationJob(5, 0, 1400, 1200+i, 0),
-                               ApplicationJob(5, 0, 1400, 1200, 1),
-                               ApplicationJob(5, 0, 700, 650, 2)], 1.5)
+            runtime = Runtime([ApplicationJob(5, 0, 1400, 1200+i, 0,
+                                              resubmit_factor=1.5),
+                               ApplicationJob(5, 0, 1400, 1200, 1,
+                                              resubmit_factor=1.5),
+                               ApplicationJob(5, 0, 700, 650, 2,
+                                              resubmit_factor=1.5)], 1.5)
             runtime(sch)
             workload = runtime.get_stats()
             for job in workload:
@@ -722,7 +734,7 @@ class TestSimulator(unittest.TestCase):
         with self.assertRaises(AssertionError):
             ret = sim.run()
         apl = [ApplicationJob(6, 0, 500, 1000, 0),
-               ApplicationJob(6, 0, 500, 1000, 0)]
+               ApplicationJob(6, 0, 500, 1000, 1)]
         sim.create_scenario("test", BatchScheduler(System(10)), 1.5,
                             job_list=apl)
         ret = sim.run()
@@ -730,8 +742,9 @@ class TestSimulator(unittest.TestCase):
 
     def test_simulation_correctness(self):
         sim = Simulator.Simulator(check_correctness=True)
-        apl = [ApplicationJob(6, 0, 500, 200, 0),
-               ApplicationJob(6, 0, 500, 1000, 0)]
+        apl = [ApplicationJob(6, 0, 500, 200, 0,
+                              resubmit_factor=1.5),
+               ApplicationJob(6, 0, 500, 1000, 1)]
         sim.create_scenario("test", BatchScheduler(System(10)), 1.5,
                             job_list=apl)
         ret = sim.run()
