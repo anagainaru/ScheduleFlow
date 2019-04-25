@@ -53,7 +53,8 @@ class ApplicationJob(object):
     ''' Job class containing the properties of the running instance '''
 
     def __init__(self, nodes, submission_time, wall,
-                 rwall, job_id, request_sequence=[]):
+                 rwall, job_id, request_sequence=[],
+                 resubmit_factor=-1):
         ''' Constructor method takes the number of nodes required by the job,
         the submission time, the actual walltime, the requested walltime, a
         job id and a sequence of request times in case the job fails '''
@@ -82,6 +83,11 @@ class ApplicationJob(object):
         self.request_walltime = rwall
         self.job_id = job_id
         self.request_sequence = request_sequence[:]
+        if resubmit_factor == -1:
+            self.resubmit = False
+        else:
+            self.resubmit = True
+            self.resubmit_factor = resubmit_factor
 
         # Entries in the execution log: (JobChangeType, old_value)
         self.__execution_log = []
@@ -290,8 +296,9 @@ class Runtime(object):
             self.__current_time, job))
         # check if the job finished successfully or it was a failure
         if job.walltime > job.request_walltime:
-            # resubmit failed job
-            # TODO -- this changes information in the job instance
+            # resubmit failed job unless the job doesn't permit it
+            if not job.resubmit:
+                return
             job.update_submission(self.__factor, self.__current_time)
             self.__logger.debug(
                 r'[Timestamp %d] Resubmit failed job %s' %
@@ -300,7 +307,6 @@ class Runtime(object):
                                 EventType.JobSubmission, job))
 
         # look for backfilling jobs if the reserved time > walltime
-        # TODO -- this changes information in the job instance
         elif job.walltime < job.request_walltime:
             backfill_schedule = self.scheduler.backfill_request(
                 job, self.__reserved_jobs, self.__current_time)
