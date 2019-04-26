@@ -122,17 +122,16 @@ class TestApplicationJob(unittest.TestCase):
             ApplicationJob(10, 0, 10, 7, 1, [5, 10])
 
     def test_invalid_factor(self):
-        ap = ApplicationJob(7, 5, 10, 11, 1)
         with self.assertRaises(AssertionError):
-            ap.update_submission(0.2, 0)
+            ap = ApplicationJob(7, 5, 10, 11, 1, resubmit_factor=0.2)
 
     def test_request_list_factor(self):
-        ap = ApplicationJob(7, 5, 100, 70, 1, [80, 90])
-        ap.update_submission(2, 0)
+        ap = ApplicationJob(7, 5, 100, 70, 1, [80, 90], resubmit_factor=2)
+        ap.update_submission(0)
         self.assertEqual(ap.request_walltime, 80)
-        ap.update_submission(2, 0)
+        ap.update_submission(0)
         self.assertEqual(ap.request_walltime, 90)
-        ap.update_submission(2, 0)
+        ap.update_submission(0)
         self.assertEqual(ap.request_walltime, 180)
 
 

@@ -87,6 +87,9 @@ class ApplicationJob(object):
             self.resubmit = False
             self.resubmit_factor = 1
         else:
+            assert (resubmit_factor > 1),\
+                r"""Increase factor for an execution request time must be
+                over 1: received %d""" % (resubmit_factor)
             self.resubmit = True
             self.resubmit_factor = resubmit_factor
 
@@ -147,7 +150,7 @@ class ApplicationJob(object):
         self.__execution_log.append((JobChangeType.RequestSequenceOverwrite,
                                      self.request_sequence[:]))
 
-    def update_submission(self, factor, submission_time):
+    def update_submission(self, submission_time):
         ''' Method to update submission information including
         the submission time and the walltime request '''
 
@@ -165,10 +168,8 @@ class ApplicationJob(object):
             self.request_walltime = self.request_sequence[0]
             del self.request_sequence[0]
         else:
-            assert (factor > 1),\
-                r"""Increase factor for an execution request time must be
-                over 1: received %d""" % (factor)
-            self.request_walltime = int(factor * self.request_walltime)
+            self.request_walltime = int(self.resubmit_factor *
+                                        self.request_walltime)
 
     def free_wasted_space(self):
         ''' Method for marking that the job finished leaving a gap equal to
@@ -299,7 +300,7 @@ class Runtime(object):
             # resubmit failed job unless the job doesn't permit it
             if not job.resubmit:
                 return
-            job.update_submission(job.resubmit_factor, self.__current_time)
+            job.update_submission(self.__current_time)
             self.__logger.debug(
                 r'[Timestamp %d] Resubmit failed job %s' %
                 (self.__current_time, job))
