@@ -361,7 +361,7 @@ class TestRuntime(unittest.TestCase):
             runtime = Runtime([ApplicationJob(
                 10, 0, 100, 80, 1,
                 request_sequence=[100, 120],
-                resubmit_factor=1.5)], 1.5)
+                resubmit_factor=1.5)])
             runtime(sch)
             workload = runtime.get_stats()
             for job in workload:
@@ -372,7 +372,7 @@ class TestRuntime(unittest.TestCase):
     def test_empty_workload(self):
         for SchedulerType in Scheduler.__subclasses__():
             sch = SchedulerType(System(10))
-            runtime = Runtime(set(), 1.5)
+            runtime = Runtime(set())
             runtime(sch)
             workload = runtime.get_stats()
             self.assertEqual(len(workload), 0)
@@ -388,7 +388,7 @@ class TestRuntime(unittest.TestCase):
                 start_time,
                 execution_time,
                 execution_time,
-                1)], 1.5)
+                1)])
             runtime(sch)
             workload = runtime.get_stats()
             self.assertEqual(len(workload), 1)
@@ -412,7 +412,7 @@ class TestRuntime(unittest.TestCase):
                 execution_time,
                 execution_time - 10,
                 1,
-                resubmit_factor=1.5)], 1.5)
+                resubmit_factor=1.5)])
             runtime(sch)
             workload = runtime.get_stats()
             self.assertEqual(len(workload), 1)
@@ -439,7 +439,7 @@ class TestRuntime(unittest.TestCase):
                         1000 - i * 10,
                         1000 - i * 10,
                         i))
-            runtime = Runtime(apl, 1.5)
+            runtime = Runtime(apl)
             runtime(sch)
             workload = runtime.get_stats()
             exec_order = sorted([workload[job][0][0] for job in workload])
@@ -457,7 +457,7 @@ class TestRuntime(unittest.TestCase):
             # aplication in the beginning that will make all other be in the
             # wait queue for the next schedule trigger
             apl.add(ApplicationJob(100, 0, 1000, 1000, 101))
-            runtime = Runtime(apl, 1.5)
+            runtime = Runtime(apl)
             runtime(sch)
             workload = runtime.get_stats()
             self.assertEqual(
@@ -475,7 +475,7 @@ class TestRuntime(unittest.TestCase):
             execution_time = np.random.randint(11, 100)
             apl.add(ApplicationJob(np.random.randint(51, 100),
                                    0, execution_time, execution_time, i))
-        runtime = Runtime(apl, 1.5)
+        runtime = Runtime(apl)
         runtime(sch)
         workload = runtime.get_stats()
         # get (stat_time, volume) for each job and sort by start time
@@ -499,7 +499,7 @@ class TestRuntime(unittest.TestCase):
         apl.add(fail_job)
 
         sch = OnlineScheduler(System(10))
-        runtime = Runtime(apl, 1.5)
+        runtime = Runtime(apl)
         runtime(sch)
         workload = runtime.get_stats()
         # failed job runs after its previous instance
@@ -517,7 +517,7 @@ class TestRuntime(unittest.TestCase):
         apl.add(fail_job)
 
         sch = BatchScheduler(System(10))
-        runtime = Runtime(apl, 1.5)
+        runtime = Runtime(apl)
         runtime(sch)
         workload = runtime.get_stats()
         # failed job ran last
@@ -536,7 +536,7 @@ class TestRuntime(unittest.TestCase):
                 apl.add(ApplicationJob(5, 0, 50, time, i * 2 + 1))
 
             sch = SchedulerType(System(10))
-            runtime = Runtime(apl, 1.5)
+            runtime = Runtime(apl)
             runtime(sch)
             workload = runtime.get_stats()
             # check that first job ran is id 15
@@ -564,7 +564,7 @@ class TestRuntime(unittest.TestCase):
             apl.add(ApplicationJob(5, 0, time, 50, i * 2 + 1))
         apl.add(ApplicationJob(5, 0, 10, 10, 20))
         apl.add(ApplicationJob(5, 0, 10, 10, 21))
-        runtime = Runtime(apl, 1.5)
+        runtime = Runtime(apl)
         runtime(sch)
         workload = runtime.get_stats()
         # check that all jobs are executed before timestamp 250
@@ -583,7 +583,7 @@ class TestRuntime(unittest.TestCase):
         apl.add(ApplicationJob(5, 0, 50, 60, 4))
         apl.add(ApplicationJob(5, 0, 50, 70, 5))
         apl.add(ApplicationJob(10, 0, 10, 10, 20))
-        runtime = Runtime(apl, 1.5)
+        runtime = Runtime(apl)
         runtime(sch)
         workload = runtime.get_stats()
         # check that all jobs are executed before timestamp 250
@@ -600,7 +600,7 @@ class TestRuntime(unittest.TestCase):
             apl.add(ApplicationJob(5, 1, 100, 100, i * 2 + 1))
         apl.add(ApplicationJob(10, 1, 100, 100, 20))
         apl.add(ApplicationJob(5, 10, 40, 40, 30))
-        runtime = Runtime(apl, 1.5)
+        runtime = Runtime(apl)
         runtime(sch)
         workload = runtime.get_stats()
         for job in workload:
@@ -622,7 +622,7 @@ class TestRuntime(unittest.TestCase):
             apl.add(ApplicationJob(5, 1, 100, 100, i * 2 + 1))
         apl.add(ApplicationJob(10, 1, 100, 100, 20))
         apl.add(ApplicationJob(5, 10, 40, 40, 30))
-        runtime = Runtime(apl, 1.5)
+        runtime = Runtime(apl)
         runtime(sch)
         workload = runtime.get_stats()
         for job in workload:
@@ -642,7 +642,7 @@ class TestRuntime(unittest.TestCase):
         apl.add(ApplicationJob(3, 5400, 7200, 7200, 3))
         apl.add(ApplicationJob(3, 5402, 600, 600, 4))
         apl.add(ApplicationJob(5, 5401, 5800, 5800, 6))
-        runtime = Runtime(apl, 1.5)
+        runtime = Runtime(apl)
         runtime(sch)
         workload = runtime.get_stats()
         workload_job4 = [workload[job] for job in workload
@@ -652,7 +652,7 @@ class TestRuntime(unittest.TestCase):
     def test_cascading_failures(self):
         sch = BatchScheduler(System(10))
         runtime = Runtime([ApplicationJob(5, 0, 500, 100, 0,
-                                          resubmit_factor=1.5)], 1.5)
+                                          resubmit_factor=1.5)])
         runtime(sch)
         workload = runtime.get_stats()
         for job in workload:
@@ -671,7 +671,7 @@ class TestRuntime(unittest.TestCase):
                                ApplicationJob(5, 0, 1400, 1200, 1,
                                               resubmit_factor=1.5),
                                ApplicationJob(5, 0, 700, 650, 2,
-                                              resubmit_factor=1.5)], 1.5)
+                                              resubmit_factor=1.5)])
             runtime(sch)
             workload = runtime.get_stats()
             for job in workload:
@@ -687,10 +687,10 @@ class TestSimulator(unittest.TestCase):
     def test_stats_engine(self):
         sch = BatchScheduler(System(10))
         runtime = Runtime([ApplicationJob(6, 0, 500, 1000, 0),
-                           ApplicationJob(6, 0, 1000, 2000, 0)], 1.5)
+                           ApplicationJob(6, 0, 1000, 2000, 0)])
         runtime(sch)
         workload = runtime.get_stats()
-        stats = Simulator.StatsEngine(10, 1.5)
+        stats = Simulator.StatsEngine(10)
         stats.set_execution_output(workload)
         self.assertEqual(stats.total_makespan(), 2500)
         self.assertEqual(stats.system_utilization(), 0.36)
@@ -703,12 +703,12 @@ class TestSimulator(unittest.TestCase):
     def test_create_scenario(self):
         sim = Simulator.Simulator()
         sim.logger.setLevel(logging.CRITICAL)
-        ret = sim.create_scenario("test", BatchScheduler(System(10)), 1.5)
+        ret = sim.create_scenario("test", BatchScheduler(System(10)))
         self.assertEqual(len(sim.job_list), 0)
         self.assertEqual(len(ret), 0)
         apl = [ApplicationJob(6, 0, 500, 1000, 0),
                ApplicationJob(6, 0, 500, 1000, 0)]
-        ret = sim.create_scenario("test", BatchScheduler(System(10)), 1.5,
+        ret = sim.create_scenario("test", BatchScheduler(System(10)),
                                   job_list=apl)
         self.assertEqual(len(sim.job_list), 2)
         self.assertEqual(len(ret), 1)
@@ -716,7 +716,7 @@ class TestSimulator(unittest.TestCase):
     def test_additional_jobs(self):
         sim = Simulator.Simulator()
         sim.logger.setLevel(logging.CRITICAL)
-        sim.create_scenario("test", BatchScheduler(System(10)), 1.5)
+        sim.create_scenario("test", BatchScheduler(System(10)))
         apl = [ApplicationJob(6, 0, 500, 1000, 10),
                ApplicationJob(6, 0, 500, 1000, 10)]
         ret = sim.add_applications(apl)
@@ -737,7 +737,7 @@ class TestSimulator(unittest.TestCase):
             ret = sim.run()
         apl = [ApplicationJob(6, 0, 500, 1000, 0),
                ApplicationJob(6, 0, 500, 1000, 1)]
-        sim.create_scenario("test", BatchScheduler(System(10)), 1.5,
+        sim.create_scenario("test", BatchScheduler(System(10)),
                             job_list=apl)
         ret = sim.run()
         self.assertEqual(ret, 0)
@@ -747,7 +747,7 @@ class TestSimulator(unittest.TestCase):
         apl = [ApplicationJob(6, 0, 500, 200, 0,
                               resubmit_factor=1.5),
                ApplicationJob(6, 0, 500, 1000, 1)]
-        sim.create_scenario("test", BatchScheduler(System(10)), 1.5,
+        sim.create_scenario("test", BatchScheduler(System(10)),
                             job_list=apl)
         ret = sim.run()
         self.assertEqual(sim.test_correctness(), 0)

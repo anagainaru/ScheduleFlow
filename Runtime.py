@@ -118,7 +118,7 @@ class ApplicationJob(object):
         for its consecutive "step"-th submission. First submission will use
         the provided request time. Following submissions will either use the
         values provided in the request sequence or will increase the last
-        value by the resubmission factor. '''
+        value by the job resubmission factor. '''
 
         if step == 0:
             return self.request_walltime
@@ -197,13 +197,12 @@ class Runtime(object):
     ''' Runtime class responsible for coordinating the submission and
     execution process for all the jobs in a workload '''
 
-    def __init__(self, workload, factor, logger=None):
+    def __init__(self, workload, logger=None):
         ''' Constructor method creates the job submission events for all
         jobs in the workload. It also requires a default facor value for
         increasing the request time of failed jobs (in case they do not
         contain a sequence of request walltimes '''
 
-        self.__factor = factor
         self.__current_time = 0
         self.__reserved_jobs = {}  # reserved_job[job] = time_to_start
         self.__finished_jobs = {}  # finish_jobs[job] = [(start, end)]
@@ -300,7 +299,7 @@ class Runtime(object):
             # resubmit failed job unless the job doesn't permit it
             if not job.resubmit:
                 return
-            job.update_submission(self.__factor, self.__current_time)
+            job.update_submission(job.resubmit_factor, self.__current_time)
             self.__logger.debug(
                 r'[Timestamp %d] Resubmit failed job %s' %
                 (self.__current_time, job))
