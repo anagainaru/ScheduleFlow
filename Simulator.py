@@ -65,8 +65,7 @@ class StatsEngine():
                              self.__execution_log[job][i][0] for i
                              in range(len(self.__execution_log[job])-1)])
             request = job.get_request_time(
-                          len(self.__execution_log[job]) - 1,
-                          self.__factor)
+                          len(self.__execution_log[job]) - 1)
             apl_total = 1. * job.walltime / (apl_total + request)
             total += apl_total
         return total / max(1, len(self.__execution_log))
@@ -136,7 +135,7 @@ class Simulator():
                                  self.__factor)
         if self.__generate_gif:
             self.__viz_handler = VizEngine.VizualizationEngine(
-                    self.__system.get_total_nodes(), self.__factor)
+                    self.__system.get_total_nodes())
 
         return self.add_applications(job_list)
 
@@ -177,8 +176,7 @@ class Simulator():
             if not math.isclose(end-start, requested_time,
                                 rel_tol=1e-3):
                 return False
-            requested_time = job.get_request_time(
-                i + 1, resubmission_factor=self.__factor)
+            requested_time = job.get_request_time(i + 1)
 
         # check len of succesful execution (last)
         start = execution_list[len(execution_list)-1][0]

@@ -85,15 +85,17 @@ class TestApplicationJob(unittest.TestCase):
         apl = ApplicationJob(10, 0, 200, 100, 1,
                              resubmit_factor=1.5)
         self.assertEqual(apl.get_request_time(0), 100)
-        self.assertEqual(apl.get_request_time(2, 1.5), 225)
+        self.assertEqual(apl.get_request_time(2), 225)
 
     def test_get_request_complex(self):
         apl = ApplicationJob(10, 0, 200, 100, 1,
                              request_sequence=[200, 300],
                              resubmit_factor=1.5)
         self.assertEqual(apl.get_request_time(1), 200)
+        self.assertEqual(apl.get_request_time(4), 675)
+        apl = ApplicationJob(10, 0, 200, 100, 1,
+                             request_sequence=[200, 300])
         self.assertEqual(apl.get_request_time(4), 300)
-        self.assertEqual(apl.get_request_time(4, 1.5), 675)
 
     def test_sequence_overwrite(self):
         apl = ApplicationJob(10, 0, 200, 100, 1,
