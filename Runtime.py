@@ -52,17 +52,17 @@ class JobChangeType(IntEnum):
 class ApplicationJob(object):
     ''' Job class containing the properties of the running instance '''
 
-    def __init__(self, nodes, submission_time, wall,
-                 rwall, job_id, request_sequence=[],
+    def __init__(self, nodes, submission_time, walltime,
+                 requested_walltimes, job_id, request_sequence=[],
                  resubmit_factor=-1):
         ''' Constructor method takes the number of nodes required by the job,
         the submission time, the actual walltime, the requested walltime, a
         job id and a sequence of request times in case the job fails '''
 
-        assert (wall > 0),\
+        assert (walltime > 0),\
             r'Application walltime must be positive: received %3.1f' % (
             wall)
-        assert (rwall > 0),\
+        assert (all(i > 0 for i in requested_walltimes)),\
             r'Job requested walltime must be > 0 : received %3.1f' % (rwall)
         assert (submission_time >= 0),\
             r'Job submission time must be > 0 : received %3.1f' % (
@@ -70,19 +70,16 @@ class ApplicationJob(object):
         assert (nodes > 0),\
             r'Number of nodes for a job must be > 0 : received %d' % (
             nodes)
-        assert (all(request_sequence[i] < request_sequence[i + 1] for i in
-                range(len(request_sequence) - 1))),\
+        assert (all(requested_walltimes[i] < requested_walltimes[i + 1] for i in
+                range(len(requested_walltimes) - 1))),\
             r'Request time sequence is not sorted in increasing order'
-        if len(request_sequence) > 0:
-            assert (request_sequence[0] > rwall),\
-                r'Request time sequence is not sorted in increasing order'
 
         self.nodes = nodes
         self.submission_time = submission_time
-        self.walltime = wall
-        self.request_walltime = rwall
+        self.walltime = walltime
+        self.request_walltime = requested_walltimes[0]
         self.job_id = job_id
-        self.request_sequence = request_sequence[:]
+        self.request_sequence = request_sequence[1:]
         if resubmit_factor == -1:
             self.resubmit = False
         else:
