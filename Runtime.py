@@ -61,9 +61,10 @@ class ApplicationJob(object):
 
         assert (walltime > 0),\
             r'Application walltime must be positive: received %3.1f' % (
-            wall)
+            walltime)
         assert (all(i > 0 for i in requested_walltimes)),\
-            r'Job requested walltime must be > 0 : received %3.1f' % (rwall)
+            r'Job requested walltime must be > 0 : received %s' % (
+                    requested_walltimes)
         assert (submission_time >= 0),\
             r'Job submission time must be > 0 : received %3.1f' % (
             submission_time)
@@ -79,7 +80,7 @@ class ApplicationJob(object):
         self.walltime = walltime
         self.request_walltime = requested_walltimes[0]
         self.job_id = job_id
-        self.request_sequence = request_sequence[1:]
+        self.request_sequence = requested_walltimes[1:]
         if resubmit_factor == -1:
             self.resubmit = False
             self.resubmit_factor = 1
