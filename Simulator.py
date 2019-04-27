@@ -139,22 +139,19 @@ class Simulator():
         return self.__execution_log
 
     def add_applications(self, job_list):
-        change_log = []
         for new_job in job_list:
             if new_job in self.job_list:
                 self.logger.warning("Job %s is already included "
                                     "in the sumlation." %(new_job))
                 continue
             job_id_list = [job.job_id for job in self.job_list]
-            if new_job.job_id in job_id_list:
-                new_id = max(job_id_list) + 1 #len(change_log) + 1
-                self.logger.warning("Jobs cannot share the same ID. "
-                                    "Updated job %d with ID %d." %
-                                    (new_job.job_id, new_id))
-                change_log.append((new_job.job_id, new_id))
-                new_job.job_id = new_id
+            if new_job.job_id == -1 or new_job.job_id in job_id_list:
+                newid = len(self.job_list)
+                if len(job_id_list) > newid:
+                    newid = max(job_id_list) + 1
+                new_job.job_id = newid 
             self.job_list.append(new_job)
-        return change_log
+        return len(self.job_list)
 
     def __sanity_check_job_execution(self, execution_list, job):
         # The execution list: [(st, end)]

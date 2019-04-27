@@ -31,9 +31,8 @@ if __name__ == '__main__':
         job_list.add(ApplicationJob(processing_units,
                                     submission_time,
                                     execution_time,
-                                    [request_time],
-                                    i))
-    job_list.add(ApplicationJob(np.random.randint(9, 11), 0, 100, [90], 10,
+                                    [request_time]))
+    job_list.add(ApplicationJob(np.random.randint(9, 11), 0, 100, [90, 135],
                                 resubmit_factor=1.5))
 
     print("Scenario : makespan : utilization : average_job_utilization : "

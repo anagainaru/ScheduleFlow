@@ -53,7 +53,7 @@ class ApplicationJob(object):
     ''' Job class containing the properties of the running instance '''
 
     def __init__(self, nodes, submission_time, walltime,
-                 requested_walltimes, job_id, resubmit_factor=-1):
+                 requested_walltimes, resubmit_factor=-1):
         ''' Constructor method takes the number of nodes required by the job,
         the submission time, the actual walltime, the requested walltime, a
         job id and a sequence of request times in case the job fails '''
@@ -78,7 +78,7 @@ class ApplicationJob(object):
         self.submission_time = submission_time
         self.walltime = walltime
         self.request_walltime = requested_walltimes[0]
-        self.job_id = job_id
+        self.job_id = -1
         self.request_sequence = requested_walltimes[1:]
         if resubmit_factor == -1:
             self.resubmit = False
