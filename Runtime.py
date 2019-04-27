@@ -300,6 +300,7 @@ class Runtime(object):
             # resubmit failed job unless the job doesn't permit it
             if not job.resubmit:
                 return
+
             job.update_submission(self.__current_time)
             self.__logger.debug(
                 r'[Timestamp %d] Resubmit failed job %s' %
