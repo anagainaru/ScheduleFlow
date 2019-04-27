@@ -160,13 +160,13 @@ class ApplicationJob(object):
                                      self.request_walltime))
 
         self.submission_time = submission_time
-        # if factor is a series of request values, just use the first value
         if len(self.request_sequence) > 0:
             self.request_walltime = self.request_sequence[0]
             del self.request_sequence[0]
         else:
             self.request_walltime = int(self.resubmit_factor *
                                         self.request_walltime)
+        print(self)
 
     def free_wasted_space(self):
         ''' Method for marking that the job finished leaving a gap equal to
@@ -293,11 +293,8 @@ class Runtime(object):
         self.__logger.info(r'[Timestamp %d] Stop job %s' % (
             self.__current_time, job))
         # check if the job finished successfully or it was a failure
-        if job.walltime > job.request_walltime:
+        if job.walltime > job.request_walltime and job.resubmit:
             # resubmit failed job unless the job doesn't permit it
-            if not job.resubmit:
-                return
-
             job.update_submission(self.__current_time)
             self.__logger.debug(
                 r'[Timestamp %d] Resubmit failed job %s' %
