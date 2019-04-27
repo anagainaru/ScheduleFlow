@@ -97,14 +97,13 @@ class TexGenerator():
 
 
 class VizualizationEngine():
-    def __init__(self, procs, resubmission_factor, execution_log=[],
-                 horizontal_ax_limit=0, keep_intermediate_pdf=False):
+    def __init__(self, procs, execution_log=[], horizontal_ax_limit=0,
+                 keep_intermediate_pdf=False):
         self.__scaley = 150 / procs
         self.__limitx = horizontal_ax_limit
         self.__execution_log = execution_log
         self.__keep_pdf = keep_intermediate_pdf
         self.__set_scalex(execution_log)
-        self.__factor = resubmission_factor
 
         # check if pdflatex and convert from ImageMagik are installed
         assert (find_executable('pdflatex')), \
@@ -188,8 +187,7 @@ class VizualizationEngine():
             run_list.append((start, end, job.nodes,
                              requested_time, job.job_id,
                              i + 1))
-            requested_time = job.get_request_time(
-                    i + 1, resubmission_factor=self.__factor)
+            requested_time = job.get_request_time(i + 1)
 
         # check succesful execution (last run)
         start = execution_list[len(execution_list) - 1][0]

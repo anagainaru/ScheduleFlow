@@ -5,11 +5,10 @@ import Runtime
 
 
 class StatsEngine():
-    def __init__(self, total_nodes, resubmission_factor):
+    def __init__(self, total_nodes):
         self.__execution_log = {}
         self.__makespan = -1
         self.__total_nodes = total_nodes
-        self.__factor = resubmission_factor
 
     def __str__(self):
         if len(self.__execution_log) == 0:
@@ -65,8 +64,7 @@ class StatsEngine():
                              self.__execution_log[job][i][0] for i
                              in range(len(self.__execution_log[job])-1)])
             request = job.get_request_time(
-                          len(self.__execution_log[job]) - 1,
-                          self.__factor)
+                          len(self.__execution_log[job]) - 1)
             apl_total = 1. * job.walltime / (apl_total + request)
             total += apl_total
         return total / max(1, len(self.__execution_log))
@@ -123,20 +121,17 @@ class Simulator():
                                     "loops to 1.")
             self.__loops = 1
 
-    def create_scenario(self, scenario_name, scheduler,
-                        resubmission_factor, job_list=[]):
+    def create_scenario(self, scenario_name, scheduler, job_list=[]):
         self.__scheduler = scheduler
         self.__system = scheduler.system
         self.job_list = []
         self.__execution_log = {}
         self.__scenario_name = scenario_name
-        self.__factor = resubmission_factor
 
-        self.stats = StatsEngine(self.__system.get_total_nodes(),
-                                 self.__factor)
+        self.stats = StatsEngine(self.__system.get_total_nodes())
         if self.__generate_gif:
             self.__viz_handler = VizEngine.VizualizationEngine(
-                    self.__system.get_total_nodes(), self.__factor)
+                    self.__system.get_total_nodes())
 
         return self.add_applications(job_list)
 
@@ -177,8 +172,7 @@ class Simulator():
             if not math.isclose(end-start, requested_time,
                                 rel_tol=1e-3):
                 return False
-            requested_time = job.get_request_time(
-                i + 1, resubmission_factor=self.__factor)
+            requested_time = job.get_request_time(i + 1)
 
         # check len of succesful execution (last)
         start = execution_list[len(execution_list)-1][0]
@@ -240,7 +234,7 @@ class Simulator():
         assert (len(self.job_list)>0), "Cannot run an empty scenario"
         check = 0
         for i in range(self.__loops):
-            runtime = Runtime.Runtime(self.job_list, self.__factor)
+            runtime = Runtime.Runtime(self.job_list)
             runtime(self.__scheduler)
             self.__execution_log = runtime.get_stats()
 

@@ -82,7 +82,11 @@ class ApplicationJob(object):
         self.request_sequence = request_sequence[1:]
         if resubmit_factor == -1:
             self.resubmit = False
+            self.resubmit_factor = 1
         else:
+            assert (resubmit_factor > 1),\
+                r"""Increase factor for an execution request time must be
+                over 1: received %d""" % (resubmit_factor)
             self.resubmit = True
             self.resubmit_factor = resubmit_factor
 
@@ -109,24 +113,24 @@ class ApplicationJob(object):
     def __lt__(self, apl):
         return self.job_id < apl.job_id
 
-    def get_request_time(self, step, resubmission_factor=1):
+    def get_request_time(self, step):
         ''' Method for descovering the request time that the job will use
         for its consecutive "step"-th submission. First submission will use
         the provided request time. Following submissions will either use the
         values provided in the request sequence or will increase the last
-        value by the resubmission factor. '''
+        value by the job resubmission factor. '''
 
         if step == 0:
             return self.request_walltime
         if len(self.request_sequence) == 0:
-            return self.request_walltime * pow(resubmission_factor, step)
+            return self.request_walltime * pow(self.resubmit_factor, step)
 
         if len(self.request_sequence) > step-1:
             return self.request_sequence[step-1]
 
         seq_len = len(self.request_sequence)
         return self.request_sequence[seq_len - 1] * pow(
-            resubmission_factor, step - seq_len)
+            self.resubmit_factor, step - seq_len)
 
     def overwrite_request_sequence(self, request_sequence):
         ''' Method for overwriting the sequence of future walltime
@@ -143,7 +147,7 @@ class ApplicationJob(object):
         self.__execution_log.append((JobChangeType.RequestSequenceOverwrite,
                                      self.request_sequence[:]))
 
-    def update_submission(self, factor, submission_time):
+    def update_submission(self, submission_time):
         ''' Method to update submission information including
         the submission time and the walltime request '''
 
@@ -161,10 +165,8 @@ class ApplicationJob(object):
             self.request_walltime = self.request_sequence[0]
             del self.request_sequence[0]
         else:
-            assert (factor > 1),\
-                r"""Increase factor for an execution request time must be
-                over 1: received %d""" % (factor)
-            self.request_walltime = int(factor * self.request_walltime)
+            self.request_walltime = int(self.resubmit_factor *
+                                        self.request_walltime)
 
     def free_wasted_space(self):
         ''' Method for marking that the job finished leaving a gap equal to
@@ -193,13 +195,12 @@ class Runtime(object):
     ''' Runtime class responsible for coordinating the submission and
     execution process for all the jobs in a workload '''
 
-    def __init__(self, workload, factor, logger=None):
+    def __init__(self, workload, logger=None):
         ''' Constructor method creates the job submission events for all
         jobs in the workload. It also requires a default facor value for
         increasing the request time of failed jobs (in case they do not
         contain a sequence of request walltimes '''
 
-        self.__factor = factor
         self.__current_time = 0
         self.__reserved_jobs = {}  # reserved_job[job] = time_to_start
         self.__finished_jobs = {}  # finish_jobs[job] = [(start, end)]
@@ -296,7 +297,8 @@ class Runtime(object):
             # resubmit failed job unless the job doesn't permit it
             if not job.resubmit:
                 return
-            job.update_submission(self.__factor, self.__current_time)
+
+            job.update_submission(self.__current_time)
             self.__logger.debug(
                 r'[Timestamp %d] Resubmit failed job %s' %
                 (self.__current_time, job))
