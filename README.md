@@ -6,11 +6,14 @@
 [![Codefresh build status]( https://g.codefresh.io/api/badges/pipeline/anagainaru_marketplace/anagainaru%2FSchedulerSimulator%2FSchedulerSimulator?type=cf-1)]( https://g.codefresh.io/public/accounts/anagainaru_marketplace/pipelines/anagainaru/SchedulerSimulator/SchedulerSimulator)
 [![codecov](https://codecov.io/gh/anagainaru/SchedulerSimulator/branch/master/graph/badge.svg)](https://codecov.io/gh/anagainaru/SchedulerSimulator)
 
-### Usage
+The ScheduleFlow software consists of a series of scripts and classes that offer an API allowing users to create simulation scenarios for online and reservation-based batch schedulers.
+For details on the API or the internals of the Simulator, visit the [wiki](https://github.com/anagainaru/SchedulerSimulator/wiki)
+
+### Example
 
 `python run_simple_example.py`
 
-<sup>* Tested with python 3</sup>
+<sup>* Tested with python 3.7</sup>
 
 **Requirements** 
 
