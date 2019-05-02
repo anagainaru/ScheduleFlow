@@ -24,12 +24,16 @@ api/.style={rectangle, draw, fill={rgb:red,96;green,39;blue,73}, inner sep=5pt, 
 user/.style={rectangle, draw, fill={rgb:red,255;green,192;blue,0}, inner sep=5pt, text width=4.5cm, text badly centered, minimum height=0.2cm, text=white, font=\sffamily}]
 
 % User
-\node [user] (user)  at (0, 0) {User};
-\node [workflow, below=0 of user] (user-desc) {create list of Application(s)\\
-initialize System/Scheduler};
-\node [workflow, below=0 of user-desc] (user-create) {run Simulator scenario};
+\node [user] (user) {User};
+\node [workflow, below=0 of user] (user-desc) {Create list of Application(s)\\
+Initialize System/Scheduler \\ Create Simulator scenario};
+\node [workflow, below=0 of user-desc] (user-create) {Run Simulator scenario};
 
-\node [api, right=1cm of user-create] (simulator) {Runtime};
+\node [internal, left=1cm of user-create] (runtime) {Simulator};
+\node [workflow, below=0 of runtime] (runtime-init) {Create runtime\\Run simulation};
+\node [workflow, below=0 of runtime-init] {Generate statistics\\Generate animation};
+
+\node [api, below=0.3cm of user-create] (simulator) {Runtime};
 \node [workflow, below=0 of simulator] (sim-init) {init: create submit events for all jobs in the initial list};
 \node [workflow, below=0 of sim-init] (sim-trigger) {if time for new schedule:\\ \quad - trigger a schedule event};
 \node [workflow, below=0 of sim-trigger] (sim-submission) {next event is \textbf{job\_submission}};
@@ -51,11 +55,13 @@ initialize System/Scheduler};
 %%%%%%%%%%%%%%%%
 
 \path[->,thick] 
-(user-create) edge (simulator)
+(user-create) edge (runtime)
 (eventq) edge node[events, auto] (evq) {get events} (simulator)
 (sim-submission) edge (sch-add)
 (sch-allocate) edge (system)
 (sch-clear) edge (system);
+
+\draw[->,thick] (runtime-init.east)+(0,-1mm) -- (simulator.west);
 
 \draw[->,thick] (sim-trigger.east) -| node[events, pos=0.25,below] (tr_ev) {trigger\_schedule} ++(2.5,0) -- ++(0,1.55) -- (eventq.south)+(-9.4mm,0);	
 \draw[->,thick] (sim-start.east)+(0,-2mm) -| node[events, pos=0.25,below] {job\_end event} (eventq.south);
