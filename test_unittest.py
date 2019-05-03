@@ -76,53 +76,53 @@ class TestSystem(unittest.TestCase):
 
 
 # test the application class
-class TestApplicationJob(unittest.TestCase):
+class TestApplication(unittest.TestCase):
     def test_get_request_time(self):
-        apl = ScheduleFlow.ApplicationJob(10, 0, 200, [100],
-                                          resubmit_factor=1.5)
-        self.assertEqual(apl.get_request_time(0), 100)
-        self.assertEqual(apl.get_request_time(2), 225)
+        job_list = ScheduleFlow.Application(10, 0, 200, [100],
+                                            resubmit_factor=1.5)
+        self.assertEqual(job_list.get_request_time(0), 100)
+        self.assertEqual(job_list.get_request_time(2), 225)
 
     def test_get_request_complex(self):
-        apl = ScheduleFlow.ApplicationJob(10, 0, 200, [100, 200, 300],
-                                          resubmit_factor=1.5)
-        self.assertEqual(apl.get_request_time(1), 200)
-        self.assertEqual(apl.get_request_time(4), 675)
-        apl = ScheduleFlow.ApplicationJob(10, 0, 200, [100, 200, 300])
-        self.assertEqual(apl.get_request_time(4), 300)
+        job_list = ScheduleFlow.Application(10, 0, 200, [100, 200, 300],
+                                            resubmit_factor=1.5)
+        self.assertEqual(job_list.get_request_time(1), 200)
+        self.assertEqual(job_list.get_request_time(4), 675)
+        job_list = ScheduleFlow.Application(10, 0, 200, [100, 200, 300])
+        self.assertEqual(job_list.get_request_time(4), 300)
 
     def test_sequence_overwrite(self):
-        apl = ScheduleFlow.ApplicationJob(10, 0, 200, [100],
-                                          resubmit_factor=1.5)
+        job_list = ScheduleFlow.Application(10, 0, 200, [100],
+                                            resubmit_factor=1.5)
         with self.assertRaises(AssertionError):
-            apl.overwrite_request_sequence([100, 150])
+            job_list.overwrite_request_sequence([100, 150])
         with self.assertRaises(AssertionError):
-            apl.overwrite_request_sequence([200, 150])
-        apl.overwrite_request_sequence([190, 200])
-        self.assertEqual(apl.get_request_time(1), 190)
+            job_list.overwrite_request_sequence([200, 150])
+        job_list.overwrite_request_sequence([190, 200])
+        self.assertEqual(job_list.get_request_time(1), 190)
 
     def test_invalid_job(self):
         with self.assertRaises(AssertionError):
-            ScheduleFlow.ApplicationJob(0, 0, 10, [11])
+            ScheduleFlow.Application(0, 0, 10, [11])
         with self.assertRaises(AssertionError):
-            ScheduleFlow.ApplicationJob(10, 0, 0, [11])
+            ScheduleFlow.Application(10, 0, 0, [11])
         with self.assertRaises(AssertionError):
-            ScheduleFlow.ApplicationJob(10, 0, 10, [0])
+            ScheduleFlow.Application(10, 0, 10, [0])
         with self.assertRaises(AssertionError):
-            ScheduleFlow.ApplicationJob(10, -2, 10, [11])
+            ScheduleFlow.Application(10, -2, 10, [11])
         with self.assertRaises(AssertionError):
-            ScheduleFlow.ApplicationJob(10, 0, 10, [7, 12, 10])
+            ScheduleFlow.Application(10, 0, 10, [7, 12, 10])
         with self.assertRaises(AssertionError):
-            ScheduleFlow.ApplicationJob(10, 0, 10, [])
+            ScheduleFlow.Application(10, 0, 10, [])
 
     def test_invalid_factor(self):
         with self.assertRaises(AssertionError):
-            ap = ScheduleFlow.ApplicationJob(7, 5, 10, [11],
-                                             resubmit_factor=0.2)
+            ap = ScheduleFlow.Application(7, 5, 10, [11],
+                                          resubmit_factor=0.2)
 
     def test_request_list_factor(self):
-        ap = ScheduleFlow.ApplicationJob(7, 5, 100, [70, 80, 90],
-                                         resubmit_factor=2)
+        ap = ScheduleFlow.Application(7, 5, 100, [70, 80, 90],
+                                      resubmit_factor=2)
         ap.update_submission(0)
         self.assertEqual(ap.request_walltime, 80)
         ap.update_submission(0)
@@ -136,12 +136,12 @@ class TestScheduler(unittest.TestCase):
     def test_invalid_stop(self):
         sch = ScheduleFlow.Scheduler(ScheduleFlow.System(10))
         with self.assertRaises(AssertionError):
-            sch.clear_job(ScheduleFlow.ApplicationJob(7, 5, 10, [11]))
+            sch.clear_job(ScheduleFlow.Application(7, 5, 10, [11]))
 
     def test_invalid_jobs(self):
         sch = ScheduleFlow.Scheduler(ScheduleFlow.System(10))
         with self.assertRaises(AssertionError):
-            sch.submit_job(ScheduleFlow.ApplicationJob(20, 5, 10, [11]))
+            sch.submit_job(ScheduleFlow.Application(20, 5, 10, [11]))
 
     def test_empty_schedule(self):
         for SchedulerType in ScheduleFlow.Scheduler.__subclasses__():
@@ -153,8 +153,8 @@ class TestScheduler(unittest.TestCase):
         sch = ScheduleFlow.Scheduler(ScheduleFlow.System(10))
         reservation = {}
         for i in range(5):
-            reservation[ScheduleFlow.ApplicationJob(5, 0, 50, [50])] = i * 50
-            reservation[ScheduleFlow.ApplicationJob(5, 0, 50, [50])] = i * 50
+            reservation[ScheduleFlow.Application(5, 0, 50, [50])] = i * 50
+            reservation[ScheduleFlow.Application(5, 0, 50, [50])] = i * 50
         gap_list = sch.create_gaps_list(reservation, 0)
         self.assertEqual(len(gap_list), 0)
 
@@ -163,12 +163,12 @@ class TestScheduler(unittest.TestCase):
         np.random.seed(0)
         reservation = {}
         for i in list(range(5)) + list(range(6, 10)):
-            reservation[ScheduleFlow.ApplicationJob(5, 0, 50, [50])] = i * 50
-            reservation[ScheduleFlow.ApplicationJob(5, 0, 50, [50])] = i * 50
+            reservation[ScheduleFlow.Application(5, 0, 50, [50])] = i * 50
+            reservation[ScheduleFlow.Application(5, 0, 50, [50])] = i * 50
         # add random number of one node jobs with execution times <= 50
         num_jobs = np.random.randint(1, 10)
         for i in range(num_jobs):
-            reservation[ScheduleFlow.ApplicationJob(
+            reservation[ScheduleFlow.Application(
                 1, 0, 50 - i, [50 - i])] = 250
         gap_list = sch.create_gaps_list(reservation, 0)
         for i in range(num_jobs):
@@ -185,7 +185,7 @@ class TestOnlineScheduler(unittest.TestCase):
         for i in range(10):
             exect = np.random.randint(10, 100)
             max_exec = exect if max_exec < exect else max_exec
-            sch.submit_job(ScheduleFlow.ApplicationJob(51, 0, exect, [exect]))
+            sch.submit_job(ScheduleFlow.Application(51, 0, exect, [exect]))
         ap_list = sch.trigger_schedule()
         self.assertNotEqual(len(ap_list), 0)
         self.assertEqual(ap_list[0][1].request_walltime, max_exec)
@@ -197,7 +197,7 @@ class TestOnlineScheduler(unittest.TestCase):
         for i in range(10):
             procs = np.random.randint(10, 100)
             max_procs = procs if max_procs < procs else max_procs
-            sch.submit_job(ScheduleFlow.ApplicationJob(procs, 0, 10, [10]))
+            sch.submit_job(ScheduleFlow.Application(procs, 0, 10, [10]))
 
         ap_list = sch.trigger_schedule()
         self.assertNotEqual(len(ap_list), 0)
@@ -209,7 +209,7 @@ class TestOnlineScheduler(unittest.TestCase):
         num_jobs = np.random.randint(1, 101)
         for i in range(num_jobs):
             exect = np.random.randint(10, 100)
-            sch.submit_job(ScheduleFlow.ApplicationJob(
+            sch.submit_job(ScheduleFlow.Application(
                 1, np.random.randint(0, 100), exect, [exect]))
         ap_list = sch.trigger_schedule()
         self.assertEqual(len(ap_list), num_jobs)
@@ -218,43 +218,43 @@ class TestOnlineScheduler(unittest.TestCase):
         sch = ScheduleFlow.OnlineScheduler(ScheduleFlow.System(10))
         reservation = {}
         for i in range(5):
-            reservation[ScheduleFlow.ApplicationJob(5, 0, 50, [50])] = i * 50
-            reservation[ScheduleFlow.ApplicationJob(5, 0, 50, [50])] = i * 50
+            reservation[ScheduleFlow.Application(5, 0, 50, [50])] = i * 50
+            reservation[ScheduleFlow.Application(5, 0, 50, [50])] = i * 50
         ret = sch.fit_job_in_schedule(
-            ScheduleFlow.ApplicationJob(1, 0, 50, [50]), reservation, 0)
+            ScheduleFlow.Application(1, 0, 50, [50]), reservation, 0)
         self.assertEqual(ret, -1)
 
     def test_fit_middle(self):
         sch = ScheduleFlow.OnlineScheduler(ScheduleFlow.System(10))
         reservation = {}
         for i in list(range(5)) + list(range(6, 10)):
-            reservation[ScheduleFlow.ApplicationJob(5, 0, 50, [50])] = i * 50
-            reservation[ScheduleFlow.ApplicationJob(5, 0, 50, [50])] = i * 50
+            reservation[ScheduleFlow.Application(5, 0, 50, [50])] = i * 50
+            reservation[ScheduleFlow.Application(5, 0, 50, [50])] = i * 50
         # add random number of one node jobs ( < 8 total jobs )
         # with execution times <= 50
         num_jobs = np.random.randint(1, 8)
         for i in range(num_jobs):
-            reservation[ScheduleFlow.ApplicationJob(
+            reservation[ScheduleFlow.Application(
                 1, 0, 50 - i, [50 - i])] = 250
         # try to fit an application of execution time = 40 and 2 nodes whose
         # submission time is 5 over when the gap is available
         ret = sch.fit_job_in_schedule(
-            ScheduleFlow.ApplicationJob(2, 255, 40, [40]), reservation, 0)
+            ScheduleFlow.Application(2, 255, 40, [40]), reservation, 0)
         self.assertEqual(ret, 255)
 
     def test_fit_end(self):
         sch = ScheduleFlow.OnlineScheduler(ScheduleFlow.System(10))
         reservation = {}
         for i in range(5):
-            reservation[ScheduleFlow.ApplicationJob(5, 0, 50, [50])] = i * 50
-            reservation[ScheduleFlow.ApplicationJob(5, 0, 50, [50])] = i * 50
-        reservation[ScheduleFlow.ApplicationJob(4, 0, 10, [10])] = 250
+            reservation[ScheduleFlow.Application(5, 0, 50, [50])] = i * 50
+            reservation[ScheduleFlow.Application(5, 0, 50, [50])] = i * 50
+        reservation[ScheduleFlow.Application(4, 0, 10, [10])] = 250
         # fit a job that is larger than the gap at the end
         ret = sch.fit_job_in_schedule(
-            ScheduleFlow.ApplicationJob(6, 255, 50, [50]), reservation, 0)
+            ScheduleFlow.Application(6, 255, 50, [50]), reservation, 0)
         self.assertEqual(ret, 255)
         ret = sch.fit_job_in_schedule(
-            ScheduleFlow.ApplicationJob(6, 265, 50, [50]), reservation, 0)
+            ScheduleFlow.Application(6, 265, 50, [50]), reservation, 0)
         self.assertEqual(ret, -1)
 
 
@@ -264,25 +264,25 @@ class TestBatchScheduler(unittest.TestCase):
         sch = ScheduleFlow.BatchScheduler(ScheduleFlow.System(10), 15)
         reservation = {}
         for i in range(5):
-            reservation[ScheduleFlow.ApplicationJob(5, 0, 50, [50])] = i * 50
-            reservation[ScheduleFlow.ApplicationJob(5, 0, 50, [50])] = i * 50
-        reservation[ScheduleFlow.ApplicationJob(4, 0, 10, [10])] = 250
+            reservation[ScheduleFlow.Application(5, 0, 50, [50])] = i * 50
+            reservation[ScheduleFlow.Application(5, 0, 50, [50])] = i * 50
+        reservation[ScheduleFlow.Application(4, 0, 10, [10])] = 250
         # fit a job that is larger than the gap at the end
         ret = sch.fit_job_in_schedule(
-            ScheduleFlow.ApplicationJob(6, 0, 50, [50]), reservation, 0)
+            ScheduleFlow.Application(6, 0, 50, [50]), reservation, 0)
         self.assertEqual(ret, -1)
 
     def test_fit_end(self):
         sch = ScheduleFlow.BatchScheduler(ScheduleFlow.System(10), 15)
         reservation = {}
         for i in range(5):
-            reservation[ScheduleFlow.ApplicationJob(5, 0, 50, [50])] = i * 50
-            reservation[ScheduleFlow.ApplicationJob(5, 0, 50, [50])] = i * 50
-        reservation[ScheduleFlow.ApplicationJob(4, 0, 10, [10])] = 250
+            reservation[ScheduleFlow.Application(5, 0, 50, [50])] = i * 50
+            reservation[ScheduleFlow.Application(5, 0, 50, [50])] = i * 50
+        reservation[ScheduleFlow.Application(4, 0, 10, [10])] = 250
         # fit a job that is larger than the gap at the end (submission time is
         # 5 over when the gap is available)
         ret = sch.fit_job_in_schedule(
-            ScheduleFlow.ApplicationJob(6, 255, 5, [5]), reservation, 0)
+            ScheduleFlow.Application(6, 255, 5, [5]), reservation, 0)
         self.assertEqual(ret, 255)
 
     def test_one_node_jobs(self):
@@ -291,7 +291,7 @@ class TestBatchScheduler(unittest.TestCase):
         num_jobs = np.random.randint(1, 101)
         for i in range(num_jobs):
             exect = np.random.randint(10, 100)
-            sch.submit_job(ScheduleFlow.ApplicationJob(
+            sch.submit_job(ScheduleFlow.Application(
                 1, np.random.randint(0, 100), exect, [exect]))
         ap_list = sch.trigger_schedule()
         self.assertEqual(len(ap_list), num_jobs)
@@ -305,7 +305,7 @@ class TestBatchScheduler(unittest.TestCase):
         for i in range(num_jobs):
             exect = np.random.randint(10, 100)
             procs = np.random.randint(6, 10)
-            sch.submit_job(ScheduleFlow.ApplicationJob(
+            sch.submit_job(ScheduleFlow.Application(
                 procs, 0, exect, [exect]))
         ap_list = sch.trigger_schedule()  # ap_list = (ts, job)
         ap_list.sort()
@@ -328,7 +328,7 @@ class TestBatchScheduler(unittest.TestCase):
         for i in range(num_jobs):
             exect = np.random.randint(10, 100)
             procs = np.random.randint(6, 10)
-            sch.submit_job(ScheduleFlow.ApplicationJob(
+            sch.submit_job(ScheduleFlow.Application(
                 procs, np.random.randint(0, 100), exect, [exect]))
         ap_list = sch.trigger_schedule()
         self.assertTrue(len(ap_list), 10)
@@ -340,11 +340,11 @@ class TestBatchScheduler(unittest.TestCase):
         for i in range(num_jobs):
             exect = np.random.randint(10, 100)
             procs = np.random.randint(6, 9)
-            sch.submit_job(ScheduleFlow.ApplicationJob(
+            sch.submit_job(ScheduleFlow.Application(
                 procs, np.random.randint(0, 100), exect, [exect]))
         # add a small job that will fit inside the schedule
         # of the first 10 jobs
-        sch.submit_job(ScheduleFlow.ApplicationJob(
+        sch.submit_job(ScheduleFlow.Application(
             1, np.random.randint(0, 100), 10, [10]))
         ap_list = sch.trigger_schedule()
         self.assertTrue(len(ap_list), 11)
@@ -355,7 +355,7 @@ class TestRuntime(unittest.TestCase):
     def test_restore_job_default(self):
         for SchedulerType in ScheduleFlow.Scheduler.__subclasses__():
             sch = SchedulerType(ScheduleFlow.System(10))
-            runtime = Runtime([ScheduleFlow.ApplicationJob(
+            runtime = Runtime([ScheduleFlow.Application(
                 10, 0, 100, [80, 100, 120],
                 resubmit_factor=1.5)])
             runtime(sch)
@@ -379,7 +379,7 @@ class TestRuntime(unittest.TestCase):
             np.random.seed(0)
             start_time = np.random.randint(1, 100)
             execution_time = np.random.randint(1, 100)
-            runtime = Runtime([ScheduleFlow.ApplicationJob(
+            runtime = Runtime([ScheduleFlow.Application(
                 7,
                 start_time,
                 execution_time,
@@ -401,7 +401,7 @@ class TestRuntime(unittest.TestCase):
             np.random.seed(0)
             start_time = np.random.randint(1, 100)
             execution_time = np.random.randint(11, 100)
-            runtime = Runtime([ScheduleFlow.ApplicationJob(
+            runtime = Runtime([ScheduleFlow.Application(
                 7,
                 start_time,
                 execution_time,
@@ -424,15 +424,15 @@ class TestRuntime(unittest.TestCase):
     def test_many_one_node_jobs(self):
         for SchedulerType in ScheduleFlow.Scheduler.__subclasses__():
             sch = SchedulerType(ScheduleFlow.System(100))
-            apl = set()
+            job_list = set()
             for i in range(100):
-                apl.add(
-                    ScheduleFlow.ApplicationJob(
+                job_list.add(
+                    ScheduleFlow.Application(
                         1,
                         i * 10,
                         1000 - i * 10,
                         [1000 - i * 10]))
-            runtime = Runtime(apl)
+            runtime = Runtime(job_list)
             runtime(sch)
             workload = runtime.get_stats()
             exec_order = sorted([workload[job][0][0] for job in workload])
@@ -442,15 +442,15 @@ class TestRuntime(unittest.TestCase):
         for SchedulerType in ScheduleFlow.Scheduler.__subclasses__():
             sch = SchedulerType(ScheduleFlow.System(100))
             np.random.seed(0)
-            apl = set()
+            job_list = set()
             for i in range(100):
                 execution_time = np.random.randint(11, 100)
-                apl.add(ScheduleFlow.ApplicationJob(
+                job_list.add(ScheduleFlow.Application(
                     1, 1 + i * 10, execution_time, [execution_time]))
-            # aplication in the beginning that will make all other be in the
+            # job_listication in the beginning that will make all other be in the
             # wait queue for the next schedule trigger
-            apl.add(ScheduleFlow.ApplicationJob(100, 0, 1000, [1000]))
-            runtime = Runtime(apl)
+            job_list.add(ScheduleFlow.Application(100, 0, 1000, [1000]))
+            runtime = Runtime(job_list)
             runtime(sch)
             workload = runtime.get_stats()
             self.assertEqual(
@@ -462,14 +462,14 @@ class TestRuntime(unittest.TestCase):
 
     def test_nofail_random(self):
         sch = ScheduleFlow.OnlineScheduler(ScheduleFlow.System(100))
-        apl = set()
+        job_list = set()
         np.random.seed(0)
         for i in range(100):
             execution_time = np.random.randint(11, 100)
-            apl.add(ScheduleFlow.ApplicationJob(
+            job_list.add(ScheduleFlow.Application(
                 np.random.randint(51, 100),
                 0, execution_time, [execution_time]))
-        runtime = Runtime(apl)
+        runtime = Runtime(job_list)
         runtime(sch)
         workload = runtime.get_stats()
         # get (stat_time, volume) for each job and sort by start time
@@ -481,38 +481,38 @@ class TestRuntime(unittest.TestCase):
                             for i in range(len(exec_order) - 1)))
 
     def test_fail_job_online(self):
-        apl = set()
+        job_list = set()
         np.random.seed(0)
         for i in range(10):
             execution_time = np.random.randint(11, 100)
-            apl.add(ScheduleFlow.ApplicationJob(
+            job_list.add(ScheduleFlow.Application(
                 np.random.randint(6, 11),
                 0, execution_time, [execution_time],
                 resubmit_factor=1.5))
-        fail_job = ScheduleFlow.ApplicationJob(
+        fail_job = ScheduleFlow.Application(
             np.random.randint(1, 11), 0, 100, [90], resubmit_factor=1.5)
-        apl.add(fail_job)
+        job_list.add(fail_job)
 
         sch = ScheduleFlow.OnlineScheduler(ScheduleFlow.System(10))
-        runtime = Runtime(apl)
+        runtime = Runtime(job_list)
         runtime(sch)
         workload = runtime.get_stats()
         # failed job runs after its previous instance
         self.assertEqual(workload[fail_job][0][1], workload[fail_job][1][0])
 
     def test_fail_job_batch(self):
-        apl = set()
+        job_list = set()
         np.random.seed(0)
         for i in range(10):
             execution_time = np.random.randint(11, 100)
-            apl.add(ScheduleFlow.ApplicationJob(
+            job_list.add(ScheduleFlow.Application(
                 np.random.randint(1, 11), 0, execution_time, [execution_time]))
-        fail_job = ScheduleFlow.ApplicationJob(
+        fail_job = ScheduleFlow.Application(
             np.random.randint(9, 11), 0, 100, [90], resubmit_factor=1.5)
-        apl.add(fail_job)
+        job_list.add(fail_job)
 
         sch = ScheduleFlow.BatchScheduler(ScheduleFlow.System(10))
-        runtime = Runtime(apl)
+        runtime = Runtime(job_list)
         runtime(sch)
         workload = runtime.get_stats()
         # failed job ran last
@@ -522,17 +522,17 @@ class TestRuntime(unittest.TestCase):
 
     def test_backfill_nojob(self):
         for SchedulerType in ScheduleFlow.Scheduler.__subclasses__():
-            apl = set()
+            job_list = set()
             for i in range(10):
                 if i == 7:
-                    apl.add(ScheduleFlow.ApplicationJob(5, 0, 50, [50]))
-                    seljob = ScheduleFlow.ApplicationJob(5, 0, 50, [60])
-                    apl.add(seljob)
-                apl.add(ScheduleFlow.ApplicationJob(5, 0, 50, [50]))
-                apl.add(ScheduleFlow.ApplicationJob(5, 0, 50, [50]))
+                    job_list.add(ScheduleFlow.Application(5, 0, 50, [50]))
+                    seljob = ScheduleFlow.Application(5, 0, 50, [60])
+                    job_list.add(seljob)
+                job_list.add(ScheduleFlow.Application(5, 0, 50, [50]))
+                job_list.add(ScheduleFlow.Application(5, 0, 50, [50]))
 
             sch = SchedulerType(ScheduleFlow.System(10))
-            runtime = Runtime(apl)
+            runtime = Runtime(job_list)
             runtime(sch)
             workload = runtime.get_stats()
             # check that first job ran is id 15
@@ -550,16 +550,16 @@ class TestRuntime(unittest.TestCase):
     def test_backfill_jobs(self):
         # two backfill jobs running over a gap created by one job
         sch = ScheduleFlow.BatchScheduler(ScheduleFlow.System(10), 9)
-        apl = set()
+        job_list = set()
         for i in range(5):
             time = 50
             if i == 3:
                 time = 30
-            apl.add(ScheduleFlow.ApplicationJob(5, 0, 50, [50]))
-            apl.add(ScheduleFlow.ApplicationJob(5, 0, time, [50]))
-        apl.add(ScheduleFlow.ApplicationJob(5, 0, 10, [10]))
-        apl.add(ScheduleFlow.ApplicationJob(5, 0, 10, [10]))
-        runtime = Runtime(apl)
+            job_list.add(ScheduleFlow.Application(5, 0, 50, [50]))
+            job_list.add(ScheduleFlow.Application(5, 0, time, [50]))
+        job_list.add(ScheduleFlow.Application(5, 0, 10, [10]))
+        job_list.add(ScheduleFlow.Application(5, 0, 10, [10]))
+        runtime = Runtime(job_list)
         runtime(sch)
         workload = runtime.get_stats()
         # check that all jobs are executed before timestamp 250
@@ -569,16 +569,16 @@ class TestRuntime(unittest.TestCase):
     def test_backfill_gaps(self):
         # one backfill jobs running over gaps created by two jobs
         sch = ScheduleFlow.BatchScheduler(ScheduleFlow.System(10), 10)
-        apl = set()
+        job_list = set()
         for i in range(5):
             if i == 2:
                 continue
-            apl.add(ScheduleFlow.ApplicationJob(5, 0, 50, [50]))
-            apl.add(ScheduleFlow.ApplicationJob(5, 0, 50, [50]))
-        apl.add(ScheduleFlow.ApplicationJob(5, 0, 50, [60]))
-        apl.add(ScheduleFlow.ApplicationJob(5, 0, 50, [70]))
-        apl.add(ScheduleFlow.ApplicationJob(10, 0, 10, [10]))
-        runtime = Runtime(apl)
+            job_list.add(ScheduleFlow.Application(5, 0, 50, [50]))
+            job_list.add(ScheduleFlow.Application(5, 0, 50, [50]))
+        job_list.add(ScheduleFlow.Application(5, 0, 50, [60]))
+        job_list.add(ScheduleFlow.Application(5, 0, 50, [70]))
+        job_list.add(ScheduleFlow.Application(10, 0, 10, [10]))
+        runtime = Runtime(job_list)
         runtime(sch)
         workload = runtime.get_stats()
         # check that all jobs are executed before timestamp 250
@@ -587,15 +587,15 @@ class TestRuntime(unittest.TestCase):
 
     def test_starvation_online(self):
         sch = ScheduleFlow.OnlineScheduler(ScheduleFlow.System(10))
-        apl = set()
-        apl.add(ScheduleFlow.ApplicationJob(5, 0, 100, [100]))
-        apl.add(ScheduleFlow.ApplicationJob(5, 0, 50, [50]))
+        job_list = set()
+        job_list.add(ScheduleFlow.Application(5, 0, 100, [100]))
+        job_list.add(ScheduleFlow.Application(5, 0, 50, [50]))
         for i in range(1, 5):
-            apl.add(ScheduleFlow.ApplicationJob(5, 1, 100, [100]))
-            apl.add(ScheduleFlow.ApplicationJob(5, 1, 100, [100]))
-        apl.add(ScheduleFlow.ApplicationJob(10, 1, 100, [100]))
-        apl.add(ScheduleFlow.ApplicationJob(5, 10, 40, [40]))
-        runtime = Runtime(apl)
+            job_list.add(ScheduleFlow.Application(5, 1, 100, [100]))
+            job_list.add(ScheduleFlow.Application(5, 1, 100, [100]))
+        job_list.add(ScheduleFlow.Application(10, 1, 100, [100]))
+        job_list.add(ScheduleFlow.Application(5, 10, 40, [40]))
+        runtime = Runtime(job_list)
         runtime(sch)
         workload = runtime.get_stats()
         for job in workload:
@@ -609,15 +609,15 @@ class TestRuntime(unittest.TestCase):
 
     def test_starvation_batch(self):
         sch = ScheduleFlow.BatchScheduler(ScheduleFlow.System(10))
-        apl = set()
-        apl.add(ScheduleFlow.ApplicationJob(5, 0, 100, [100]))
-        apl.add(ScheduleFlow.ApplicationJob(5, 0, 50, [50]))
+        job_list = set()
+        job_list.add(ScheduleFlow.Application(5, 0, 100, [100]))
+        job_list.add(ScheduleFlow.Application(5, 0, 50, [50]))
         for i in range(1, 5):
-            apl.add(ScheduleFlow.ApplicationJob(5, 1, 100, [100]))
-            apl.add(ScheduleFlow.ApplicationJob(5, 1, 100, [100]))
-        apl.add(ScheduleFlow.ApplicationJob(10, 1, 100, [100]))
-        apl.add(ScheduleFlow.ApplicationJob(5, 10, 40, [40]))
-        runtime = Runtime(apl)
+            job_list.add(ScheduleFlow.Application(5, 1, 100, [100]))
+            job_list.add(ScheduleFlow.Application(5, 1, 100, [100]))
+        job_list.add(ScheduleFlow.Application(10, 1, 100, [100]))
+        job_list.add(ScheduleFlow.Application(5, 10, 40, [40]))
+        runtime = Runtime(job_list)
         runtime(sch)
         workload = runtime.get_stats()
         for job in workload:
@@ -630,15 +630,15 @@ class TestRuntime(unittest.TestCase):
 
     def test_no_fit_in_schedule(self):
         sch = ScheduleFlow.BatchScheduler(ScheduleFlow.System(10))
-        apl = set()
-        selap = ScheduleFlow.ApplicationJob(3, 5402, 600, [600])
-        apl.add(ScheduleFlow.ApplicationJob(2, 0, 13000, [13000]))
-        apl.add(ScheduleFlow.ApplicationJob(3, 0, 6800, [7200]))
-        apl.add(ScheduleFlow.ApplicationJob(5, 0, 5500, [5500]))
-        apl.add(ScheduleFlow.ApplicationJob(3, 5400, 7200, [7200]))
-        apl.add(selap)
-        apl.add(ScheduleFlow.ApplicationJob(5, 5401, 5800, [5800]))
-        runtime = Runtime(apl)
+        job_list = set()
+        selap = ScheduleFlow.Application(3, 5402, 600, [600])
+        job_list.add(ScheduleFlow.Application(2, 0, 13000, [13000]))
+        job_list.add(ScheduleFlow.Application(3, 0, 6800, [7200]))
+        job_list.add(ScheduleFlow.Application(5, 0, 5500, [5500]))
+        job_list.add(ScheduleFlow.Application(3, 5400, 7200, [7200]))
+        job_list.add(selap)
+        job_list.add(ScheduleFlow.Application(5, 5401, 5800, [5800]))
+        runtime = Runtime(job_list)
         runtime(sch)
         workload = runtime.get_stats()
         workload_job4 = workload[selap]
@@ -646,7 +646,7 @@ class TestRuntime(unittest.TestCase):
 
     def test_cascading_failures(self):
         sch = ScheduleFlow.BatchScheduler(ScheduleFlow.System(10))
-        runtime = Runtime([ScheduleFlow.ApplicationJob(
+        runtime = Runtime([ScheduleFlow.Application(
             5, 0, 500, [100], resubmit_factor=1.5)])
         runtime(sch)
         workload = runtime.get_stats()
@@ -661,11 +661,11 @@ class TestRuntime(unittest.TestCase):
         expected_start_job2 = [1200, 3650]
         for i in range(2):
             sch = ScheduleFlow.BatchScheduler(ScheduleFlow.System(10))
-            seljob = ScheduleFlow.ApplicationJob(5, 0, 700, [650],
+            seljob = ScheduleFlow.Application(5, 0, 700, [650],
                                                  resubmit_factor=1.5)
-            runtime = Runtime([ScheduleFlow.ApplicationJob(
+            runtime = Runtime([ScheduleFlow.Application(
                 5, 0, 1400, [1200+i], resubmit_factor=1.5),
-                               ScheduleFlow.ApplicationJob(
+                               ScheduleFlow.Application(
                 5, 0, 1400, [1200], resubmit_factor=1.5),
                                seljob])
             runtime(sch)
@@ -682,8 +682,8 @@ class TestRuntime(unittest.TestCase):
 class TestSimulator(unittest.TestCase):
     def test_stats_engine(self):
         sch = ScheduleFlow.BatchScheduler(ScheduleFlow.System(10))
-        runtime = Runtime([ScheduleFlow.ApplicationJob(6, 0, 500, [1000]),
-                           ScheduleFlow.ApplicationJob(6, 0, 1000, [2000])])
+        runtime = Runtime([ScheduleFlow.Application(6, 0, 500, [1000]),
+                           ScheduleFlow.Application(6, 0, 1000, [2000])])
         runtime(sch)
         workload = runtime.get_stats()
         stats = StatsEngine(10)
@@ -704,12 +704,12 @@ class TestSimulator(unittest.TestCase):
             ScheduleFlow.BatchScheduler(ScheduleFlow.System(10)))
         self.assertEqual(len(sim.job_list), 0)
         self.assertEqual(ret, 0)
-        apl = [ScheduleFlow.ApplicationJob(6, 0, 500, [1000]),
-               ScheduleFlow.ApplicationJob(6, 0, 500, [1000])]
+        job_list = [ScheduleFlow.Application(6, 0, 500, [1000]),
+               ScheduleFlow.Application(6, 0, 500, [1000])]
         ret = sim.create_scenario(
             "test",
             ScheduleFlow.BatchScheduler(ScheduleFlow.System(10)),
-            job_list=apl)
+            job_list=job_list)
         self.assertEqual(len(sim.job_list), 2)
         self.assertEqual(ret, 2)
 
@@ -719,38 +719,38 @@ class TestSimulator(unittest.TestCase):
         sim.create_scenario(
             "test",
             ScheduleFlow.BatchScheduler(ScheduleFlow.System(10)))
-        apl = [ScheduleFlow.ApplicationJob(6, 0, 500, [1000]),
-               ScheduleFlow.ApplicationJob(6, 0, 500, [1000])]
-        ret = sim.add_applications(apl)
-        ret = sim.add_applications(apl)
+        job_list = [ScheduleFlow.Application(6, 0, 500, [1000]),
+               ScheduleFlow.Application(6, 0, 500, [1000])]
+        ret = sim.add_applications(job_list)
+        ret = sim.add_applications(job_list)
         self.assertEqual(ret, 2)
-        apl = [ScheduleFlow.ApplicationJob(6, 0, 500, [1000]),
-               ScheduleFlow.ApplicationJob(6, 0, 500, [1000])]
-        ret = sim.add_applications(apl)
+        job_list = [ScheduleFlow.Application(6, 0, 500, [1000]),
+               ScheduleFlow.Application(6, 0, 500, [1000])]
+        ret = sim.add_applications(job_list)
         self.assertEqual(ret, 4)
 
     def test_run_scenario(self):
         sim = ScheduleFlow.Simulator()
         with self.assertRaises(AssertionError):
             ret = sim.run()
-        apl = [ScheduleFlow.ApplicationJob(6, 0, 500, [1000]),
-               ScheduleFlow.ApplicationJob(6, 0, 500, [1000])]
+        job_list = [ScheduleFlow.Application(6, 0, 500, [1000]),
+               ScheduleFlow.Application(6, 0, 500, [1000])]
         sim.create_scenario(
             "test",
             ScheduleFlow.BatchScheduler(ScheduleFlow.System(10)),
-            job_list=apl)
+            job_list=job_list)
         ret = sim.run()
         self.assertEqual(ret, 0)
 
     def test_simulation_correctness(self):
         sim = ScheduleFlow.Simulator(check_correctness=True)
-        apl = [ScheduleFlow.ApplicationJob(6, 0, 500, [200],
-                                           resubmit_factor=1.5),
-               ScheduleFlow.ApplicationJob(6, 0, 500, [1000])]
+        job_list = [ScheduleFlow.Application(6, 0, 500, [200],
+                                             resubmit_factor=1.5),
+                    ScheduleFlow.Application(6, 0, 500, [1000])]
         sim.create_scenario(
             "test",
             ScheduleFlow.BatchScheduler(ScheduleFlow.System(10)),
-            job_list=apl)
+            job_list=job_list)
         ret = sim.run()
         self.assertEqual(sim.test_correctness(), 0)
 
