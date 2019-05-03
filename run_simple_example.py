@@ -1,20 +1,19 @@
-from Runtime import System
-from Runtime import ApplicationJob
-import Scheduler
-import Simulator
+import ScheduleFlow
 import sys
 import numpy as np
 
 
 def run_scenario(num_procssing_units, job_list):
-    simulator = Simulator.Simulator(check_correctness=True,
-                                    generate_gif=True,
-                                    output_file_handler=sys.stdout)
-    sch = Scheduler.BatchScheduler(System(num_processing_units))
+    simulator = ScheduleFlow.Simulator(check_correctness=True,
+                                       generate_gif=True,
+                                       output_file_handler=sys.stdout)
+    sch = ScheduleFlow.BatchScheduler(
+        ScheduleFlow.System(num_processing_units))
     simulator.create_scenario("test_batch", sch, job_list=job_list)
     simulator.run()
 
-    sch = Scheduler.OnlineScheduler(System(num_processing_units))
+    sch = ScheduleFlow.OnlineScheduler(
+        ScheduleFlow.System(num_processing_units))
     simulator.create_scenario("test_online", sch, job_list=job_list)
     simulator.run()
 
@@ -28,11 +27,13 @@ if __name__ == '__main__':
         processing_units = np.random.randint(
             1, num_processing_units + 1)
         submission_time = 0
-        job_list.add(ApplicationJob(processing_units,
-                                    submission_time,
-                                    execution_time,
-                                    [request_time]))
-    job_list.add(ApplicationJob(np.random.randint(9, 11), 0, 100, [90, 135]))
+        job_list.add(ScheduleFlow.ApplicationJob(
+            processing_units,
+            submission_time,
+            execution_time,
+            [request_time]))
+    job_list.add(ScheduleFlow.ApplicationJob(
+        np.random.randint(9, 11), 0, 100, [90, 135]))
 
     print("Scenario : makespan : utilization : average_job_utilization : "
           "average_job_response_time : average_job_stretch : "
