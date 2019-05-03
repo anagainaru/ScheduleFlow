@@ -1,4 +1,357 @@
 import logging
+import math
+import _intScheduleFlow
+from _intScheduleFlow import JobChangeType
+
+
+class Simulator():
+    def __init__(self, loops=1, generate_gif=False, check_correctness=False,
+                 output_file_handler=None):
+        assert (loops > 0), "Number of loops has to be a positive integer"
+
+        self.__loops = loops
+        self.__generate_gif = generate_gif
+        self.__check_correctness = check_correctness
+        self.__execution_log = {}
+        self.job_list = []
+        self.logger = logging.getLogger(__name__)
+
+        self.__fp = output_file_handler
+
+        if generate_gif:
+            self.horizontal_ax = -1
+            if self.__loops != 1:
+                self.logger.warning("Number of loops in the Simulator "
+                                    "needs to be 1 if the generate_gif "
+                                    "option is True. Updated number of "
+                                    "loops to 1.")
+            self.__loops = 1
+
+    def create_scenario(self, scenario_name, scheduler, job_list=[]):
+        self.__scheduler = scheduler
+        self.__system = scheduler.system
+        self.job_list = []
+        self.__execution_log = {}
+        self.__scenario_name = scenario_name
+
+        self.stats = _intScheduleFlow.StatsEngine(self.__system.get_total_nodes())
+        if self.__generate_gif:
+            self.__viz_handler = _intScheduleFlow.VizualizationEngine(
+                    self.__system.get_total_nodes())
+
+        return self.add_applications(job_list)
+
+    def get_execution_log(self):
+        return self.__execution_log
+
+    def add_applications(self, job_list):
+        for new_job in job_list:
+            if new_job in self.job_list:
+                self.logger.warning("Job %s is already included "
+                                    "in the sumlation." %(new_job))
+                continue
+            job_id_list = [job.job_id for job in self.job_list]
+            if new_job.job_id == -1 or new_job.job_id in job_id_list:
+                newid = len(self.job_list)
+                if len(job_id_list) > newid:
+                    newid = max(job_id_list) + 1
+                new_job.job_id = newid 
+            self.job_list.append(new_job)
+        return len(self.job_list)
+
+    def __sanity_check_job_execution(self, execution_list, job):
+        # The execution list: [(st, end)]
+        # check that first start is after the submission time
+        if execution_list[0][0] < job.submission_time:
+            return False
+        requested_time = job.request_walltime
+        for i in range(len(execution_list)-1):
+            # check that resubmissions start after end of previous
+            if execution_list[i][1] > execution_list[i + 1][0]:
+                return False
+            # check len of failed executions
+            start = execution_list[i][0]
+            end = execution_list[i][1]
+            if not math.isclose(end-start, requested_time,
+                                rel_tol=1e-3):
+                return False
+            requested_time = job.get_request_time(i + 1)
+
+        # check len of succesful execution (last)
+        start = execution_list[len(execution_list)-1][0]
+        end = execution_list[len(execution_list)-1][1]
+        if not math.isclose(end-start, job.walltime,
+                            rel_tol=1e-3):
+            return False
+        return True
+
+    def __sainity_check_schedule(self, workload):
+        check_fail = 0
+        # check that scheduled applications do not exceed system size
+        # only check executions and not reservations (backfill)
+        event_list = []
+        for job in workload:
+            event_list += [i[0] for i in workload[job]]
+            event_list += [i[1] for i in workload[job]]
+        event_list = list(set(event_list))
+        event_list.sort()
+
+        for i in range(len(event_list) - 1):
+            start = event_list[i]
+            end = event_list[i + 1]
+            # find all jobs running between event i and i + 1
+            procs = 0
+            for job in workload:
+                run_jobs = len([1 for run in workload[job]
+                                if run[0] <= start
+                                and run[1] >= end])
+                if run_jobs > 0:
+                    procs += job.nodes
+
+            if procs > self.__system.get_total_nodes():
+                check_fail += 1
+        return check_fail
+
+    def test_correctness(self):
+        ''' Method for checking the correctness of the execution of a
+        given list of jobs. Job list contains the jobs with their initial
+        information, workload contains execution information for each
+        job '''
+        assert (len(self.__execution_log) > 0), \
+            "ERR - Trying to test correctness on an empty execution log"
+
+        check_fail = 0
+        for job in self.__execution_log:
+            pass_check = self.__sanity_check_job_execution(
+                self.__execution_log[job], job)
+            if not pass_check:
+                self.logger.error("%s did not pass the sanity check: %s" %
+                                  (job, self.__execution_log[job]))
+                check_fail += 1
+                continue
+
+        check_fail += self.__sainity_check_schedule(self.__execution_log)
+        return check_fail
+
+    def run(self):
+        assert (len(self.job_list)>0), "Cannot run an empty scenario"
+        check = 0
+        for i in range(self.__loops):
+            runtime = _intScheduleFlow.Runtime(self.job_list)
+            runtime(self.__scheduler)
+            self.__execution_log = runtime.get_stats()
+
+            if self.__check_correctness:
+                check += self.test_correctness()
+                if check > 0:
+                    self.logger.debug("FAIL correctness test (loop %d)" % (i))
+                    continue
+
+            self.stats.set_execution_output(self.__execution_log)
+            self.logger.info(self.stats)
+            if self.__fp is not None:
+                self.stats.print_to_file(self.__fp, self.__scenario_name)
+
+        if check == 0:
+            self.logger.info("PASS correctness test")
+
+        if self.__generate_gif and check == 0:
+            if self.horizontal_ax != -1:
+                self.__viz_handler.set_horizontal_ax_limit(
+                    self.horizontal_ax)
+            self.__viz_handler.set_execution_log(self.__execution_log)
+            self.horizontal_ax = self.__viz_handler.generate_scenario_gif(
+                self.__scenario_name)
+            self.logger.info(r"GIF generated draw/%s" % (self.__scenario_name))
+        return check
+
+
+class ApplicationJob(object):
+    ''' Job class containing the properties of the running instance '''
+
+    def __init__(self, nodes, submission_time, walltime,
+                 requested_walltimes, resubmit_factor=-1):
+        ''' Constructor method takes the number of nodes required by the job,
+        the submission time, the actual walltime, the requested walltime, a
+        job id and a sequence of request times in case the job fails '''
+
+        assert (walltime > 0),\
+            'Application walltime must be positive: received %3.1f' % (
+            walltime)
+        assert (len(requested_walltimes)>0),\
+            'Request time sequence cannot be empty'
+        assert (all(i > 0 for i in requested_walltimes)),\
+            'Job requested walltime must be > 0 : received %s' % (
+                    requested_walltimes)
+        assert (submission_time >= 0),\
+            'Job submission time must be > 0 : received %3.1f' % (
+            submission_time)
+        assert (nodes > 0),\
+            'Number of nodes for a job must be > 0 : received %d' % (
+            nodes)
+        assert (all(requested_walltimes[i] < requested_walltimes[i + 1] for i in
+                range(len(requested_walltimes) - 1))),\
+            'Request time sequence is not sorted in increasing order'
+
+        self.nodes = nodes
+        self.submission_time = submission_time
+        self.walltime = walltime
+        self.request_walltime = requested_walltimes[0]
+        self.job_id = -1
+        self.request_sequence = requested_walltimes[1:]
+        self.resubmit = True
+        if resubmit_factor == -1:
+            if len(self.request_sequence) == 0:
+                self.resubmit = False
+            self.resubmit_factor = 1
+        else:
+            assert (resubmit_factor > 1),\
+                r"""Increase factor for an execution request time must be
+                over 1: received %d""" % (resubmit_factor)
+            self.resubmit_factor = resubmit_factor
+
+        # Entries in the execution log: (JobChangeType, old_value)
+        self.__execution_log = []
+        if len(self.request_sequence) > 0:
+            self.__execution_log.append(
+                    (JobChangeType.RequestSequenceOverwrite,
+                     self.request_sequence[:]))
+
+    def __str__(self):
+        return r"""Job %d: %d nodes; %3.1f submission time; %3.1f total
+               execution time (%3.1f requested)""" % (
+               self.job_id, self.nodes, self.submission_time, self.walltime,
+               self.request_walltime)
+
+    def __repr__(self):
+        return r'Job(%d, %3.1f, %3.1f, %3.1f, %d)' % (self.nodes,
+                                                      self.submission_time,
+                                                      self.walltime,
+                                                      self.request_walltime,
+                                                      self.job_id)
+
+    def __lt__(self, apl):
+        return self.job_id < apl.job_id
+
+    def get_request_time(self, step):
+        ''' Method for descovering the request time that the job will use
+        for its consecutive "step"-th submission. First submission will use
+        the provided request time. Following submissions will either use the
+        values provided in the request sequence or will increase the last
+        value by the job resubmission factor. '''
+
+        if step == 0:
+            return self.request_walltime
+        if len(self.request_sequence) == 0:
+            return self.request_walltime * pow(self.resubmit_factor, step)
+
+        if len(self.request_sequence) > step-1:
+            return self.request_sequence[step-1]
+
+        seq_len = len(self.request_sequence)
+        return self.request_sequence[seq_len - 1] * pow(
+            self.resubmit_factor, step - seq_len)
+
+    def overwrite_request_sequence(self, request_sequence):
+        ''' Method for overwriting the sequence of future walltime
+        requests '''
+
+        assert (all(request_sequence[i] <
+                request_sequence[i + 1] for i in
+                range(len(request_sequence) - 1))),\
+            r'Request time sequence is not sorted in increasing order'
+        if len(request_sequence) > 0:
+            assert (request_sequence[0] > self.request_walltime),\
+                r'Request time sequence is not sorted in increasing order'
+        self.request_sequence = request_sequence[:]
+        self.__execution_log.append((JobChangeType.RequestSequenceOverwrite,
+                                     self.request_sequence[:]))
+
+    def update_submission(self, submission_time):
+        ''' Method to update submission information including
+        the submission time and the walltime request '''
+
+        assert (submission_time >= 0),\
+            r'Negative submission time received: %d' % (
+            submission_time)
+        self.__execution_log.append((JobChangeType.SubmissionChange,
+                                     self.submission_time))
+        self.__execution_log.append((JobChangeType.RequestChange,
+                                     self.request_walltime))
+
+        self.submission_time = submission_time
+        if len(self.request_sequence) > 0:
+            self.request_walltime = self.request_sequence[0]
+            del self.request_sequence[0]
+        else:
+            self.request_walltime = int(self.resubmit_factor *
+                                        self.request_walltime)
+        if self.resubmit_factor == 1 and len(self.request_sequence)==0:
+                self.resubmit = False
+
+
+    def free_wasted_space(self):
+        ''' Method for marking that the job finished leaving a gap equal to
+        the difference between the requested time and the walltime '''
+        self.__execution_log.append((JobChangeType.RequestChange,
+                                     self.request_walltime))
+        self.request_walltime = self.walltime
+
+    def restore_default_values(self):
+        ''' Method for restoring the initial submission values '''
+        restore = next((i for i in self.__execution_log if
+                        i[0] == JobChangeType.RequestSequenceOverwrite), None)
+        if restore is not None:
+            self.request_sequence = restore[1][:]
+        restore = next((i for i in self.__execution_log if
+                        i[0] == JobChangeType.SubmissionChange), None)
+        if restore is not None:
+            self.submission_time = restore[1]
+        restore = next((i for i in self.__execution_log if
+                        i[0] == JobChangeType.RequestChange), None)
+        if restore is not None:
+            self.request_walltime = restore[1]
+
+        self.resubmit = True
+        if self.resubmit_factor == 1 and len(self.request_sequence)==0:
+                self.resubmit = False
+
+
+class System(object):
+    ''' System class containing available resources (for now just nodes) '''
+
+    def __init__(self, total_nodes):
+        assert (total_nodes > 0),\
+            r'Number of nodes of a system must be > 0: received %d' % (
+            total_nodes)
+
+        self.__total_nodes = total_nodes
+        self.__free_nodes = total_nodes
+
+    def __str__(self):
+        return r'System of %d nodes (%d currently free)' % (
+            self.__total_nodes, self.__free_nodes)
+
+    def get_free_nodes(self):
+        return self.__free_nodes
+
+    def get_total_nodes(self):
+        return self.__total_nodes
+
+    def start_job(self, nodes, jobid):
+        ''' Method for aquiring resources in the system '''
+
+        self.__free_nodes -= nodes
+        assert (self.__free_nodes >= 0),\
+            r'Not enough free nodes for the allocation of job %d' % (jobid)
+
+    def end_job(self, nodes, jobid):
+        ''' Method for releasing nodes in the system '''
+
+        self.__free_nodes += nodes
+        assert (self.__free_nodes <= self.__total_nodes),\
+            r'Free more nodes than total system during end of job %d' % (
+            jobid)
 
 
 class Scheduler(object):
