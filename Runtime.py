@@ -1,4 +1,5 @@
 import logging
+import collections
 from enum import IntEnum
 from EventQueue import EventQueue
 from EventQueue import EventType
@@ -59,20 +60,22 @@ class ApplicationJob(object):
         job id and a sequence of request times in case the job fails '''
 
         assert (walltime > 0),\
-            r'Application walltime must be positive: received %3.1f' % (
+            'Application walltime must be positive: received %3.1f' % (
             walltime)
+        assert (len(requested_walltimes)>0),\
+            'Request time sequence cannot be empty'
         assert (all(i > 0 for i in requested_walltimes)),\
-            r'Job requested walltime must be > 0 : received %s' % (
+            'Job requested walltime must be > 0 : received %s' % (
                     requested_walltimes)
         assert (submission_time >= 0),\
-            r'Job submission time must be > 0 : received %3.1f' % (
+            'Job submission time must be > 0 : received %3.1f' % (
             submission_time)
         assert (nodes > 0),\
-            r'Number of nodes for a job must be > 0 : received %d' % (
+            'Number of nodes for a job must be > 0 : received %d' % (
             nodes)
         assert (all(requested_walltimes[i] < requested_walltimes[i + 1] for i in
                 range(len(requested_walltimes) - 1))),\
-            r'Request time sequence is not sorted in increasing order'
+            'Request time sequence is not sorted in increasing order'
 
         self.nodes = nodes
         self.submission_time = submission_time
@@ -80,14 +83,15 @@ class ApplicationJob(object):
         self.request_walltime = requested_walltimes[0]
         self.job_id = -1
         self.request_sequence = requested_walltimes[1:]
+        self.resubmit = True
         if resubmit_factor == -1:
-            self.resubmit = False
+            if len(self.request_sequence) == 0:
+                self.resubmit = False
             self.resubmit_factor = 1
         else:
             assert (resubmit_factor > 1),\
                 r"""Increase factor for an execution request time must be
                 over 1: received %d""" % (resubmit_factor)
-            self.resubmit = True
             self.resubmit_factor = resubmit_factor
 
         # Entries in the execution log: (JobChangeType, old_value)
@@ -166,6 +170,9 @@ class ApplicationJob(object):
         else:
             self.request_walltime = int(self.resubmit_factor *
                                         self.request_walltime)
+        if self.resubmit_factor == 1 and len(self.request_sequence)==0:
+                self.resubmit = False
+
 
     def free_wasted_space(self):
         ''' Method for marking that the job finished leaving a gap equal to
@@ -188,6 +195,10 @@ class ApplicationJob(object):
                         i[0] == JobChangeType.RequestChange), None)
         if restore is not None:
             self.request_walltime = restore[1]
+
+        self.resubmit = True
+        if self.resubmit_factor == 1 and len(self.request_sequence)==0:
+                self.resubmit = False
 
 
 class Runtime(object):
