@@ -82,7 +82,7 @@ class Scheduler(object):
                 nodes -= event[2].nodes
             ts = max(event[0], min_ts)
         gap_list.sort()
-        return gap_list
+        return [i for i in gap_list if i[2]>0]
 
     def fit_job_in_schedule(self, job, reserved_jobs, min_ts):
         ''' Base method that fits a new job into an existing schedule.
@@ -190,6 +190,9 @@ class BatchScheduler(Scheduler):
                 r'[Scheduler] Found reservation slot for %s at beginning' %
                 (job))
             return 0
+
+        end_window = max([reservations[job] + job.request_walltime
+                          for job in reservations])
         ts = self.__create_job_reservation(job, reservations)
         if ts != -1:
             return ts
@@ -197,14 +200,14 @@ class BatchScheduler(Scheduler):
         # not have other jobs starting in front)
         gap_list = super(BatchScheduler, self).create_gaps_list(
             reservations, 0)
-        end_window = max([gap[1] for gap in gap_list])
-        end_gaps = [gap for gap in gap_list if gap[1] == end_window]
-        for gap in end_gaps:
-            if job.nodes <= gap[2]:
-                self.logger.info(
-                    r'[Scheduler] Found reservation for %s at timestamp %d'
-                    % (job, gap[0]))
-                return gap[0]
+        if len(gap_list) > 0:
+            end_gaps = [gap for gap in gap_list if gap[1] == end_window]
+            for gap in end_gaps:
+                if job.nodes <= gap[2]:
+                    self.logger.info(
+                        r'[Scheduler] Found reservation for %s at timestamp %d'
+                        % (job, gap[0]))
+                    return gap[0]
 
         # there is no fit for the job to start anywhere inside the schedule
         # start job after the last job
@@ -249,10 +252,8 @@ class BatchScheduler(Scheduler):
         for job in reserved_jobs:
             if job == stop_job:
                 job.free_wasted_space()
-        gap_list = super(BatchScheduler, self).create_gaps_list(
-            reserved_jobs, min_ts)
-        self.logger.info(r'[Backfill %d] Reservations: %s; Gaps %s' %
-                         (min_ts, reserved_jobs, gap_list))
+        self.logger.info(r'[Backfill %d] Reservations: %s' %
+                         (min_ts, reserved_jobs))
 
         batch_jobs = self.__get_batch_jobs()
         selected_jobs = []
