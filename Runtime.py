@@ -166,7 +166,6 @@ class ApplicationJob(object):
         else:
             self.request_walltime = int(self.resubmit_factor *
                                         self.request_walltime)
-        print(self)
 
     def free_wasted_space(self):
         ''' Method for marking that the job finished leaving a gap equal to
