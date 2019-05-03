@@ -68,21 +68,22 @@ class Scheduler(object):
         nodes = 0
         ts = -1
         for event in order_reservations:
-            if event[0] > ts and ts != -1:
+            free_nodes = self.system.get_total_nodes() - nodes
+            if event[0] > ts and ts != -1 and free_nodes > 0:
                 gap_list.append(
-                    [ts, event[0], self.system.get_total_nodes() - nodes])
+                    [ts, event[0], free_nodes])
                 # gap end is the same as the beginning of the current gap
                 prev = [gap for gap in gap_list if gap[1] == ts]
                 for gap in prev:
-                    gap_list.append([gap[0], event[0], min(
-                        gap[2], self.system.get_total_nodes() - nodes)])
+                    gap_list.append([gap[0], event[0],
+                                     min(gap[2], free_nodes)])
             if event[1] == 1:  # job start
                 nodes += event[2].nodes
             else:  # job_end
                 nodes -= event[2].nodes
             ts = max(event[0], min_ts)
         gap_list.sort()
-        return [i for i in gap_list if i[2]>0]
+        return gap_list
 
     def fit_job_in_schedule(self, job, reserved_jobs, min_ts):
         ''' Base method that fits a new job into an existing schedule.
@@ -210,7 +211,7 @@ class BatchScheduler(Scheduler):
                     return gap[0]
 
         # there is no fit for the job to start anywhere inside the schedule
-        # start job after the last job
+        # start the current job after the last job
         self.logger.info(
             r'[Scheduler] Found reservation slot for %s at timestamp %d' %
             (job, end_window))
