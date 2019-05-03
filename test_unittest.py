@@ -155,8 +155,7 @@ class TestScheduler(unittest.TestCase):
             reservation[ApplicationJob(5, 0, 50, [50])] = i * 50
             reservation[ApplicationJob(5, 0, 50, [50])] = i * 50
         gap_list = sch.create_gaps_list(reservation, 0)
-        free_nodes = max([gap[2] for gap in gap_list])
-        self.assertEqual(free_nodes, 0)
+        self.assertEqual(len(gap_list), 0)
 
     def test_gaps_random(self):
         sch = Scheduler(System(10))

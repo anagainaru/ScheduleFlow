@@ -68,14 +68,15 @@ class Scheduler(object):
         nodes = 0
         ts = -1
         for event in order_reservations:
-            if event[0] > ts and ts != -1:
+            free_nodes = self.system.get_total_nodes() - nodes
+            if event[0] > ts and ts != -1 and free_nodes > 0:
                 gap_list.append(
-                    [ts, event[0], self.system.get_total_nodes() - nodes])
+                    [ts, event[0], free_nodes])
                 # gap end is the same as the beginning of the current gap
                 prev = [gap for gap in gap_list if gap[1] == ts]
                 for gap in prev:
-                    gap_list.append([gap[0], event[0], min(
-                        gap[2], self.system.get_total_nodes() - nodes)])
+                    gap_list.append([gap[0], event[0],
+                                     min(gap[2], free_nodes)])
             if event[1] == 1:  # job start
                 nodes += event[2].nodes
             else:  # job_end
@@ -190,6 +191,9 @@ class BatchScheduler(Scheduler):
                 r'[Scheduler] Found reservation slot for %s at beginning' %
                 (job))
             return 0
+
+        end_window = max([reservations[job] + job.request_walltime
+                          for job in reservations])
         ts = self.__create_job_reservation(job, reservations)
         if ts != -1:
             return ts
@@ -197,17 +201,17 @@ class BatchScheduler(Scheduler):
         # not have other jobs starting in front)
         gap_list = super(BatchScheduler, self).create_gaps_list(
             reservations, 0)
-        end_window = max([gap[1] for gap in gap_list])
-        end_gaps = [gap for gap in gap_list if gap[1] == end_window]
-        for gap in end_gaps:
-            if job.nodes <= gap[2]:
-                self.logger.info(
-                    r'[Scheduler] Found reservation for %s at timestamp %d'
-                    % (job, gap[0]))
-                return gap[0]
+        if len(gap_list) > 0:
+            end_gaps = [gap for gap in gap_list if gap[1] == end_window]
+            for gap in end_gaps:
+                if job.nodes <= gap[2]:
+                    self.logger.info(
+                        r'[Scheduler] Found reservation for %s at timestamp %d'
+                        % (job, gap[0]))
+                    return gap[0]
 
         # there is no fit for the job to start anywhere inside the schedule
-        # start job after the last job
+        # start the current job after the last job
         self.logger.info(
             r'[Scheduler] Found reservation slot for %s at timestamp %d' %
             (job, end_window))
@@ -249,10 +253,8 @@ class BatchScheduler(Scheduler):
         for job in reserved_jobs:
             if job == stop_job:
                 job.free_wasted_space()
-        gap_list = super(BatchScheduler, self).create_gaps_list(
-            reserved_jobs, min_ts)
-        self.logger.info(r'[Backfill %d] Reservations: %s; Gaps %s' %
-                         (min_ts, reserved_jobs, gap_list))
+        self.logger.info(r'[Backfill %d] Reservations: %s' %
+                         (min_ts, reserved_jobs))
 
         batch_jobs = self.__get_batch_jobs()
         selected_jobs = []
