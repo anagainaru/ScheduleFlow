@@ -77,10 +77,14 @@ class Simulator():
                 return False
             requested_time = job.get_request_time(i + 1)
 
-        # check len of succesful execution (last)
+        # check len of last execution
         start = execution_list[len(execution_list)-1][0]
         end = execution_list[len(execution_list)-1][1]
-        if not math.isclose(end-start, job.walltime,
+        expected_time = requested_time
+        if end - start >= job.walltime:
+            # if run was successful, exected time is the job walltime
+            expected_time = job.walltime
+        if not math.isclose(end-start, expected_time,
                             rel_tol=1e-3):
             return False
         return True
