@@ -166,7 +166,7 @@ class Simulator():
         return check
 
 
-class ApplicationJob(object):
+class Application(object):
     ''' Job class containing the properties of the running instance '''
 
     def __init__(self, nodes, submission_time, walltime,
@@ -230,8 +230,8 @@ class ApplicationJob(object):
                                                       self.request_walltime,
                                                       self.job_id)
 
-    def __lt__(self, apl):
-        return self.job_id < apl.job_id
+    def __lt__(self, job):
+        return self.job_id < job.job_id
 
     def get_request_time(self, step):
         ''' Method for descovering the request time that the job will use
