@@ -750,7 +750,7 @@ class TestSimulator(unittest.TestCase):
                ScheduleFlow.Application(10, 0, 500, [200, 600]),
                ScheduleFlow.Application(10, 0, 500, [300, 400]),
                ScheduleFlow.Application(10, 0, 500, [400, 450],
-                                        resubmit_factor=1.5)
+                                        resubmit_factor=1.5)]
         sim.create_scenario(
             "test",
             ScheduleFlow.BatchScheduler(ScheduleFlow.System(10)),
