@@ -1,5 +1,5 @@
 import logging
-import math
+import numpy as np
 import _intScheduleFlow
 from _intScheduleFlow import JobChangeType
 
@@ -72,8 +72,8 @@ class Simulator():
             # check len of failed executions
             start = execution_list[i][0]
             end = execution_list[i][1]
-            if not math.isclose(end-start, requested_time,
-                                rel_tol=1e-3):
+            if not np.isclose(end-start, requested_time,
+                              rel_tol=1e-3):
                 return False
             requested_time = job.get_request_time(i + 1)
 
@@ -84,8 +84,8 @@ class Simulator():
         if end - start >= job.walltime:
             # if run was successful, exected time is the job walltime
             expected_time = job.walltime
-        if not math.isclose(end-start, expected_time,
-                            rel_tol=1e-3):
+        if not np.isclose(end-start, expected_time,
+                          rel_tol=1e-3):
             return False
         return True
 
