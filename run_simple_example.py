@@ -21,19 +21,21 @@ def run_scenario(num_procssing_units, job_list):
 if __name__ == '__main__':
     num_processing_units = 10
     job_list = set()
+    # create the list of applications
     for i in range(10):
         execution_time = np.random.randint(11, 100)
         request_time = execution_time + int(i / 2) * 10
         processing_units = np.random.randint(
             1, num_processing_units + 1)
         submission_time = 0
-        job_list.add(ScheduleFlow.ApplicationJob(
+        job_list.add(ScheduleFlow.Application(
             processing_units,
             submission_time,
             execution_time,
             [request_time]))
-    job_list.add(ScheduleFlow.ApplicationJob(
-        np.random.randint(9, 11), 0, 100, [90, 135]))
+    # add a job that request less time than required for its first run
+    job_list.add(ScheduleFlow.Application(np.random.randint(9, 11), 0,
+                                          100, [90, 135]))
 
     print("Scenario : makespan : utilization : average_job_utilization : "
           "average_job_response_time : average_job_stretch : "
