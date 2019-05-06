@@ -495,7 +495,7 @@ class BatchScheduler(Scheduler):
         super(BatchScheduler, self).__init__(system, logger)
         self.batch_size = batch_size
 
-    def __get_batch_jobs(self):
+    def get_batch_jobs(self):
         ''' Method that returns the first batch_size jobs in the waiting
         queue ordered by their submission time '''
 
@@ -518,7 +518,7 @@ class BatchScheduler(Scheduler):
                              job.request_walltime == sl]
         return batch_sorted[:self.batch_size]
 
-    def __create_job_reservation(self, job, reserved_jobs):
+    def create_job_reservation(self, job, reserved_jobs):
         ''' Method that implements a greedy algotithm for finding a place
         for a new job into a reservation window that is given by the
         previously reserved jobs '''
@@ -538,7 +538,7 @@ class BatchScheduler(Scheduler):
                 return ts
         return -1
 
-    def __build_schedule(self, job, reservations):
+    def build_schedule(self, job, reservations):
         ''' Method for extending the existing reservation to include
         a new job. All jobs have to fit in the schedule, thus the reservation
         will be increased if the job does not fit inside the current one '''
@@ -551,7 +551,7 @@ class BatchScheduler(Scheduler):
 
         end_window = max([reservations[job] + job.request_walltime
                           for job in reservations])
-        ts = self.__create_job_reservation(job, reservations)
+        ts = self.create_job_reservation(job, reservations)
         if ts != -1:
             return ts
         # check for the end of the schedule for a fit (after all jobs that do
@@ -580,19 +580,19 @@ class BatchScheduler(Scheduler):
         The implemented algorithm is greedyly fitting jobs in the batch list
          starting with the largest on the first available slot '''
 
-        batch_jobs = self.__get_batch_jobs()
+        batch_jobs = self.get_batch_jobs()
         selected_jobs = {}
         for job in batch_jobs:
             # find a place for the job in the current schedule
-            ts = self.__build_schedule(job, selected_jobs)
+            ts = self.build_schedule(job, selected_jobs)
             selected_jobs[job] = ts
             self.wait_queue.remove(job)
 
         # try to fit any of the remaining jobs into the gaps created by the
         # schedule (for the next batch list)
-        batch_jobs = self.__get_batch_jobs()
+        batch_jobs = self.get_batch_jobs()
         for job in batch_jobs:
-            ts = self.__create_job_reservation(job, selected_jobs)
+            ts = self.create_job_reservation(job, selected_jobs)
             if ts != -1:
                 selected_jobs[job] = ts
                 self.wait_queue.remove(job)
@@ -613,7 +613,7 @@ class BatchScheduler(Scheduler):
         self.logger.info(r'[Backfill %d] Reservations: %s' %
                          (min_ts, reserved_jobs))
 
-        batch_jobs = self.__get_batch_jobs()
+        batch_jobs = self.get_batch_jobs()
         selected_jobs = []
         for job in batch_jobs:
             tm = super(BatchScheduler, self).fit_job_in_schedule(
@@ -635,7 +635,7 @@ class OnlineScheduler(Scheduler):
         super(OnlineScheduler, self).clear_job(job)
         return 0  # trigger a new schedule starting now (timestamp 0)
 
-    def __get_next_job(self, nodes):
+    def get_next_job(self, nodes):
         ''' Method to extract the largest volume job (nodes * requested time)
         in the waiting queue that fits the space given by the `nodes` '''
 
@@ -664,7 +664,7 @@ class OnlineScheduler(Scheduler):
             return []
         free_nodes = self.system.get_free_nodes()
         while free_nodes > 0:
-            job = self.__get_next_job(free_nodes)
+            job = self.get_next_job(free_nodes)
             self.logger.info(
                 r'Reserve next job: %s; Free procs %s' % (job, free_nodes))
             if job == -1:
