@@ -744,9 +744,13 @@ class TestSimulator(unittest.TestCase):
 
     def test_simulation_correctness(self):
         sim = ScheduleFlow.Simulator(check_correctness=True)
-        job_list = [ScheduleFlow.Application(6, 0, 500, [200],
+        job_list = [ScheduleFlow.Application(10, 0, 500, [200],
                                              resubmit_factor=1.5),
-                    ScheduleFlow.Application(6, 0, 500, [1000])]
+               ScheduleFlow.Application(10, 0, 500, [600]),
+               ScheduleFlow.Application(10, 0, 500, [200, 600]),
+               ScheduleFlow.Application(10, 0, 500, [300, 400]),
+               ScheduleFlow.Application(10, 0, 500, [400, 450],
+                                        resubmit_factor=1.5)
         sim.create_scenario(
             "test",
             ScheduleFlow.BatchScheduler(ScheduleFlow.System(10)),
