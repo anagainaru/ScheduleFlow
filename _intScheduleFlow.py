@@ -10,9 +10,13 @@
 import subprocess
 import logging
 import heapq
-import collections
 from distutils.spawn import find_executable
 from enum import IntEnum
+import sys
+if sys.version_info[0] < 3:
+    import collections as col
+else:
+    import collections.abc as col
 
 
 class JobChangeType(IntEnum):
@@ -54,7 +58,7 @@ class EventQueue(object):
         ''' The items that can be pushed in the EventQueue must be tuples
         of the form (timestamp, event) '''
 
-        assert (isinstance(item, collections.abc.Sequence)
+        assert (isinstance(item, col.Sequence)
                 ), 'EventQueue works only on tuples (time, values)'
         heapq.heappush(self.heap, item)
 
