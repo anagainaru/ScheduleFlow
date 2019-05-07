@@ -576,7 +576,7 @@ class BatchScheduler(Scheduler):
                 (job))
             return 0
 
-        end_window = max([reservations[j] + job.request_walltime
+        end_window = max([reservations[j] + j.request_walltime
                           for j in reservations])
         ts = self.create_job_reservation(job, reservations)
         if ts != -1:
