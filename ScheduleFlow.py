@@ -73,7 +73,7 @@ class Simulator():
             start = execution_list[i][0]
             end = execution_list[i][1]
             if not np.isclose(end-start, requested_time,
-                              rel_tol=1e-3):
+                              rtol=1e-3):
                 return False
             requested_time = job.get_request_time(i + 1)
 
@@ -85,7 +85,7 @@ class Simulator():
             # if run was successful, exected time is the job walltime
             expected_time = job.walltime
         if not np.isclose(end-start, expected_time,
-                          rel_tol=1e-3):
+                          rtol=1e-3):
             return False
         return True
 
