@@ -5,8 +5,12 @@ from _intScheduleFlow import JobChangeType
 
 
 class Simulator():
+    ''' Main class of the simulation '''
+
     def __init__(self, loops=1, generate_gif=False, check_correctness=False,
                  output_file_handler=None):
+        ''' Constructor defining the main properties of a simulation '''
+
         assert (loops > 0), "Number of loops has to be a positive integer"
 
         self.__loops = loops
@@ -28,6 +32,8 @@ class Simulator():
             self.__loops = 1
 
     def create_scenario(self, scenario_name, scheduler, job_list=[]):
+        ''' Method for setting the properties of the current scenario '''
+
         self.__scheduler = scheduler
         self.__system = scheduler.system
         self.job_list = []
@@ -42,9 +48,13 @@ class Simulator():
         return self.add_applications(job_list)
 
     def get_execution_log(self):
+        ''' Method that returns the execution log. The log is a dictionary, where
+        log[job] = list of (start time, end time) for each running instance '''
         return self.__execution_log
 
     def add_applications(self, job_list):
+        ''' Method for sending additional applications to the simulation '''
+
         for new_job in job_list:
             if new_job in self.job_list:
                 self.logger.warning("Job %s is already included "
@@ -60,6 +70,8 @@ class Simulator():
         return len(self.job_list)
 
     def __sanity_check_job_execution(self, execution_list, job):
+        ''' Sanity checks for one application's execution log '''
+
         # The execution list: [(st, end)]
         # check that first start is after the submission time
         if execution_list[0][0] < job.submission_time:
@@ -90,6 +102,8 @@ class Simulator():
         return True
 
     def __sainity_check_schedule(self, workload):
+        ''' Basic sanity checks for a complete schedule '''
+
         check_fail = 0
         # check that scheduled applications do not exceed system size
         # only check executions and not reservations (backfill)
@@ -138,6 +152,9 @@ class Simulator():
         return check_fail
 
     def run(self):
+        ''' Main method of the simulator that triggers the start of 
+        a given simulation scenario '''
+
         assert (len(self.job_list)>0), "Cannot run an empty scenario"
         check = 0
         for i in range(self.__loops):
@@ -171,7 +188,8 @@ class Simulator():
 
 
 class Application(object):
-    ''' Job class containing the properties of the running instance '''
+    ''' Class containing the properties of an application and
+    all its running instances '''
 
     def __init__(self, nodes, submission_time, walltime,
                  requested_walltimes, resubmit_factor=-1):

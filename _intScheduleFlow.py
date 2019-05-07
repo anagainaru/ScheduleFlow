@@ -7,7 +7,8 @@ from enum import IntEnum
 
 
 class JobChangeType(IntEnum):
-    ''' Enumeration class to hold  '''
+    ''' Enumeration class to hold all the types of changes
+    that can be applied to an Application properties '''
 
     SubmissionChange = 0
     RequestChange = 1
@@ -230,8 +231,14 @@ class Runtime(object):
 
 
 class TexGenerator():
+    ''' Internal class used by the Visualization Engine to create the
+    latex files that will be compiled into a GIF animation '''
+
     def __init__(self, execution_slices_list, execution_job_list,
                  scalex, scaley):
+        ''' The constructor takes a division of the space into slices,
+        the execution log for each job and the vertical and horizontal
+        scale factors to fit the simulation to the figure size '''
         self.__scalex = scalex
         self.__scaley = scaley
         self.__slices = execution_slices_list
@@ -239,7 +246,8 @@ class TexGenerator():
         self.__total_runs = len(execution_job_list)
 
     def write_to_file(self, filename):
-        # create a file for each step of the simulation
+        ''' Method to create a file for each step of the simulation '''
+
         for i in range(self.__total_runs + 1):
             outf = open(r'draw/%s_%d.tex' % (filename, i), 'w')
             # write header
@@ -260,6 +268,9 @@ class TexGenerator():
             outf.close()
 
     def __print_current_execution_info(self, execution, outf):
+        ''' Method to plot the start time, duration and request time
+        for the current step (showing a job instance) '''
+
         start = float(execution[0])
         end = float(execution[1]) - start
         request = float(execution[3])
@@ -271,11 +282,18 @@ class TexGenerator():
         outf.write('\n')
 
     def __print_makespan(self, value, outf):
+        ''' The last step of the simulation plots the total makespan
+        instead of the job information plotting during each other step '''
+
         val = float(value)
         outf.write(r'\legend{%.1f}{-0.5}{%.1f}' % (val * self.__scalex, val))
         outf.write("\n")
 
     def __print_execution(self, execution, outf, last_frame):
+        ''' Method for ploting a jobs execution represented by a rectagle.
+        Yellow color represents a sucessfull execution, shades of orange
+        consecutive failed instances '''
+
         start = float(execution[0]) * self.__scalex
         end = float(execution[1]) * self.__scalex
         procs = execution[2] * self.__scaley
@@ -296,6 +314,9 @@ class TexGenerator():
             outf.write("\n")
 
     def __print_reservation(self, execution, outf):
+        ''' Method for plotting the dashed rectangle that shows the
+        reserved time for a given execution '''
+
         start = float(execution[0]) * self.__scalex
         procs = execution[2] * self.__scaley
         offset = execution[6] * self.__scaley
@@ -308,6 +329,8 @@ class TexGenerator():
             outf.write("\n")
 
     def __print_execution_list(self, step, outf):
+        ''' Method for printing all job instances for a given step '''
+
         # check if it is the last frame
         last_frame = False
         if step == len(self.__slices) + 1:
@@ -315,7 +338,7 @@ class TexGenerator():
             step = step - 1
         for i in range(step):
             execution_list = self.__slices[i]
-            # print all sliced of the current execution
+            # print all slices of the current execution
             for execution in execution_list:
                 self.__print_execution(execution, outf, last_frame)
             if not last_frame:
@@ -324,6 +347,8 @@ class TexGenerator():
 
 
 class VizualizationEngine():
+    ''' Internal class responsible with creating the GIF animation '''
+
     def __init__(self, procs, execution_log=[], horizontal_ax_limit=0,
                  keep_intermediate_pdf=False):
         self.__scaley = 150 / procs
@@ -339,6 +364,9 @@ class VizualizationEngine():
             'Convert from ImageMagik needs to be installed to create GIFs'
 
     def __set_scalex(self, execution_log):
+        ''' Method for setting the scale for plotting the execution log
+        on the given image size '''
+
         if len(execution_log) > 0:
             limitx = max([execution_log[job][len(execution_log[job]) - 1][1]
                           for job in execution_log])
@@ -351,10 +379,17 @@ class VizualizationEngine():
         self.__set_scalex(execution_log)
 
     def set_horizontal_ax_limit(self, horizontal_ax_limit):
+        ''' Method used to set the horizontal limit different than 
+        the end of the simulation '''
+
         self.__limitx = horizontal_ax_limit
         self.__scalex = 90/horizontal_ax_limit
 
     def generate_scenario_gif(self, name_scenario):
+        ''' Method that generates the animation latex files, creates the
+        PDF and calls convert from ImageMagik to convert the PDFs into a
+        GIF file '''
+
         assert (len(self.__execution_log) > 0),\
             'ERR - Trying to create an animation for an empty execution log'
 
@@ -368,6 +403,7 @@ class VizualizationEngine():
         ''' Generate a temp list of (start, end, procs,
         requested walltime, job_id, color) used to create
         the tex file '''
+
         run_list = []
         for job in self.__execution_log:
             run_list += self.__get_job_runs(self.__execution_log[job], job)
@@ -379,13 +415,19 @@ class VizualizationEngine():
         tex_generator.write_to_file(filename)
 
     def __find_running_jobs(self, run_list, start, end):
+        ''' Given an execution log find all jobs that are included 
+        inside the schedule between start and end '''
+
         return [i for i in range(len(run_list)) if
                 run_list[i][0] <= start and
                 run_list[i][1] >= end]
 
     def __get_sliced_list(self, run_list):
         ''' Generate a list of (start, end, procs, request_end,
-        job_id, color, starty) '''
+        job_id, failure_count, starty) for each job instance for
+        each slice (a slice is a unit execution time not containing
+        any job starts or ends)'''
+
         event_list = list(set([i[0] for i in run_list] +
                               [i[1] for i in run_list]))
         event_list.sort()
@@ -405,6 +447,9 @@ class VizualizationEngine():
         return sliced_list
 
     def __get_job_runs(self, execution_list, job):
+        ''' Generate a list of (start, end, procs, request_time,
+        job_id, failure_count) for each job instance run '''
+
         run_list = []
         requested_time = job.request_walltime
         for i in range(len(execution_list) - 1):
@@ -425,6 +470,9 @@ class VizualizationEngine():
 
 
 class StatsEngine():
+    ''' Internal class used by the Simulator to generate the statistics
+    related to a simulation (utilization, average makespan, etc) '''
+
     def __init__(self, total_nodes):
         self.__execution_log = {}
         self.__makespan = -1
@@ -446,25 +494,34 @@ class StatsEngine():
                 self.total_failures())
 
     def set_execution_output(self, execution_log):
+        ''' Add the execution log that will be used to generate stats '''
+
         assert (len(execution_log)>0), "Simulation execution log is NULL"
         self.__execution_log = execution_log
         self.__makespan = max([max([i[1] for i in self.__execution_log[job]])
                                for job in self.__execution_log])
-
     def total_makespan(self):
+        ''' Time from simulation beginning last job end '''
         return self.__makespan
 
     def total_failures(self):
+        ''' Total number of failures for all job instance runs '''
         total_failures = sum([len(self.__execution_log[job])-1 for job in
                               self.__execution_log])
         return total_failures
 
     def system_utilization(self):
+        ''' The sum of execution time for successful runs multiplied by the
+        processors used for each job divided by the simulation volume
+        (makespan multiplied by number of nodes in the system) '''
+
         total_runtime = sum([job.walltime * job.nodes for job in
                              self.__execution_log])
         return total_runtime / (self.__makespan * self.__total_nodes)
 
     def average_job_wait_time(self):
+        ''' Average time between submission and run for all instances '''
+
         total_wait = 0
         total_runs = 0
         for job in self.__execution_log:
@@ -478,6 +535,10 @@ class StatsEngine():
         return total_wait / max(1, total_runs)
 
     def average_job_utilization(self):
+        ''' Average utilization of the machine for each job
+        (ratio between time of successful run to the sum of all
+        execution of every instance of the job)'''
+
         total = 0
         for job in self.__execution_log:
             apl_total = sum([self.__execution_log[job][i][1] -
@@ -490,6 +551,8 @@ class StatsEngine():
         return total / max(1, len(self.__execution_log))
 
     def average_job_response_time(self):
+        ''' Average time between last run and submission of jobs '''
+
         makespan = 0
         for job in self.__execution_log:
             runs = self.__execution_log[job]
@@ -497,6 +560,9 @@ class StatsEngine():
         return makespan / max(1, len(self.__execution_log))
 
     def average_job_stretch(self):
+        ''' Average stretch for all jobs (ratio between response time
+        and time of sucessful run)'''
+
         stretch = 0
         for job in self.__execution_log:
             runs = self.__execution_log[job]
@@ -505,6 +571,8 @@ class StatsEngine():
         return stretch / max(1, len(self.__execution_log))
 
     def print_to_file(self, file_handler, scenario):
+        ''' Print all metrics to a file handler '''
+
         if len(self.__execution_log) == 0:
             return -1
         file_handler.write(
