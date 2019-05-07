@@ -388,7 +388,7 @@ class VizualizationEngine():
         self.__set_scalex(execution_log)
 
     def set_horizontal_ax_limit(self, horizontal_ax_limit):
-        ''' Method used to set the horizontal limit different than 
+        ''' Method used to set the horizontal limit different than
         the end of the simulation '''
 
         self.__limitx = horizontal_ax_limit
@@ -424,7 +424,7 @@ class VizualizationEngine():
         tex_generator.write_to_file(filename)
 
     def __find_running_jobs(self, run_list, start, end):
-        ''' Given an execution log find all jobs that are included 
+        ''' Given an execution log find all jobs that are included
         inside the schedule between start and end '''
 
         return [i for i in range(len(run_list)) if
@@ -505,10 +505,11 @@ class StatsEngine():
     def set_execution_output(self, execution_log):
         ''' Add the execution log that will be used to generate stats '''
 
-        assert (len(execution_log)>0), "Simulation execution log is NULL"
+        assert (len(execution_log) > 0), "Simulation execution log is NULL"
         self.__execution_log = execution_log
         self.__makespan = max([max([i[1] for i in self.__execution_log[job]])
                                for job in self.__execution_log])
+
     def total_makespan(self):
         ''' Time from simulation beginning last job end '''
         return self.__makespan
@@ -593,3 +594,4 @@ class StatsEngine():
              self.average_job_stretch(),
              self.average_job_wait_time(),
              self.total_failures()))
+

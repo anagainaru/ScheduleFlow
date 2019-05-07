@@ -6,6 +6,7 @@ from _intScheduleFlow import Runtime
 from _intScheduleFlow import StatsEngine
 import ScheduleFlow
 
+
 # test the event priority queue
 class TestEventQueue(unittest.TestCase):
     def test_empty(self):
@@ -117,8 +118,8 @@ class TestApplication(unittest.TestCase):
 
     def test_invalid_factor(self):
         with self.assertRaises(AssertionError):
-            ap = ScheduleFlow.Application(7, 5, 10, [11],
-                                          resubmit_factor=0.2)
+            ScheduleFlow.Application(7, 5, 10, [11],
+                                     resubmit_factor=0.2)
 
     def test_request_list_factor(self):
         ap = ScheduleFlow.Application(7, 5, 100, [70, 80, 90],
@@ -447,8 +448,8 @@ class TestRuntime(unittest.TestCase):
                 execution_time = np.random.randint(11, 100)
                 job_list.add(ScheduleFlow.Application(
                     1, 1 + i * 10, execution_time, [execution_time]))
-            # job_listication in the beginning that will make all other be in the
-            # wait queue for the next schedule trigger
+            # job_listication in the beginning that will make all other be
+            # in the wait queue for the next schedule trigger
             job_list.add(ScheduleFlow.Application(100, 0, 1000, [1000]))
             runtime = Runtime(job_list)
             runtime(sch)
@@ -662,7 +663,7 @@ class TestRuntime(unittest.TestCase):
         for i in range(2):
             sch = ScheduleFlow.BatchScheduler(ScheduleFlow.System(10))
             seljob = ScheduleFlow.Application(5, 0, 700, [650],
-                                                 resubmit_factor=1.5)
+                                              resubmit_factor=1.5)
             runtime = Runtime([ScheduleFlow.Application(
                 5, 0, 1400, [1200+i], resubmit_factor=1.5),
                                ScheduleFlow.Application(
@@ -677,6 +678,7 @@ class TestRuntime(unittest.TestCase):
                 for i in range(len(expected_start_job2)):
                     self.assertEqual(workload[job][i][0],
                                      expected_start_job2[i])
+
 
 # test the simulator class
 class TestSimulator(unittest.TestCase):
@@ -705,7 +707,7 @@ class TestSimulator(unittest.TestCase):
         self.assertEqual(len(sim.job_list), 0)
         self.assertEqual(ret, 0)
         job_list = [ScheduleFlow.Application(6, 0, 500, [1000]),
-               ScheduleFlow.Application(6, 0, 500, [1000])]
+                    ScheduleFlow.Application(6, 0, 500, [1000])]
         ret = sim.create_scenario(
             "test",
             ScheduleFlow.BatchScheduler(ScheduleFlow.System(10)),
@@ -720,12 +722,12 @@ class TestSimulator(unittest.TestCase):
             "test",
             ScheduleFlow.BatchScheduler(ScheduleFlow.System(10)))
         job_list = [ScheduleFlow.Application(6, 0, 500, [1000]),
-               ScheduleFlow.Application(6, 0, 500, [1000])]
+                    ScheduleFlow.Application(6, 0, 500, [1000])]
         ret = sim.add_applications(job_list)
         ret = sim.add_applications(job_list)
         self.assertEqual(ret, 2)
         job_list = [ScheduleFlow.Application(6, 0, 500, [1000]),
-               ScheduleFlow.Application(6, 0, 500, [1000])]
+                    ScheduleFlow.Application(6, 0, 500, [1000])]
         ret = sim.add_applications(job_list)
         self.assertEqual(ret, 4)
 
@@ -734,7 +736,7 @@ class TestSimulator(unittest.TestCase):
         with self.assertRaises(AssertionError):
             ret = sim.run()
         job_list = [ScheduleFlow.Application(6, 0, 500, [1000]),
-               ScheduleFlow.Application(6, 0, 500, [1000])]
+                    ScheduleFlow.Application(6, 0, 500, [1000])]
         sim.create_scenario(
             "test",
             ScheduleFlow.BatchScheduler(ScheduleFlow.System(10)),
@@ -746,16 +748,16 @@ class TestSimulator(unittest.TestCase):
         sim = ScheduleFlow.Simulator(check_correctness=True)
         job_list = [ScheduleFlow.Application(10, 0, 500, [200],
                                              resubmit_factor=1.5),
-               ScheduleFlow.Application(10, 0, 500, [600]),
-               ScheduleFlow.Application(10, 0, 500, [200, 600]),
-               ScheduleFlow.Application(10, 0, 500, [300, 400]),
-               ScheduleFlow.Application(10, 0, 500, [400, 450],
-                                        resubmit_factor=1.5)]
+                    ScheduleFlow.Application(10, 0, 500, [600]),
+                    ScheduleFlow.Application(10, 0, 500, [200, 600]),
+                    ScheduleFlow.Application(10, 0, 500, [300, 400]),
+                    ScheduleFlow.Application(10, 0, 500, [400, 450],
+                                             resubmit_factor=1.5)]
         sim.create_scenario(
             "test",
             ScheduleFlow.BatchScheduler(ScheduleFlow.System(10)),
             job_list=job_list)
-        ret = sim.run()
+        sim.run()
         self.assertEqual(sim.test_correctness(), 0)
 
 
