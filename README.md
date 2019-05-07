@@ -9,7 +9,13 @@
 The ScheduleFlow software consists of a series of scripts and classes that offer an API allowing users to create simulation scenarios for online and reservation-based batch schedulers.
 For details on the API or the internals of the Simulator, visit the [wiki](https://github.com/anagainaru/SchedulerSimulator/wiki)
 
-### Example
+### Citation
+
+If you use the package available here in your work, please refer to the latest release. 
+
+[![DOI](https://zenodo.org/badge/179132255.svg)](https://zenodo.org/badge/latestdoi/179132255)
+
+### Crash course
 
 `python run_simple_example.py`
 
