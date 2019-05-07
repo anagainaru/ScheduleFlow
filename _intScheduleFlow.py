@@ -594,4 +594,3 @@ class StatsEngine():
              self.average_job_stretch(),
              self.average_job_wait_time(),
              self.total_failures()))
-
