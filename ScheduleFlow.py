@@ -1,3 +1,12 @@
+#  Copyright (c) 2019-2020 by the ScheduleFlow authors
+#   All rights reserved.
+
+#   This file is part of the ScheduleFlow package. ScheduleFlow is
+#   distributed under a BSD 3-clause license. For details see the
+#   LICENSE file in the top-level directory.
+
+#   SPDX-License-Identifier: BSD-3-Clause
+
 import logging
 import math
 import _intScheduleFlow
@@ -5,8 +14,12 @@ from _intScheduleFlow import JobChangeType
 
 
 class Simulator():
+    ''' Main class of the simulation '''
+
     def __init__(self, loops=1, generate_gif=False, check_correctness=False,
                  output_file_handler=None):
+        ''' Constructor defining the main properties of a simulation '''
+
         assert (loops > 0), "Number of loops has to be a positive integer"
 
         self.__loops = loops
@@ -28,13 +41,16 @@ class Simulator():
             self.__loops = 1
 
     def create_scenario(self, scenario_name, scheduler, job_list=[]):
+        ''' Method for setting the properties of the current scenario '''
+
         self.__scheduler = scheduler
         self.__system = scheduler.system
         self.job_list = []
         self.__execution_log = {}
         self.__scenario_name = scenario_name
 
-        self.stats = _intScheduleFlow.StatsEngine(self.__system.get_total_nodes())
+        self.stats = _intScheduleFlow.StatsEngine(
+                self.__system.get_total_nodes())
         if self.__generate_gif:
             self.__viz_handler = _intScheduleFlow.VizualizationEngine(
                     self.__system.get_total_nodes())
@@ -42,24 +58,30 @@ class Simulator():
         return self.add_applications(job_list)
 
     def get_execution_log(self):
+        ''' Method that returns the execution log. The log is a dictionary,
+        where log[job] = list of (start, end) for each running instance '''
         return self.__execution_log
 
     def add_applications(self, job_list):
+        ''' Method for sending additional applications to the simulation '''
+
         for new_job in job_list:
             if new_job in self.job_list:
                 self.logger.warning("Job %s is already included "
-                                    "in the sumlation." %(new_job))
+                                    "in the sumlation." % (new_job))
                 continue
             job_id_list = [job.job_id for job in self.job_list]
             if new_job.job_id == -1 or new_job.job_id in job_id_list:
                 newid = len(self.job_list)
                 if len(job_id_list) > newid:
                     newid = max(job_id_list) + 1
-                new_job.job_id = newid 
+                new_job.job_id = newid
             self.job_list.append(new_job)
         return len(self.job_list)
 
     def __sanity_check_job_execution(self, execution_list, job):
+        ''' Sanity checks for one application's execution log '''
+
         # The execution list: [(st, end)]
         # check that first start is after the submission time
         if execution_list[0][0] < job.submission_time:
@@ -90,6 +112,8 @@ class Simulator():
         return True
 
     def __sainity_check_schedule(self, workload):
+        ''' Basic sanity checks for a complete schedule '''
+
         check_fail = 0
         # check that scheduled applications do not exceed system size
         # only check executions and not reservations (backfill)
@@ -138,7 +162,10 @@ class Simulator():
         return check_fail
 
     def run(self):
-        assert (len(self.job_list)>0), "Cannot run an empty scenario"
+        ''' Main method of the simulator that triggers the start of
+        a given simulation scenario '''
+
+        assert (len(self.job_list) > 0), "Cannot run an empty scenario"
         check = 0
         for i in range(self.__loops):
             runtime = _intScheduleFlow.Runtime(self.job_list)
@@ -171,7 +198,8 @@ class Simulator():
 
 
 class Application(object):
-    ''' Job class containing the properties of the running instance '''
+    ''' Class containing the properties of an application and
+    all its running instances '''
 
     def __init__(self, nodes, submission_time, walltime,
                  requested_walltimes, resubmit_factor=-1):
@@ -182,7 +210,7 @@ class Application(object):
         assert (walltime > 0),\
             'Application walltime must be positive: received %3.1f' % (
             walltime)
-        assert (len(requested_walltimes)>0),\
+        assert (len(requested_walltimes) > 0),\
             'Request time sequence cannot be empty'
         assert (all(i > 0 for i in requested_walltimes)),\
             'Job requested walltime must be > 0 : received %s' % (
@@ -193,8 +221,8 @@ class Application(object):
         assert (nodes > 0),\
             'Number of nodes for a job must be > 0 : received %d' % (
             nodes)
-        assert (all(requested_walltimes[i] < requested_walltimes[i + 1] for i in
-                range(len(requested_walltimes) - 1))),\
+        assert (all(requested_walltimes[i] < requested_walltimes[i + 1]
+                for i in range(len(requested_walltimes) - 1))),\
             'Request time sequence is not sorted in increasing order'
 
         self.nodes = nodes
@@ -290,9 +318,8 @@ class Application(object):
         else:
             self.request_walltime = int(self.resubmit_factor *
                                         self.request_walltime)
-        if self.resubmit_factor == 1 and len(self.request_sequence)==0:
-                self.resubmit = False
-
+        if self.resubmit_factor == 1 and len(self.request_sequence) == 0:
+            self.resubmit = False
 
     def free_wasted_space(self):
         ''' Method for marking that the job finished leaving a gap equal to
@@ -317,8 +344,8 @@ class Application(object):
             self.request_walltime = restore[1]
 
         self.resubmit = True
-        if self.resubmit_factor == 1 and len(self.request_sequence)==0:
-                self.resubmit = False
+        if self.resubmit_factor == 1 and len(self.request_sequence) == 0:
+            self.resubmit = False
 
 
 class System(object):
@@ -549,8 +576,8 @@ class BatchScheduler(Scheduler):
                 (job))
             return 0
 
-        end_window = max([reservations[job] + job.request_walltime
-                          for job in reservations])
+        end_window = max([reservations[j] + job.request_walltime
+                          for j in reservations])
         ts = self.create_job_reservation(job, reservations)
         if ts != -1:
             return ts

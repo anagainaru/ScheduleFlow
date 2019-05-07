@@ -1,3 +1,12 @@
+#  Copyright (c) 2019-2020 by the Cabana authors
+#   All rights reserved.
+
+#   This file is part of the ScheduleFlow package. ScheduleFlow is
+#   distributed under a BSD 3-clause license. For details see the
+#   LICENSE file in the top-level directory.
+
+#   SPDX-License-Identifier: BSD-3-Clause
+
 import ScheduleFlow
 import sys
 import numpy as np
