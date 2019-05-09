@@ -8,6 +8,7 @@
 #   SPDX-License-Identifier: BSD-3-Clause
 
 import logging
+import os
 import numpy as np
 import _intScheduleFlow
 from _intScheduleFlow import JobChangeType
@@ -39,6 +40,9 @@ class Simulator():
                                     "option is True. Updated number of "
                                     "loops to 1.")
             self.__loops = 1
+        
+        if "SF_DRAW_PATH" not in os.environ:
+            os.environ["SF_DRAW_PATH"] = "./draw"
 
     def create_scenario(self, scenario_name, scheduler, job_list=[]):
         ''' Method for setting the properties of the current scenario '''
