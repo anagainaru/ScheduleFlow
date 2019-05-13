@@ -42,7 +42,7 @@ class Simulator():
             self.__loops = 1
         
         if "SF_DRAW_PATH" not in os.environ:
-            os.environ["SF_DRAW_PATH"] = "./draw"
+            os.environ["SF_DRAW_PATH"] = "."
 
     def create_scenario(self, scenario_name, scheduler, job_list=[]):
         ''' Method for setting the properties of the current scenario '''
