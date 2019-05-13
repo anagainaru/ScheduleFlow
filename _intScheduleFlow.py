@@ -263,11 +263,11 @@ class TexGenerator():
         ''' Method to create a file for each step of the simulation '''
 
         for i in range(self.__total_runs + 1):
-            outf = open(os.environ["SF_DRAW_PATH"]+'/draw/%s_%d.tex' % (
+            outf = open(os.environ["ScheduleFlow_PATH"]+'/draw/%s_%d.tex' % (
                 filename, i), 'w')
             # write header
             outf.writelines([l for l in open(
-                os.environ["SF_DRAW_PATH"]+"/draw/tex_header").readlines()])
+                os.environ["ScheduleFlow_PATH"]+"/draw/tex_header").readlines()])
             self.__print_execution_list(i + 1, outf)
             if i < self.__total_runs:
                 # write last job start and end times
@@ -279,7 +279,7 @@ class TexGenerator():
                                       outf)
             # write footer
             outf.writelines([l for l in open(
-                os.environ["SF_DRAW_PATH"]+"/draw/tex_footer").readlines()])
+                os.environ["ScheduleFlow_PATH"]+"/draw/tex_footer").readlines()])
             outf.close()
 
     def __print_current_execution_info(self, execution, outf):
@@ -410,7 +410,7 @@ class VizualizationEngine():
 
         self.__generate_animation_files(name_scenario)
         subprocess.call([
-            os.environ["SF_DRAW_PATH"]+"/draw/create_animation.sh",
+            os.environ["ScheduleFlow_PATH"]+"/draw/create_animation.sh",
             name_scenario,
             "delete"])
         return self.__limitx
