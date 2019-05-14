@@ -5,7 +5,7 @@ if [ "$#" -lt 1 ]; then
     exit
 fi
 
-for i in $ScheduleFlow_PATH/draw/$1_*.tex; do echo "Compile $i ..."; pdflatex -output-directory $SF_DRAW_PATH/draw $i > /dev/null; done
+for i in $ScheduleFlow_PATH/draw/$1_*.tex; do echo "Compile $i ..."; pdflatex -output-directory $ScheduleFlow_PATH/draw $i > /dev/null; done
 rm $ScheduleFlow_PATH/draw/$1_*.{aux,log,nav,out,snm,toc}
 echo "Generating GIF ..."
 total_files=`ls -l $ScheduleFlow_PATH/draw/$1_*.pdf | wc -l`
