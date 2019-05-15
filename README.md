@@ -61,14 +61,21 @@ given simulation:
 scheduler = Scheduler.BatchScheduler(system)
 simulator.create_scenario(scenario_name,
                           scheduler,
-                          resubmit_factor=1.5,
                           job_list=job_list)
 simulator.run()
 ```
 
 The scenario uses a scheduler and a list of jobs that need to be
 simulated. In addition, jobs can be added to a scenario by using
-the `simulator.add_jobs(job_list)` method.
+the `simulator.add_applications(job_list)` method. Alternatively,
+the run_scenario method can be called directly on the simulator:
+
+```python
+scheduler = Scheduler.BatchScheduler(system)
+simulator.run_scenario(scenario_name,
+                       scheduler,
+                       job_list)
+```
 
 The scenario name is used to create the animation GIF filenames
 and for debugging purposes. The resubmit factor indicates that 
@@ -82,7 +89,7 @@ fo create PDF files which are used by ImageMagick to generate the GIF.
 
 **Output**
 
-If successfuly ran, the `run_simple_example.py` script will output:
+If successfuly ran, the `run_simple_example.py` script will output (*):
 
 <pre>
 Scenario : makespan : utilization : average_job_utilization : average_job_response_time : average_job_stretch : average_job_wait_time : failures
@@ -102,5 +109,5 @@ Reservation-based scheduler simulation
 ![Batch scheduler](./docs/online.png)
 
 <sup>* Depeding on the requirements of the jobs, the scheduler might give
-other execution orders for the submitted jobs.</sup>
+other execution orders for the submitted jobs and thus slightly different performance values</sup>
 
