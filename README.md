@@ -15,9 +15,35 @@ If you use the package available here in your work, please refer to the latest r
 
 [![DOI](https://zenodo.org/badge/179132255.svg)](https://zenodo.org/badge/latestdoi/179132255)
 
-### Usage
+### Getting Started
 
-Copy the latest release ... TODO
+Clone the repository or download the latest release:
+
+`git clone https://github.com/anagainaru/ScheduleFlow.git ScheduleFlow`
+
+In the python code import the ScheduleFlow package:
+```python
+sys.path.append("path/to/ScheduleFlow")
+import ScheduleFlow
+```
+
+For generating GIF animations, the path to the ScheduleFlow root directory needs to be saved in the ScheduleFlow_PATH environmental variable, either in the python code:
+```python
+import os
+os.environ["ScheduleFlow_PATH"] = "path/to/ScheduleFlow"
+```
+or as linux command:
+
+`export ScheduleFlow_PATH="path/to/ScheduleFlow" `
+
+**Requirements** 
+
+The ScheduleFlow package works on both python2 or python3 and requires numpy.
+
+<pre>
+Generating GIFs for simulations requires <b>pdflatex</b> and <b>convert</b> from ImageMagick.
+</pre>
+
 
 ### Example
 
@@ -25,13 +51,7 @@ Copy the latest release ... TODO
 
 <sup>* Tested with python 3.7</sup>
 
-**Requirements** 
-
-<pre>
-Generating GIFs for simulations requires <b>pdflatex</b> and <b>convert</b> from ImageMagick.
-</pre>
-
-**Details**
+**Crash course**
 
 The script simulates the execution of 11 jobs submitted to 
 a reservation-based scheduler and an online scheduler.
