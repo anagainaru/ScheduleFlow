@@ -15,7 +15,11 @@ If you use the package available here in your work, please refer to the latest r
 
 [![DOI](https://zenodo.org/badge/179132255.svg)](https://zenodo.org/badge/latestdoi/179132255)
 
-### Crash course
+### Usage
+
+Copy the latest release ... TODO
+
+### Example
 
 `python run_simple_example.py`
 
@@ -71,10 +75,7 @@ the `simulator.add_applications(job_list)` method. Alternatively,
 the run_scenario method can be called directly on the simulator:
 
 ```python
-scheduler = Scheduler.BatchScheduler(system)
-simulator.run_scenario(scenario_name,
-                       scheduler,
-                       job_list)
+simulator.run_scenario(scenario_name, scheduler, job_list)
 ```
 
 The scenario name is used to create the animation GIF filenames
@@ -89,7 +90,7 @@ fo create PDF files which are used by ImageMagick to generate the GIF.
 
 **Output**
 
-If successfuly ran, the `run_simple_example.py` script will output (*):
+If successfuly ran, the `run_simple_example.py` script will output <sup>*</sup>:
 
 <pre>
 Scenario : makespan : utilization : average_job_utilization : average_job_response_time : average_job_stretch : average_job_wait_time : failures
