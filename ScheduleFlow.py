@@ -40,6 +40,14 @@ class Simulator():
                                     "loops to 1.")
             self.__loops = 1
 
+    def run_scenario(self, scenario_name, scheduler, job_list):
+        ''' Method for directly runnning a scenario (includes creating
+        the scenario and calling the run method'''
+
+        assert (len(job_list)>0), "The job list cannot be empty"
+        self.create_scenario(self, scenario_name, scheduler, job_list)
+        self.run()
+
     def create_scenario(self, scenario_name, scheduler, job_list=[]):
         ''' Method for setting the properties of the current scenario '''
 
