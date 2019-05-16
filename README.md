@@ -38,7 +38,7 @@ or as linux command:
 
 **Requirements** 
 
-The ScheduleFlow package works on both python2 or python3 and requires numpy.
+The ScheduleFlow package was build for python 3 and requires numpy. For running on python 2, enum34 needs to be installed.
 
 <pre>
 Generating GIFs for simulations requires <b>pdflatex</b> and <b>convert</b> from ImageMagick.
@@ -110,7 +110,7 @@ fo create PDF files which are used by ImageMagick to generate the GIF.
 
 **Output**
 
-If successfuly ran, the `run_simple_example.py` script will output <sup>*</sup>:
+If successfuly ran, the `run_simple_example.py` script will output<sup>*</sup>:
 
 <pre>
 Scenario : makespan : utilization : average_job_utilization : average_job_response_time : average_job_stretch : average_job_wait_time : failures
@@ -121,13 +121,13 @@ GIFs generated in ./draw/test_{batch, online}.gif
 
 Example GIFs generated:
 
-Reservation-based scheduler simulation
+Reservation-based scheduler simulation<sup>*</sup>
 
 ![Batch scheduler](./docs/batch.png)
 
-Reservation-based scheduler simulation
+Online scheduler simulation<sup>*</sup>
 
-![Batch scheduler](./docs/online.png)
+![Online scheduler](./docs/online.png)
 
 <sup>* Depeding on the requirements of the jobs, the scheduler might give
 other execution orders for the submitted jobs and thus slightly different performance values</sup>
