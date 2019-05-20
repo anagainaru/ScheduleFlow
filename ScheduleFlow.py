@@ -44,6 +44,14 @@ class Simulator():
         if "ScheduleFlow_PATH" not in os.environ:
             os.environ["ScheduleFlow_PATH"] = "."
 
+    def run_scenario(self, scenario_name, scheduler, job_list):
+        ''' Method for directly runnning a scenario (includes creating
+        the scenario and calling the run method'''
+
+        assert (len(job_list)>0), "The job list cannot be empty"
+        self.create_scenario(self, scenario_name, scheduler, job_list)
+        self.run()
+
     def create_scenario(self, scenario_name, scheduler, job_list=[]):
         ''' Method for setting the properties of the current scenario '''
 
