@@ -493,6 +493,16 @@ class StatsEngine():
         self.__execution_log = {}
         self.__makespan = -1
         self.__total_nodes = total_nodes
+        
+        self.__metric_mapping = {
+            "system makespan" : self.total_makespan,
+            "system utilization" : self.system_utilization,
+            "job utilization" : self.average_job_utilization,
+            "job response time" : self.average_job_response_time,
+            "job stretch" : self.average_job_stretch,
+            "job wait time" : self.average_job_wait_time,
+            "job failures" : self.total_failures}
+        self.__metrics = set([i for i in self.__metric_mapping])
 
     def __str__(self):
         if len(self.__execution_log) == 0:
@@ -516,7 +526,20 @@ class StatsEngine():
         self.__execution_log = execution_log
         self.__makespan = max([max([i[1] for i in self.__execution_log[job]])
                                for job in self.__execution_log])
+    
+    def set_metrics(self, metric_list):
+        ''' Add the metrics of interest for the current simulation '''
 
+        for metric in metric_list:
+            if metric == "all":
+                return self.__metrics
+        self.__metrics = set()
+        for metric in metric_list:
+            if metric not in self.__metric_mapping:
+                continue
+            self.__metrics.add(metric)
+        return self.__metrics
+    
     def total_makespan(self):
         ''' Time from simulation beginning last job end '''
         return self.__makespan
@@ -592,12 +615,8 @@ class StatsEngine():
 
         if len(self.__execution_log) == 0:
             return -1
-        file_handler.write(
-            "%s : %.2f : %.2f : %.2f : %.2f : %.2f : %.2f : %d\n" %
-            (scenario, self.total_makespan(),
-             self.system_utilization(),
-             self.average_job_utilization(),
-             self.average_job_response_time(),
-             self.average_job_stretch(),
-             self.average_job_wait_time(),
-             self.total_failures()))
+        file_handler.write("%s : " %(scenario))
+        for metric in self.__metrics:
+            file_handler.write("%.2f : " %
+            (self.__metric_mapping[metric]()))
+        file_handler.write("\n")
