@@ -12,7 +12,7 @@ import sys
 import numpy as np
 
 
-def run_scenario(num_procssing_units, job_list):
+def run_scenario(num_processing_units, job_list):
     simulator = ScheduleFlow.Simulator(check_correctness=True,
                                        generate_gif=True,
                                        output_file_handler=sys.stdout)
