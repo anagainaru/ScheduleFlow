@@ -502,7 +502,8 @@ class StatsEngine():
             "job stretch" : self.average_job_stretch,
             "job wait time" : self.average_job_wait_time,
             "job failures" : self.total_failures}
-        self.__metrics = set([i for i in self.__metric_mapping])
+        self.__metrics = [i for i in self.__metric_mapping]
+        self.__metrics.sort()
 
     def __str__(self):
         if len(self.__execution_log) == 0:
@@ -545,6 +546,10 @@ class StatsEngine():
             if metric not in self.__metric_mapping:
                 continue
             self.__metrics.add(metric)
+
+        # set order is not deterministic when parsed
+        self.__metrics = list(self.__metrics)
+        self.__metrics.sort()
         return self.__metrics
     
     def total_makespan(self):
@@ -634,7 +639,7 @@ class StatsEngine():
         if loop_id == 0:
             file_handler.write("Scenario name : ")
             for metric in self.__metrics:
-                file_handler.write("%s :" %(metric))
+                file_handler.write("%s : " %(metric))
             file_handler.write("\n")
 
         # print metric values
