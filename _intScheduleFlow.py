@@ -539,7 +539,7 @@ class StatsEngine():
                 return self.__metrics
         self.__metrics = set()
         for metric in metric_list:
-            if "all" in metric:
+            if "all" in metric[:4]:
                 self.__add_metric_list(metric[4:])
                 continue
             if metric not in self.__metric_mapping:
