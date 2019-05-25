@@ -493,6 +493,17 @@ class StatsEngine():
         self.__execution_log = {}
         self.__makespan = -1
         self.__total_nodes = total_nodes
+        
+        self.__metric_mapping = {
+            "system makespan" : self.total_makespan,
+            "system utilization" : self.system_utilization,
+            "job utilization" : self.average_job_utilization,
+            "job response time" : self.average_job_response_time,
+            "job stretch" : self.average_job_stretch,
+            "job wait time" : self.average_job_wait_time,
+            "job failures" : self.total_failures}
+        self.__metrics = [i for i in self.__metric_mapping]
+        self.__metrics.sort()
 
     def __str__(self):
         if len(self.__execution_log) == 0:
@@ -516,7 +527,31 @@ class StatsEngine():
         self.__execution_log = execution_log
         self.__makespan = max([max([i[1] for i in self.__execution_log[job]])
                                for job in self.__execution_log])
+    
+    def __add_metric_list(self, metric_name):
+        self.__metrics |= set([metric for metric in self.__metric_mapping
+                              if metric_name in metric])
 
+    def set_metrics(self, metric_list):
+        ''' Add the metrics of interest for the current simulation '''
+
+        for metric in metric_list:
+            if metric == "all":
+                return self.__metrics
+        self.__metrics = set()
+        for metric in metric_list:
+            if "all" in metric[:4]:
+                self.__add_metric_list(metric[4:])
+                continue
+            if metric not in self.__metric_mapping:
+                continue
+            self.__metrics.add(metric)
+
+        # set order is not deterministic when parsed
+        self.__metrics = list(self.__metrics)
+        self.__metrics.sort()
+        return self.__metrics
+    
     def total_makespan(self):
         ''' Time from simulation beginning last job end '''
         return self.__makespan
@@ -542,7 +577,7 @@ class StatsEngine():
         total_wait = 0
         total_runs = 0
         for job in self.__execution_log:
-            submission = 0
+            submission = job.submission_time
             apl_wait = 0
             for instance in self.__execution_log[job]:
                 apl_wait += instance[0] - submission
@@ -587,17 +622,29 @@ class StatsEngine():
                         job.walltime)
         return stretch / max(1, len(self.__execution_log))
 
-    def print_to_file(self, file_handler, scenario):
+    def get_metric_values(self):
+        if len(self.__execution_log) == 0:
+            return {}
+        ret = {}
+        for metric in self.__metrics:
+            ret[metric] = self.__metric_mapping[metric]()
+        return ret
+
+    def print_to_file(self, file_handler, scenario, loop_id):
         ''' Print all metrics to a file handler '''
 
         if len(self.__execution_log) == 0:
             return -1
-        file_handler.write(
-            "%s : %.2f : %.2f : %.2f : %.2f : %.2f : %.2f : %d\n" %
-            (scenario, self.total_makespan(),
-             self.system_utilization(),
-             self.average_job_utilization(),
-             self.average_job_response_time(),
-             self.average_job_stretch(),
-             self.average_job_wait_time(),
-             self.total_failures()))
+        # if printing the first loop, print the header
+        if loop_id == 0:
+            file_handler.write("Scenario name : ")
+            for metric in self.__metrics:
+                file_handler.write("%s : " %(metric))
+            file_handler.write("\n")
+
+        # print metric values
+        file_handler.write("%s : " %(scenario))
+        for metric in self.__metrics:
+            file_handler.write("%.2f : " %
+            (self.__metric_mapping[metric]()))
+        file_handler.write("\n")

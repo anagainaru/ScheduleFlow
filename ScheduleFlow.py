@@ -173,7 +173,7 @@ class Simulator():
         check_fail += self.__sainity_check_schedule(self.__execution_log)
         return check_fail
 
-    def run(self):
+    def run(self, metrics=["all"]):
         ''' Main method of the simulator that triggers the start of
         a given simulation scenario '''
 
@@ -185,15 +185,17 @@ class Simulator():
             self.__execution_log = runtime.get_stats()
 
             if self.__check_correctness:
-                check += self.test_correctness()
-                if check > 0:
+                check_loop = self.test_correctness()
+                check += check_loop
+                if check_loop > 0:
                     self.logger.debug("FAIL correctness test (loop %d)" % (i))
                     continue
 
             self.stats.set_execution_output(self.__execution_log)
+            self.stats.set_metrics(metrics)
             self.logger.info(self.stats)
             if self.__fp is not None:
-                self.stats.print_to_file(self.__fp, self.__scenario_name)
+                self.stats.print_to_file(self.__fp, self.__scenario_name, i)
 
         if check == 0:
             self.logger.info("PASS correctness test")
@@ -206,7 +208,7 @@ class Simulator():
             self.horizontal_ax = self.__viz_handler.generate_scenario_gif(
                 self.__scenario_name)
             self.logger.info(r"GIF generated draw/%s" % (self.__scenario_name))
-        return check
+        return self.stats.get_metric_values()
 
 
 class Application(object):
