@@ -18,7 +18,7 @@ class Simulator():
     ''' Main class of the simulation '''
 
     def __init__(self, loops=1, generate_gif=False, check_correctness=False,
-                 output_file_handler=None, metrics=["all"]):
+                 output_file_handler=None):
         ''' Constructor defining the main properties of a simulation '''
 
         assert (loops > 0), "Number of loops has to be a positive integer"
@@ -29,7 +29,6 @@ class Simulator():
         self.__execution_log = {}
         self.job_list = []
         self.logger = logging.getLogger(__name__)
-        self.__metrics = metrics
 
         self.__fp = output_file_handler
 
@@ -174,7 +173,7 @@ class Simulator():
         check_fail += self.__sainity_check_schedule(self.__execution_log)
         return check_fail
 
-    def run(self):
+    def run(self, metrics=["all"]):
         ''' Main method of the simulator that triggers the start of
         a given simulation scenario '''
 
@@ -192,7 +191,7 @@ class Simulator():
                     continue
 
             self.stats.set_execution_output(self.__execution_log)
-            self.stats.set_metrics(self.__metrics)
+            self.stats.set_metrics(metrics)
             self.logger.info(self.stats)
             if self.__fp is not None:
                 self.stats.print_to_file(self.__fp, self.__scenario_name)
