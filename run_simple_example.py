@@ -46,8 +46,4 @@ if __name__ == '__main__':
     job_list.add(ScheduleFlow.Application(np.random.randint(9, 11), 0,
                                           100, [90, 135]))
 
-    print("Scenario : makespan : utilization : average_job_utilization : "
-          "average_job_response_time : average_job_stretch : "
-          "average_job_wait_time : failures")
-
     run_scenario(num_processing_units, job_list)

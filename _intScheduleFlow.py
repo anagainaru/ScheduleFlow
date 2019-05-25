@@ -625,11 +625,19 @@ class StatsEngine():
             ret[metric] = self.__metric_mapping[metric]()
         return ret
 
-    def print_to_file(self, file_handler, scenario):
+    def print_to_file(self, file_handler, scenario, loop_id):
         ''' Print all metrics to a file handler '''
 
         if len(self.__execution_log) == 0:
             return -1
+        # if printing the first loop, print the header
+        if loop_id == 0:
+            file_handler.write("Scenario name : ")
+            for metric in self.__metrics:
+                file_handler.write("%s :" %(metric))
+            file_handler.write("\n")
+
+        # print metric values
         file_handler.write("%s : " %(scenario))
         for metric in self.__metrics:
             file_handler.write("%.2f : " %

@@ -195,7 +195,7 @@ class Simulator():
             self.stats.set_metrics(metrics)
             self.logger.info(self.stats)
             if self.__fp is not None:
-                self.stats.print_to_file(self.__fp, self.__scenario_name)
+                self.stats.print_to_file(self.__fp, self.__scenario_name, i)
 
         if check == 0:
             self.logger.info("PASS correctness test")
