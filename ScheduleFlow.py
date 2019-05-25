@@ -185,8 +185,9 @@ class Simulator():
             self.__execution_log = runtime.get_stats()
 
             if self.__check_correctness:
-                check += self.test_correctness()
-                if check > 0:
+                check_loop = self.test_correctness()
+                check += check_loop
+                if check_loop > 0:
                     self.logger.debug("FAIL correctness test (loop %d)" % (i))
                     continue
 
@@ -207,7 +208,7 @@ class Simulator():
             self.horizontal_ax = self.__viz_handler.generate_scenario_gif(
                 self.__scenario_name)
             self.logger.info(r"GIF generated draw/%s" % (self.__scenario_name))
-        return check
+        return self.stats.get_metric_values()
 
 
 class Application(object):

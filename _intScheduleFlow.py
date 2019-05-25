@@ -617,6 +617,14 @@ class StatsEngine():
                         job.walltime)
         return stretch / max(1, len(self.__execution_log))
 
+    def get_metric_values(self):
+        if len(self.__execution_log) == 0:
+            return {}
+        ret = {}
+        for metric in self.__metrics:
+            ret[metric] = self.__metric_mapping[metric]()
+        return ret
+
     def print_to_file(self, file_handler, scenario):
         ''' Print all metrics to a file handler '''
 

@@ -741,8 +741,8 @@ class TestSimulator(unittest.TestCase):
             "test",
             ScheduleFlow.BatchScheduler(ScheduleFlow.System(10)),
             job_list=job_list)
-        ret = sim.run()
-        self.assertEqual(ret, 0)
+        sim.run()
+        self.assertEqual(sim.test_correctness(), 0)
 
     def test_simulation_correctness(self):
         sim = ScheduleFlow.Simulator(check_correctness=True)
