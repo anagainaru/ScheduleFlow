@@ -113,9 +113,9 @@ fo create PDF files which are used by ImageMagick to generate the GIF.
 If successfuly ran, the `run_simple_example.py` script will output<sup>*</sup>:
 
 <pre>
-Scenario : makespan : utilization : average_job_utilization : average_job_response_time : average_job_stretch : average_job_wait_time : failures
-test_batch : 526.00 : 0.54 : 0.70 : 291.55 : 8.76 : 209.50 : 1
-test_online : 421.00 : 0.67 : 0.70 : 285.91 : 8.96 : 204.33 : 1
+Scenario name : job failures : job response time : job stretch : job utilization : job wait time : system makespan : system utilization :
+test_batch : 1.00 : 361.64 : 5.78 : 0.73 : 259.08 : 606.00 : 0.67 :
+test_online : 1.00 : 374.91 : 6.86 : 0.73 : 271.25 : 553.00 : 0.74 :
 GIFs generated in ./draw/test_{batch, online}.gif
 </pre>
 
