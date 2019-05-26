@@ -179,6 +179,7 @@ class Simulator():
 
         assert (len(self.job_list) > 0), "Cannot run an empty scenario"
         check = 0
+        average_stats = {}
         for i in range(self.__loops):
             runtime = _intScheduleFlow.Runtime(self.job_list)
             runtime(self.__scheduler)
@@ -196,6 +197,12 @@ class Simulator():
             self.logger.info(self.stats)
             if self.__fp is not None:
                 self.stats.print_to_file(self.__fp, self.__scenario_name, i)
+            if len(average_stats) == 0:
+                average_stats = self.stats.get_metric_values()
+            else:
+                tmp = self.stats.get_metric_values()
+                average_stats = {i : average_stats[i] + tmp[i] 
+                                 for i in average_stats}
 
         if check == 0:
             self.logger.info("PASS correctness test")
@@ -207,8 +214,9 @@ class Simulator():
             self.__viz_handler.set_execution_log(self.__execution_log)
             self.horizontal_ax = self.__viz_handler.generate_scenario_gif(
                 self.__scenario_name)
-            self.logger.info(r"GIF generated draw/%s" % (self.__scenario_name))
-        return self.stats.get_metric_values()
+            self.logger.info(r"GIF generated draw/%s" % 
+                    (self.__scenario_name))
+        return {i : average_stats[i]/self.__loops for i in average_stats}
 
 
 class Application(object):
