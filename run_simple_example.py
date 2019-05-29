@@ -12,7 +12,7 @@ import sys
 import numpy as np
 
 
-def run_scenario(num_procssing_units, job_list):
+def run_scenario(num_processing_units, job_list):
     simulator = ScheduleFlow.Simulator(check_correctness=True,
                                        generate_gif=True,
                                        output_file_handler=sys.stdout)
@@ -45,9 +45,5 @@ if __name__ == '__main__':
     # add a job that request less time than required for its first run
     job_list.add(ScheduleFlow.Application(np.random.randint(9, 11), 0,
                                           100, [90, 135]))
-
-    print("Scenario : makespan : utilization : average_job_utilization : "
-          "average_job_response_time : average_job_stretch : "
-          "average_job_wait_time : failures")
 
     run_scenario(num_processing_units, job_list)
