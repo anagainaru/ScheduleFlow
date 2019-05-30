@@ -44,6 +44,12 @@ class Simulator():
         if "ScheduleFlow_PATH" not in os.environ:
             os.environ["ScheduleFlow_PATH"] = "."
 
+    def __str__(self):
+        return 'Simulator: generate gif %s, check correctness %s, loops %s' \
+                ', output file %s, number of jobs %d' % (
+                        self.__generate_gif, self.__check_correctness,
+                        self.__loops, self.__fp, len(self.job_list))
+
     def run_scenario(self, scenario_name, scheduler, job_list, metrics=["all"]):
         ''' Method for directly runnning a scenario (includes creating
         the scenario and calling the run method'''
@@ -260,8 +266,8 @@ class Application(object):
             self.resubmit_factor = 1
         else:
             assert (resubmit_factor > 1),\
-                r"""Increase factor for an execution request time must be
-                over 1: received %d""" % (resubmit_factor)
+                'Increase factor for an execution request time must be ' \
+                'over 1: received %d' % (resubmit_factor)
             self.resubmit_factor = resubmit_factor
 
         # Entries in the execution log: (JobChangeType, old_value)
@@ -272,17 +278,17 @@ class Application(object):
                      self.request_sequence[:]))
 
     def __str__(self):
-        return r"""Job %d: %d nodes; %3.1f submission time; %3.1f total
-               execution time (%3.1f requested)""" % (
+        return 'Job %d: %d nodes; %3.1f submission time; %3.1f total ' \
+               'execution time (%3.1f requested)' % (
                self.job_id, self.nodes, self.submission_time, self.walltime,
                self.request_walltime)
 
     def __repr__(self):
-        return r'Job(%d, %3.1f, %3.1f, %3.1f, %d)' % (self.nodes,
-                                                      self.submission_time,
-                                                      self.walltime,
-                                                      self.request_walltime,
-                                                      self.job_id)
+        return 'Job(Nodes: %d, Submission: %3.1f, Walltime: %3.1f, ' \
+               'Request: %3.1f)' % (self.nodes,
+                                    self.submission_time,
+                                    self.walltime,
+                                    self.request_walltime)
 
     def __lt__(self, job):
         return self.job_id < job.job_id
@@ -382,7 +388,11 @@ class System(object):
         self.__free_nodes = total_nodes
 
     def __str__(self):
-        return r'System of %d nodes (%d currently free)' % (
+        return 'System: %d nodes (%d currently free)' % (
+            self.__total_nodes, self.__free_nodes)
+
+    def __repr__(self):
+        return 'System(%d total nodes, %d free)' % (
             self.__total_nodes, self.__free_nodes)
 
     def get_free_nodes(self):
