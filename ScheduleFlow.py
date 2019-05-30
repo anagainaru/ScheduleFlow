@@ -45,8 +45,14 @@ class Simulator():
             os.environ["ScheduleFlow_PATH"] = "."
 
     def __str__(self):
-        return 'Simulator: generate gif %s, check correctness %s, loops %s' \
-                ', output file %s, number of jobs %d' % (
+        return 'Simulator: Generate gif %s, Check correctness %s, Loops %s' \
+                ', Output file %s, Number of jobs %d' % (
+                        self.__generate_gif, self.__check_correctness,
+                        self.__loops, self.__fp, len(self.job_list))
+
+    def __repr__(self):
+        return 'Simulator(GIF: %s, Check_correctness: %s, Loops: %s' \
+                ', Output: %s, Jobs: %d)' % (
                         self.__generate_gif, self.__check_correctness,
                         self.__loops, self.__fp, len(self.job_list))
 
@@ -388,11 +394,11 @@ class System(object):
         self.__free_nodes = total_nodes
 
     def __str__(self):
-        return 'System: %d nodes (%d currently free)' % (
+        return 'System: %d total nodes (%d currently free)' % (
             self.__total_nodes, self.__free_nodes)
 
     def __repr__(self):
-        return 'System(%d total nodes, %d free)' % (
+        return 'System(Nodes: %d, Free: %d)' % (
             self.__total_nodes, self.__free_nodes)
 
     def get_free_nodes(self):
@@ -428,8 +434,12 @@ class Scheduler(object):
         self.logger = logger or logging.getLogger(__name__)
 
     def __str__(self):
-        return r'Scheduler: %s; %d jobs in queue; %d jobs running' % (
+        return 'Scheduler: %s; %d jobs in queue; %d jobs running' % (
             self.system, len(self.wait_queue), len(self.running_jobs))
+
+    def __repr__(self):
+        return 'Scheduler(Queued jobs: %d; Running: %d)' % (
+            len(self.wait_queue), len(self.running_jobs))
 
     def submit_job(self, job):
         ''' Base method to add a job in the waiting queue '''
@@ -553,6 +563,12 @@ class BatchScheduler(Scheduler):
 
         super(BatchScheduler, self).__init__(system, logger)
         self.batch_size = batch_size
+
+    def __str__(self):
+        return "Batch "+super(BatchScheduler, self).__str__()
+
+    def __repr__(self):
+        return "Batch "+super(BatchScheduler, self).__repr__()
 
     def get_batch_jobs(self):
         ''' Method that returns the first batch_size jobs in the waiting
@@ -686,6 +702,12 @@ class BatchScheduler(Scheduler):
 
 class OnlineScheduler(Scheduler):
     ''' Online scheduler (default LJF completly online) '''
+
+    def __str__(self):
+        return "Online "+super(BatchScheduler, self).__str__()
+
+    def __repr__(self):
+        return "Online "+super(BatchScheduler, self).__repr__()
 
     def clear_job(self, job):
         ''' Method that overwrites the base one to indicate that a new
