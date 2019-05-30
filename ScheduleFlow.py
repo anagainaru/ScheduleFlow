@@ -61,8 +61,8 @@ class Simulator():
         the scenario and calling the run method'''
 
         assert (len(job_list)>0), "The job list cannot be empty"
-        self.create_scenario(self, scenario_name, scheduler, job_list)
-        self.run(metrics=["all"])
+        self.create_scenario(scenario_name, scheduler, job_list=job_list)
+        return self.run(metrics=metrics)
 
     def create_scenario(self, scenario_name, scheduler, job_list=[]):
         ''' Method for setting the properties of the current scenario '''
