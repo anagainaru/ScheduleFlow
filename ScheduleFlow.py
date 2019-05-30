@@ -44,13 +44,25 @@ class Simulator():
         if "ScheduleFlow_PATH" not in os.environ:
             os.environ["ScheduleFlow_PATH"] = "."
 
-    def run_scenario(self, scenario_name, scheduler, job_list):
+    def __str__(self):
+        return 'Simulator: Generate gif %s, Check correctness %s, Loops %s' \
+                ', Output file %s, Number of jobs %d' % (
+                        self.__generate_gif, self.__check_correctness,
+                        self.__loops, self.__fp, len(self.job_list))
+
+    def __repr__(self):
+        return 'Simulator(GIF: %s, Check_correctness: %s, Loops: %s' \
+                ', Output: %s, Jobs: %d)' % (
+                        self.__generate_gif, self.__check_correctness,
+                        self.__loops, self.__fp, len(self.job_list))
+
+    def run_scenario(self, scenario_name, scheduler, job_list, metrics=["all"]):
         ''' Method for directly runnning a scenario (includes creating
         the scenario and calling the run method'''
 
         assert (len(job_list)>0), "The job list cannot be empty"
         self.create_scenario(self, scenario_name, scheduler, job_list)
-        self.run()
+        self.run(metrics=["all"])
 
     def create_scenario(self, scenario_name, scheduler, job_list=[]):
         ''' Method for setting the properties of the current scenario '''
@@ -179,6 +191,7 @@ class Simulator():
 
         assert (len(self.job_list) > 0), "Cannot run an empty scenario"
         check = 0
+        average_stats = {}
         for i in range(self.__loops):
             runtime = _intScheduleFlow.Runtime(self.job_list)
             runtime(self.__scheduler)
@@ -196,6 +209,12 @@ class Simulator():
             self.logger.info(self.stats)
             if self.__fp is not None:
                 self.stats.print_to_file(self.__fp, self.__scenario_name, i)
+            if len(average_stats) == 0:
+                average_stats = self.stats.get_metric_values()
+            else:
+                tmp = self.stats.get_metric_values()
+                average_stats = {i : average_stats[i] + tmp[i] 
+                                 for i in average_stats}
 
         if check == 0:
             self.logger.info("PASS correctness test")
@@ -207,8 +226,9 @@ class Simulator():
             self.__viz_handler.set_execution_log(self.__execution_log)
             self.horizontal_ax = self.__viz_handler.generate_scenario_gif(
                 self.__scenario_name)
-            self.logger.info(r"GIF generated draw/%s" % (self.__scenario_name))
-        return self.stats.get_metric_values()
+            self.logger.info(r"GIF generated draw/%s" % 
+                    (self.__scenario_name))
+        return {i : average_stats[i]/self.__loops for i in average_stats}
 
 
 class Application(object):
@@ -252,8 +272,8 @@ class Application(object):
             self.resubmit_factor = 1
         else:
             assert (resubmit_factor > 1),\
-                r"""Increase factor for an execution request time must be
-                over 1: received %d""" % (resubmit_factor)
+                'Increase factor for an execution request time must be ' \
+                'over 1: received %d' % (resubmit_factor)
             self.resubmit_factor = resubmit_factor
 
         # Entries in the execution log: (JobChangeType, old_value)
@@ -264,17 +284,17 @@ class Application(object):
                      self.request_sequence[:]))
 
     def __str__(self):
-        return r"""Job %d: %d nodes; %3.1f submission time; %3.1f total
-               execution time (%3.1f requested)""" % (
+        return 'Job %d: %d nodes; %3.1f submission time; %3.1f total ' \
+               'execution time (%3.1f requested)' % (
                self.job_id, self.nodes, self.submission_time, self.walltime,
                self.request_walltime)
 
     def __repr__(self):
-        return r'Job(%d, %3.1f, %3.1f, %3.1f, %d)' % (self.nodes,
-                                                      self.submission_time,
-                                                      self.walltime,
-                                                      self.request_walltime,
-                                                      self.job_id)
+        return 'Job(Nodes: %d, Submission: %3.1f, Walltime: %3.1f, ' \
+               'Request: %3.1f)' % (self.nodes,
+                                    self.submission_time,
+                                    self.walltime,
+                                    self.request_walltime)
 
     def __lt__(self, job):
         return self.job_id < job.job_id
@@ -374,7 +394,11 @@ class System(object):
         self.__free_nodes = total_nodes
 
     def __str__(self):
-        return r'System of %d nodes (%d currently free)' % (
+        return 'System: %d total nodes (%d currently free)' % (
+            self.__total_nodes, self.__free_nodes)
+
+    def __repr__(self):
+        return 'System(Nodes: %d, Free: %d)' % (
             self.__total_nodes, self.__free_nodes)
 
     def get_free_nodes(self):
@@ -410,8 +434,12 @@ class Scheduler(object):
         self.logger = logger or logging.getLogger(__name__)
 
     def __str__(self):
-        return r'Scheduler: %s; %d jobs in queue; %d jobs running' % (
+        return 'Scheduler: %s; %d jobs in queue; %d jobs running' % (
             self.system, len(self.wait_queue), len(self.running_jobs))
+
+    def __repr__(self):
+        return 'Scheduler(Queued jobs: %d; Running: %d)' % (
+            len(self.wait_queue), len(self.running_jobs))
 
     def submit_job(self, job):
         ''' Base method to add a job in the waiting queue '''
@@ -535,6 +563,12 @@ class BatchScheduler(Scheduler):
 
         super(BatchScheduler, self).__init__(system, logger)
         self.batch_size = batch_size
+
+    def __str__(self):
+        return "Batch "+super(BatchScheduler, self).__str__()
+
+    def __repr__(self):
+        return "Batch "+super(BatchScheduler, self).__repr__()
 
     def get_batch_jobs(self):
         ''' Method that returns the first batch_size jobs in the waiting
@@ -668,6 +702,12 @@ class BatchScheduler(Scheduler):
 
 class OnlineScheduler(Scheduler):
     ''' Online scheduler (default LJF completly online) '''
+
+    def __str__(self):
+        return "Online "+super(BatchScheduler, self).__str__()
+
+    def __repr__(self):
+        return "Online "+super(BatchScheduler, self).__repr__()
 
     def clear_job(self, job):
         ''' Method that overwrites the base one to indicate that a new
