@@ -702,14 +702,12 @@ class TestSimulator(unittest.TestCase):
         sim = ScheduleFlow.Simulator()
         sim.logger.setLevel(logging.CRITICAL)
         ret = sim.create_scenario(
-            "test",
             ScheduleFlow.BatchScheduler(ScheduleFlow.System(10)))
         self.assertEqual(len(sim.job_list), 0)
         self.assertEqual(ret, 0)
         job_list = [ScheduleFlow.Application(6, 0, 500, [1000]),
                     ScheduleFlow.Application(6, 0, 500, [1000])]
         ret = sim.create_scenario(
-            "test",
             ScheduleFlow.BatchScheduler(ScheduleFlow.System(10)),
             job_list=job_list)
         self.assertEqual(len(sim.job_list), 2)
@@ -719,7 +717,6 @@ class TestSimulator(unittest.TestCase):
         sim = ScheduleFlow.Simulator()
         sim.logger.setLevel(logging.CRITICAL)
         sim.create_scenario(
-            "test",
             ScheduleFlow.BatchScheduler(ScheduleFlow.System(10)))
         job_list = [ScheduleFlow.Application(6, 0, 500, [1000]),
                     ScheduleFlow.Application(6, 0, 500, [1000])]
@@ -738,7 +735,6 @@ class TestSimulator(unittest.TestCase):
         job_list = [ScheduleFlow.Application(6, 0, 500, [1000]),
                     ScheduleFlow.Application(6, 0, 500, [1000])]
         sim.create_scenario(
-            "test",
             ScheduleFlow.BatchScheduler(ScheduleFlow.System(10)),
             job_list=job_list)
         sim.run()
@@ -754,7 +750,6 @@ class TestSimulator(unittest.TestCase):
                     ScheduleFlow.Application(10, 0, 500, [400, 450],
                                              resubmit_factor=1.5)]
         sim.create_scenario(
-            "test",
             ScheduleFlow.BatchScheduler(ScheduleFlow.System(10)),
             job_list=job_list)
         sim.run()
