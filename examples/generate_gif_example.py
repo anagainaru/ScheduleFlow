@@ -1,16 +1,8 @@
-#  Copyright (c) 2019-2020 by the Cabana authors
-#   All rights reserved.
-
-#   This file is part of the ScheduleFlow package. ScheduleFlow is
-#   distributed under a BSD 3-clause license. For details see the
-#   LICENSE file in the top-level directory.
-
-#   SPDX-License-Identifier: BSD-3-Clause
-
-import ScheduleFlow
 import sys
+sys.path.append("..")
+import ScheduleFlow
 import numpy as np
-
+import os
 
 def run_scenario(num_processing_units, job_list):
     simulator = ScheduleFlow.Simulator(check_correctness=True,
@@ -18,17 +10,21 @@ def run_scenario(num_processing_units, job_list):
                                        output_file_handler=sys.stdout)
     sch = ScheduleFlow.BatchScheduler(
         ScheduleFlow.System(num_processing_units))
-    simulator.create_scenario("test_batch", sch, job_list=job_list)
+    simulator.create_scenario(sch, job_list=job_list,
+                              scenario_name="test_batch")
     simulator.run()
 
     sch = ScheduleFlow.OnlineScheduler(
         ScheduleFlow.System(num_processing_units))
-    simulator.create_scenario("test_online", sch, job_list=job_list)
+    simulator.create_scenario(sch, job_list=job_list,
+                              scenario_name="test_online")
     simulator.run()
 
 
 if __name__ == '__main__':
+    os.environ["ScheduleFlow_PATH"] = ".."
     num_processing_units = 10
+    
     job_list = set()
     # create the list of applications
     for i in range(10):

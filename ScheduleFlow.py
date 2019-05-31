@@ -56,15 +56,18 @@ class Simulator():
                         self.__generate_gif, self.__check_correctness,
                         self.__loops, self.__fp, len(self.job_list))
 
-    def run_scenario(self, scenario_name, scheduler, job_list, metrics=["all"]):
+    def run_scenario(self, scheduler, job_list, scenario_name="ScheduleFlow",
+                     metrics=["all"]):
         ''' Method for directly runnning a scenario (includes creating
         the scenario and calling the run method'''
 
         assert (len(job_list)>0), "The job list cannot be empty"
-        self.create_scenario(scenario_name, scheduler, job_list=job_list)
+        self.create_scenario(scheduler, job_list=job_list,
+                             scenario_name=scenario_name)
         return self.run(metrics=metrics)
 
-    def create_scenario(self, scenario_name, scheduler, job_list=[]):
+    def create_scenario(self, scheduler, job_list=[],
+                        scenario_name="ScheduleFlow"):
         ''' Method for setting the properties of the current scenario '''
 
         self.__scheduler = scheduler
