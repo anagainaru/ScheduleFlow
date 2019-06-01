@@ -707,10 +707,10 @@ class OnlineScheduler(Scheduler):
     ''' Online scheduler (default LJF completly online) '''
 
     def __str__(self):
-        return "Online "+super(BatchScheduler, self).__str__()
+        return "Online "+super(OnlineScheduler, self).__str__()
 
     def __repr__(self):
-        return "Online "+super(BatchScheduler, self).__repr__()
+        return "Online "+super(OnlineScheduler, self).__repr__()
 
     def clear_job(self, job):
         ''' Method that overwrites the base one to indicate that a new
