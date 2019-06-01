@@ -536,8 +536,8 @@ class StatsEngine():
                 return self.__metrics
         self.__metrics = set()
         for metric in metric_list:
-            self.__metrics |= set([metric for metric in self.__metric_mapping
-                                   if metric_name in metric])
+            self.__metrics |= set([m for m in self.__metric_mapping
+                                   if metric in m])
 
         # set order is not deterministic when parsed
         self.__metrics = list(self.__metrics)

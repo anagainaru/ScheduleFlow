@@ -707,10 +707,10 @@ class OnlineScheduler(Scheduler):
     ''' Online scheduler (default LJF completly online) '''
 
     def __str__(self):
-        return "Online "+super(BatchScheduler, self).__str__()
+        return "Online "+super(OnlineScheduler, self).__str__()
 
     def __repr__(self):
-        return "Online "+super(BatchScheduler, self).__repr__()
+        return "Online "+super(OnlineScheduler, self).__repr__()
 
     def clear_job(self, job):
         ''' Method that overwrites the base one to indicate that a new
@@ -743,6 +743,7 @@ class OnlineScheduler(Scheduler):
         in the available nodes in the system until no job fits or there
         are no more nodes left in the system '''
 
+        self.logger.info('Wait queue: %d' %(len(self.wait_queue)))
         selected_jobs = []
         if len(self.wait_queue) == 0:
             return []
@@ -757,37 +758,29 @@ class OnlineScheduler(Scheduler):
             self.wait_queue.remove(job)
             free_nodes -= job.nodes
         return selected_jobs
-
+ 
     def fit_job_in_schedule(self, job, reserved_jobs, min_ts):
         ''' Method that overwrites the base class that implements a
         reservation based algorithm. For the base method all jobs
         need to be fitted in the reservation window and cannot exceed
         the end. Online methods do not have this limitation '''
 
-        ts = super(OnlineScheduler, self).fit_job_in_schedule(
-            job, reserved_jobs, min_ts)
-        if ts != -1:
-            return ts
-        # check for the end of the schedule for a fit regardless of how long
-        # the job might run
         if len(reserved_jobs) == 0:
             return -1
+        if job.submission_time > min_ts:
+            return -1
+
         gap_list = super(OnlineScheduler, self).create_gaps_list(
             reserved_jobs, min_ts)
         if len(gap_list) == 0:
             return -1
-        # look only at the gaps at the end of the reservation window (i.e. end
-        # of the gap is max)
-        end_window = max([gap[1] for gap in gap_list])
-        if job.submission_time >= end_window:
-            return -1
-        end_gaps = [gap for gap in gap_list if gap[1] == end_window]
-        for gap in end_gaps:
+        # keep only the gaps that start from the submission time
+        gap_list = [gap for gap in gap_list if gap[0]==min_ts]
+        for gap in gap_list:
             if job.nodes <= gap[2]:
                 # there is room for the current job starting with ts
                 self.logger.info(
                     r'[OnlineScheduler] Found space for %s: timestamp %d' %
-                    (job, max(
-                        gap[0], job.submission_time)))
-                return max(gap[0], job.submission_time)
+                    (job, gap[0]))
+                return gap[0]
         return -1
