@@ -767,18 +767,20 @@ class OnlineScheduler(Scheduler):
 
         if len(reserved_jobs) == 0:
             return -1
+        if job.submission_time > min_ts:
+            return -1
+
         gap_list = super(OnlineScheduler, self).create_gaps_list(
             reserved_jobs, min_ts)
         if len(gap_list) == 0:
             return -1
         # keep only the gaps that start from the submission time
         gap_list = [gap for gap in gap_list if gap[0]==min_ts]
-
         for gap in gap_list:
             if job.nodes <= gap[2]:
                 # there is room for the current job starting with ts
                 self.logger.info(
                     r'[OnlineScheduler] Found space for %s: timestamp %d' %
-                    (job, max(gap[0], job.submission_time)))
-                return max(gap[0], job.submission_time)
+                    (job, gap[0]))
+                return gap[0]
         return -1
