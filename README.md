@@ -3,7 +3,7 @@
 
 # Simulator for HPC schedulers
 
-[![Codefresh build status]( https://g.codefresh.io/api/badges/pipeline/anagainaru_marketplace/anagainaru%2FSchedulerSimulator%2FSchedulerSimulator?type=cf-1)]( https://g.codefresh.io/public/accounts/anagainaru_marketplace/pipelines/anagainaru/SchedulerSimulator/SchedulerSimulator)
+![Codefresh build status](https://g.codefresh.io/api/badges/pipeline/anagainaru_marketplace/anagainaru%2FScheduleFlow%2FScheduleFlow?branch=master&key=eyJhbGciOiJIUzI1NiJ9.NWNhN2U1ZWJjMGZmNGFhM2Q4N2ZhOThl.QvetofY-BjCzTRlUTShnmtZIYGiAGByySEglj9BIIbs&type=cf-1)
 [![codecov](https://codecov.io/gh/anagainaru/SchedulerSimulator/branch/master/graph/badge.svg)](https://codecov.io/gh/anagainaru/SchedulerSimulator)
 
 The ScheduleFlow software consists of a series of scripts and classes that offer an API allowing users to create simulation scenarios for online and reservation-based batch schedulers.
