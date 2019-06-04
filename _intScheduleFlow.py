@@ -81,6 +81,69 @@ class EventQueue(object):
         return obj_list
 
 
+class WaitingQueue(object):
+    ''' Class responsible with storing the priority queues used by the
+    scheduler to hold the jobs in several waiting queues '''
+
+    def __init__(self):
+        ''' Creates two waiting queues, one for large jobs having high
+        priority and one for backfilling jobs '''
+        
+        self.wait_queue = set()
+        self.backfill_queue = set()
+
+    def add(self, job, volume_threshold=36000):
+        ''' Method for adding a job into the waiting queues based on
+        their total volume '''
+
+        job_volume = job.request_walltime * job.nodes
+        if job_volume < volume_threshold:
+            self.backfill_queue.add(job)
+        else:
+            self.wait_queue.add(job)
+
+    def remove(self, job):
+        ''' Method for removing a job from the waiting queues '''
+        if job in self.wait_queue:
+            self.wait_queue.remove(job)
+            return
+        assert (job in self.backfill_queue), 'Atempting to remove'\
+            'inexisting job from the waiting queues'
+        self.backfill_queue.remove(job)
+
+    def update_priority(self, current_time, time_threshold=1800):
+        ''' Method for updating the priority of jobs that spent
+        more time than the threshold in the backfill queue '''
+
+        del_list = []
+        for job in self.backfill_queue:
+            if current_time - job.submission_time > time_threshold:
+                del_list.append(job)
+        for job in del_list:
+            self.backfill_queue.remove(job)
+            self.wait_queue.add(job)
+
+        if len(self.wait_queue)==0:
+            # move the longest job from the backfill queue
+            longest_job = max(self.backfill_queue, key=lambda job:
+                              job.nodes*job.request_walltime)
+            self.backfill_queue.remove(longest_job)
+            self.wait_queue.add(longest_job)
+
+    def get_priority_jobs(self):
+        ''' Return all the high priority jobs '''
+        return self.wait_queue
+
+    def get_backfill_jobs(self):
+        ''' Return all the low priority jobs '''
+        return self.backfill_queue
+
+    def get_all_jobs(self):
+        ''' Return all the jobs that are currently waiting in 
+        any of the queues '''
+        return self.wait_queue | self.backfill_queue
+
+
 class Runtime(object):
     ''' Runtime class responsible for coordinating the submission and
     execution process for all the jobs in a workload '''

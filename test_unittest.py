@@ -4,6 +4,7 @@ import logging
 from _intScheduleFlow import EventQueue
 from _intScheduleFlow import Runtime
 from _intScheduleFlow import StatsEngine
+from _intScheduleFlow import WaitingQueue
 import ScheduleFlow
 
 
@@ -46,6 +47,56 @@ class TestEventQueue(unittest.TestCase):
         # check that all returned events have the same timestamp
         ts = set([i[0] for i in q.pop_list()])
         self.assertEqual(len(ts), 1)
+
+
+# test the waiting queue class
+class TestWaitingQueue(unittest.TestCase):
+    def test_add(self):
+        wq = WaitingQueue()
+        self.assertEqual(len(wq.get_priority_jobs()),0)
+        wq.add(ScheduleFlow.Application(10, 0, 1800, [4500]))
+        wq.add(ScheduleFlow.Application(10, 0, 1800, [1800]))
+        wq.add(ScheduleFlow.Application(2, 0, 800, [500]))
+        self.assertEqual(len(wq.get_priority_jobs()),1)
+        self.assertEqual(len(wq.get_backfill_jobs()),2)
+        self.assertEqual(len(wq.get_all_jobs()),3)
+
+    def test_remove_fail(self):
+        wq = WaitingQueue()
+        with self.assertRaises(AssertionError):
+            wq.remove(ScheduleFlow.Application(10, 0, 1800, [4500]))
+
+    def test_remove(self):
+        wq = WaitingQueue()
+        job_list = [] 
+        job_list.append(ScheduleFlow.Application(10, 0, 1800, [4500]))
+        job_list.append(ScheduleFlow.Application(10, 0, 1800, [1800]))
+        job_list.append(ScheduleFlow.Application(2, 0, 800, [500]))
+        for job in job_list:
+            wq.add(job)
+        wq.remove(job_list[0])
+        self.assertEqual(len(wq.get_priority_jobs()),0)
+        with self.assertRaises(AssertionError):
+            wq.remove(job_list[0])
+        wq.remove(job_list[1])
+        self.assertEqual(len(wq.get_backfill_jobs()),1)
+
+    def test_update_empty(self):
+        wq = WaitingQueue()
+        wq.add(ScheduleFlow.Application(10, 0, 1800, [1800]))
+        wq.add(ScheduleFlow.Application(2, 0, 800, [500]))
+        wq.update_priority(0)
+        self.assertEqual(len(wq.get_priority_jobs()),1)
+
+    def test_update_priority(self):
+        wq = WaitingQueue()
+        wq.add(ScheduleFlow.Application(10, 0, 1800, [4500]))
+        wq.add(ScheduleFlow.Application(10, 100, 1800, [1800]))
+        wq.add(ScheduleFlow.Application(2, 0, 800, [500]))
+        wq.update_priority(0) 
+        self.assertEqual(len(wq.get_priority_jobs()),1)
+        wq.update_priority(1900) 
+        self.assertEqual(len(wq.get_priority_jobs()),2)
 
 
 # test the system class
