@@ -85,8 +85,9 @@ class Simulator():
         return self.add_applications(job_list)
 
     def get_execution_log(self):
-        ''' Method that returns the execution log. The log is a dictionary,
-        where log[job] = list of (start, end) for each running instance '''
+        ''' Method that returns the  a copy of the execution log.
+        The log is a dictionary, where log[job] = list of (start, end)
+        for each running instance '''
         return self.__execution_log
 
     def add_applications(self, job_list):
@@ -167,26 +168,45 @@ class Simulator():
                 check_fail += 1
         return check_fail
 
-    def test_correctness(self):
+    def test_correctness(self, execution_log=[]):
         ''' Method for checking the correctness of the execution of a
         given list of jobs. Job list contains the jobs with their initial
         information, workload contains execution information for each
         job '''
-        assert (len(self.__execution_log) > 0), \
+        if len(execution_log) == 0:
+            execution_log = self.__execution_log
+
+        assert (len(execution_log) > 0), \
             "ERR - Trying to test correctness on an empty execution log"
 
         check_fail = 0
-        for job in self.__execution_log:
+        for job in execution_log:
             pass_check = self.__sanity_check_job_execution(
-                self.__execution_log[job], job)
+                execution_log[job], job)
             if not pass_check:
                 self.logger.error("%s did not pass the sanity check: %s" %
-                                  (job, self.__execution_log[job]))
+                                  (job, execution_log[job]))
                 check_fail += 1
-                continue
 
-        check_fail += self.__sainity_check_schedule(self.__execution_log)
+        schedule_fail = self.__sainity_check_schedule(execution_log)
+        if schedule_fail > 0:
+            self.logger.error("Full schedule did not pass sanity check")
+        check_fail += schedule_fail
         return check_fail
+
+    def get_stats_metrics(self, metrics, execution_log=[]):
+        ''' Method for returning  values for the given set of metrics
+        on the current execution log or on a different provided log'''
+        if len(execution_log) == 0:
+            execution_log = self.__execution_log
+        assert (len(execution_log) > 0), \
+            "ERR - Trying to test correctness on an empty execution log"
+
+        stats = _intScheduleFlow.StatsEngine(
+                self.__system.get_total_nodes())
+        stats.set_execution_output(execution_log)
+        stats.set_metrics(metrics)
+        return stats.get_metric_values()
 
     def run(self, metrics=["all"]):
         ''' Main method of the simulator that triggers the start of
