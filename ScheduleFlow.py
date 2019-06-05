@@ -449,27 +449,30 @@ class System(object):
 class Scheduler(object):
     ''' Base class that needs to be extended by all Scheduler classes '''
 
-    def __init__(self, system, logger=None):
+    def __init__(self, system, logger=None, use_priority_queues=True):
         ''' Base construnction method that takes a System object '''
         self.system = system
-        self.wait_queue = set()
+        #self.wait_queue = set()
+        self.priority_queue = _intScheduleFlow.WaitingQueue(
+                use_priority_queues=False)#use_priority_queues)
         self.running_jobs = set()
         self.logger = logger or logging.getLogger(__name__)
 
     def __str__(self):
-        return 'Scheduler: %s; %d jobs in queue; %d jobs running' % (
-            self.system, len(self.wait_queue), len(self.running_jobs))
+        return 'Scheduler: %s; %s; %d jobs running' % (
+            self.system, self.priority_queue, len(self.running_jobs))
 
     def __repr__(self):
         return 'Scheduler(Queued jobs: %d; Running: %d)' % (
-            len(self.wait_queue), len(self.running_jobs))
+            len(self.priority_queue.get_all_jobs()),
+            len(self.running_jobs))
 
     def submit_job(self, job):
         ''' Base method to add a job in the waiting queue '''
 
         assert (job.nodes <= self.system.get_total_nodes()),\
             "Submitted jobs cannot ask for more nodes that the system"
-        self.wait_queue.add(job)
+        self.priority_queue.add(job)
 
     def allocate_job(self, job):
         ''' Base method for allocating the job for running on the system '''
@@ -597,23 +600,20 @@ class BatchScheduler(Scheduler):
         ''' Method that returns the first batch_size jobs in the waiting
         queue ordered by their submission time '''
 
-        batch_list = []
-        # get all submission times sorted in an increasing order
-        submission_times = sorted(
-            set([job.submission_time for job in self.wait_queue]))
-        for st in submission_times[:self.batch_size]:
-            # get all jobs from wait queue with submission time == st
-            batch_list += [job for job in self.wait_queue
-                           if job.submission_time == st]
+        wait_queue = self.priority_queue.get_priority_jobs()
+        if len(wait_queue) == 0:
+            return []
+        
+        # get jobs in the queue ordered by their submission times
+        batch_list = sorted(wait_queue, key=lambda job:job.submission_time)
+        # ger all jobs that share submission times that could be included
+        # in the current batch
+        max_submission = max([job.submission_time for job in batch_list[:self.batch_size]])
+        batch_list = [job for job in batch_list if job.submission_time <= max_submission]
 
         # sort the list by the size of the job (nodes*request_walltime)
-        size_list = list(
-            set([job.nodes * job.request_walltime for job in batch_list]))
-        size_list.sort(reverse=True)
-        batch_sorted = []
-        for sl in size_list:
-            batch_sorted += [job for job in batch_list if job.nodes *
-                             job.request_walltime == sl]
+        batch_sorted = sorted(batch_list, key=lambda job:job.nodes * job.request_walltime, reverse=True)
+        # return the first batch_size entries
         return batch_sorted[:self.batch_size]
 
     def create_job_reservation(self, job, reserved_jobs):
@@ -684,7 +684,7 @@ class BatchScheduler(Scheduler):
             # find a place for the job in the current schedule
             ts = self.build_schedule(job, selected_jobs)
             selected_jobs[job] = ts
-            self.wait_queue.remove(job)
+            self.priority_queue.remove(job)
 
         # try to fit any of the remaining jobs into the gaps created by the
         # schedule (for the next batch list)
@@ -693,7 +693,7 @@ class BatchScheduler(Scheduler):
             ts = self.create_job_reservation(job, selected_jobs)
             if ts != -1:
                 selected_jobs[job] = ts
-                self.wait_queue.remove(job)
+                self.priority_queue.remove(job)
 
         # return (start_time, job) list in the current batch
         return [(selected_jobs[job], job) for job in selected_jobs]
@@ -719,12 +719,19 @@ class BatchScheduler(Scheduler):
             if tm != -1:
                 selected_jobs.append((tm, job))
                 reserved_jobs[job] = tm
-                self.wait_queue.remove(job)
+                self.priority_queue.remove(job)
         return selected_jobs
 
 
 class OnlineScheduler(Scheduler):
     ''' Online scheduler (default LJF completly online) '''
+    
+    def __init__(self, system, logger=None):
+        ''' Constructor method forces the baso to use only one
+        waiting queue ''' 
+        super(OnlineScheduler, self).__init__(system, logger,
+                                              use_priority_queues=False)
+        self.wait_queue = self.priority_queue.get_priority_jobs()
 
     def __str__(self):
         return "Online "+super(OnlineScheduler, self).__str__()

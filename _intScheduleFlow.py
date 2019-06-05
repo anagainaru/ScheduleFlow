@@ -85,16 +85,29 @@ class WaitingQueue(object):
     ''' Class responsible with storing the priority queues used by the
     scheduler to hold the jobs in several waiting queues '''
 
-    def __init__(self):
+    def __init__(self, use_priority_queues=True):
         ''' Creates two waiting queues, one for large jobs having high
         priority and one for backfilling jobs '''
         
         self.wait_queue = set()
         self.backfill_queue = set()
+        self._num_queues = 2
+        if not use_priority_queues:
+            self._num_queues = 1
+
+    def __str__(self):
+        return 'Wait queue: %d priority; %d backfill' % (
+            len(self.wait_queue), len(self.backfill_queue))
+
+    def __repr__(self):
+        return 'WaitQueue(%d priority; %d backfill)' % (
+            len(self.wait_queue), len(self.backfill_queue))
 
     def add(self, job, volume_threshold=36000):
         ''' Method for adding a job into the waiting queues based on
         their total volume '''
+        if self._num_queues == 1:
+            volume_threshold = 0
 
         job_volume = job.request_walltime * job.nodes
         if job_volume < volume_threshold:
@@ -123,7 +136,7 @@ class WaitingQueue(object):
             self.backfill_queue.remove(job)
             self.wait_queue.add(job)
 
-        if len(self.wait_queue)==0:
+        if len(self.wait_queue)==0 and len(self.backfill_queue) > 0:
             # move the longest job from the backfill queue
             longest_job = max(self.backfill_queue, key=lambda job:
                               job.nodes*job.request_walltime)
