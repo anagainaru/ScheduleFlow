@@ -89,72 +89,104 @@ class WaitingQueue(object):
         ''' Creates two waiting queues, one for large jobs having high
         priority and one for backfilling jobs '''
         
-        self.wait_queue = set()
-        self.backfill_queue = set()
-        self._num_queues = 2
+        self.num_queues = 2
+        self.volume_threshold=[36000]
         if not use_priority_queues:
-            self._num_queues = 1
+            self.num_queues = 1
+            self.volume_threshold=[0]
+
+        self.main_queue = set()
+        self.secondary_queues = [set() for i in range(self.num_queues)]
+        self.__last_update = {}
 
     def __str__(self):
-        return 'Wait queue: %d priority; %d backfill' % (
-            len(self.wait_queue), len(self.backfill_queue))
+        return 'Wait queue: %d priority; %d secondary' % (
+            len(self.main_queue), self.total_secondary_jobs())
 
     def __repr__(self):
         return 'WaitQueue(%d priority; %d backfill)' % (
-            len(self.wait_queue), len(self.backfill_queue))
+            len(self.main_queue), self.total_secondary_jobs())
 
-    def add(self, job, volume_threshold=36000):
+    def add(self, job):
         ''' Method for adding a job into the waiting queues based on
         their total volume '''
-        if self._num_queues == 1:
-            volume_threshold = 0
 
+        self.__last_update[job] = job.submission_time
         job_volume = job.request_walltime * job.nodes
-        if job_volume < volume_threshold:
-            self.backfill_queue.add(job)
-        else:
-            self.wait_queue.add(job)
+        if job_volume > self.volume_threshold[0]:
+            self.main_queue.add(job)
+            return
+        idx = max([i for i in range(len(self.volume_threshold)) if
+                   self.volume_threshold[i] >= job_volume])
+        self.secondary_queues[idx].add(job)  
 
     def remove(self, job):
         ''' Method for removing a job from the waiting queues '''
-        if job in self.wait_queue:
-            self.wait_queue.remove(job)
-            return
-        assert (job in self.backfill_queue), 'Atempting to remove'\
+
+        assert (job in self.__last_update), 'Atempting to remove'\
             'inexisting job from the waiting queues'
-        self.backfill_queue.remove(job)
+        del self.__last_update[job]
+        if job in self.main_queue:
+            self.main_queue.remove(job)
+            return
+        idx = [i for i in range(len(self.secondary_queues)) if
+               job in self.secondary_queues[i]]
+        self.secondary_queues[idx[0]].remove(job)
+
+    def update_queue(self, low_queue, high_queue,
+                     threshold, current_time):
+        ''' Method for moving all the jobs from the low_queue to
+        the high queue if the time since submission exceeds the
+        threshold '''
+
+        del_list = []
+        for job in low_queue:
+            if current_time - self.__last_update[job] > threshold:
+                del_list.append(job)
+        for job in del_list:
+            self.__last_update[job] = current_time
+            low_queue.remove(job)
+            high_queue.add(job)
 
     def update_priority(self, current_time, time_threshold=1800):
         ''' Method for updating the priority of jobs that spent
         more time than the threshold in the backfill queue '''
 
-        del_list = []
-        for job in self.backfill_queue:
-            if current_time - job.submission_time > time_threshold:
-                del_list.append(job)
-        for job in del_list:
-            self.backfill_queue.remove(job)
-            self.wait_queue.add(job)
+        for i in range(len(self.secondary_queues)-1, 0, -1):
+            self.update_queue(self.secondary_queues[i],
+                              self.secondary_queues[i-1],
+                              time_threshold,
+                              current_time)
 
-        if len(self.wait_queue)==0 and len(self.backfill_queue) > 0:
+        self.update_queue(self.secondary_queues[0], self.main_queue,
+                          time_threshold, current_time)
+        if len(self.main_queue)==0 and self.total_secondary_jobs() > 0:
+            # get the first priority queue that has at least one job
+            idx = min([i for i in range(len(self.secondary_queues)) if
+                       len(self.secondary_queues[i]) > 0])
             # move the longest job from the backfill queue
-            longest_job = max(self.backfill_queue, key=lambda job:
+            longest_job = max(self.secondary_queues[idx], key=lambda job:
                               job.nodes*job.request_walltime)
-            self.backfill_queue.remove(longest_job)
-            self.wait_queue.add(longest_job)
+            self.secondary_queues[idx].remove(longest_job)
+            self.main_queue.add(longest_job)
+            self.__last_update[longest_job] = current_time
+
+    def total_priority_jobs(self):
+        ''' Method for returning the total jobs in main queue '''
+        return len(self.main_queue)
+
+    def total_secondary_jobs(self):
+        ''' Method for returning the total jobs in all the
+        secondary queues '''
+        return sum([len(queue) for queue in self.secondary_queues])
 
     def get_priority_jobs(self):
         ''' Return all the high priority jobs '''
-        return self.wait_queue
+        return self.main_queue
 
-    def get_backfill_jobs(self):
+    def get_secondary_jobs(self, index=0):
         ''' Return all the low priority jobs '''
-        return self.backfill_queue
-
-    def get_all_jobs(self):
-        ''' Return all the jobs that are currently waiting in 
-        any of the queues '''
-        return self.wait_queue | self.backfill_queue
+        return self.secondary_queues[0]
 
 
 class Runtime(object):

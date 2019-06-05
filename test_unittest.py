@@ -53,13 +53,12 @@ class TestEventQueue(unittest.TestCase):
 class TestWaitingQueue(unittest.TestCase):
     def test_add(self):
         wq = WaitingQueue()
-        self.assertEqual(len(wq.get_priority_jobs()),0)
+        self.assertEqual(len(wq.get_priority_jobs()), 0)
         wq.add(ScheduleFlow.Application(10, 0, 1800, [4500]))
         wq.add(ScheduleFlow.Application(10, 0, 1800, [1800]))
         wq.add(ScheduleFlow.Application(2, 0, 800, [500]))
-        self.assertEqual(len(wq.get_priority_jobs()),1)
-        self.assertEqual(len(wq.get_backfill_jobs()),2)
-        self.assertEqual(len(wq.get_all_jobs()),3)
+        self.assertEqual(wq.total_priority_jobs(), 1)
+        self.assertEqual(wq.total_secondary_jobs(), 2)
 
     def test_remove_fail(self):
         wq = WaitingQueue()
@@ -75,11 +74,11 @@ class TestWaitingQueue(unittest.TestCase):
         for job in job_list:
             wq.add(job)
         wq.remove(job_list[0])
-        self.assertEqual(len(wq.get_priority_jobs()),0)
+        self.assertEqual(wq.total_priority_jobs(),0)
         with self.assertRaises(AssertionError):
             wq.remove(job_list[0])
         wq.remove(job_list[1])
-        self.assertEqual(len(wq.get_backfill_jobs()),1)
+        self.assertEqual(wq.total_secondary_jobs(),1)
 
     def test_update_empty(self):
         wq = WaitingQueue()
