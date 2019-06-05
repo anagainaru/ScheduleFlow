@@ -603,16 +603,19 @@ class BatchScheduler(Scheduler):
         wait_queue = self.priority_queue.get_priority_jobs()
         if len(wait_queue) == 0:
             return []
-        
+
         # get jobs in the queue ordered by their submission times
         batch_list = sorted(wait_queue, key=lambda job:job.submission_time)
         # ger all jobs that share submission times that could be included
         # in the current batch
-        max_submission = max([job.submission_time for job in batch_list[:self.batch_size]])
-        batch_list = [job for job in batch_list if job.submission_time <= max_submission]
+        max_submission = max([job.submission_time for job in
+                              batch_list[:self.batch_size]])
+        batch_list = [job for job in batch_list if
+                      job.submission_time <= max_submission]
 
         # sort the list by the size of the job (nodes*request_walltime)
-        batch_sorted = sorted(batch_list, key=lambda job:job.nodes * job.request_walltime, reverse=True)
+        batch_sorted = sorted(batch_list, key=lambda job:
+                              job.nodes * job.request_walltime, reverse=True)
         # return the first batch_size entries
         return batch_sorted[:self.batch_size]
 
