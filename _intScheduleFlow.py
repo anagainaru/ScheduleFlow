@@ -179,6 +179,10 @@ class WaitingQueue(object):
             self.main_queue.add(longest_job)
             self.__last_update[longest_job] = current_time
 
+    def total_jobs(self):
+        ''' Method for returning the total jobs in all queues '''
+        return self.total_priority_jobs() + self.total_secondary_jobs()
+
     def total_priority_jobs(self):
         ''' Method for returning the total jobs in main queue '''
         return len(self.main_queue)

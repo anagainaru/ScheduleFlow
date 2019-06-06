@@ -463,7 +463,7 @@ class Scheduler(object):
 
     def __repr__(self):
         return 'Scheduler(Queued jobs: %d; Running: %d)' % (
-            len(self.waiting_queue.get_all_jobs()),
+            len(self.waiting_queue.total_jobs()),
             len(self.running_jobs))
 
     def submit_job(self, job):
@@ -489,6 +489,10 @@ class Scheduler(object):
         assert (job in self.running_jobs),\
             r'Scheduler trying to stop a job that was not running %d' % (
             job.job_id)
+
+        # update priorities of jobs in secondary queues
+        time = job.submission_time + min(job.walltime, job.request_walltime)
+        self.waiting_queue.update_priority(time)
 
         # clear system nodes, remove job from running queue
         self.system.end_job(job.nodes, job.job_id)
@@ -744,8 +748,6 @@ class OnlineScheduler(Scheduler):
         ''' Method that overwrites the base one to indicate that a new
         schedule needs to be triggered after each job end '''
 
-        time = job.submission_time + min(job.walltime, job.request_walltime)
-        self.waiting_queue.update_priority(time)
         super(OnlineScheduler, self).clear_job(job)
         return 0  # trigger a new schedule starting now (timestamp 0)
 
@@ -794,8 +796,7 @@ class OnlineScheduler(Scheduler):
         #if self.waiting_queue.total_priority_jobs() == 0:
         #    self.waiting_queue.update_priority(0)
 
-        jobs_in_waiting_queue = self.waiting_queue.total_priority_jobs() +\
-                                self.waiting_queue.total_secondary_jobs()
+        jobs_in_waiting_queue = self.waiting_queue.total_jobs()
         self.logger.info('Wait queue: %d' %(jobs_in_waiting_queue))
         selected_jobs = []
         if jobs_in_waiting_queue == 0:
