@@ -85,15 +85,15 @@ class WaitingQueue(object):
     ''' Class responsible with storing the priority queues used by the
     scheduler to hold the jobs in several waiting queues '''
 
-    def __init__(self, use_priority_queues=True):
+    def __init__(self, total_queues=2):
         ''' Creates two waiting queues, one for large jobs having high
         priority and one for backfilling jobs '''
         
-        self.num_queues = 2
-        self.volume_threshold=[36000]
-        if not use_priority_queues:
-            self.num_queues = 1
-            self.volume_threshold=[0]
+        self.num_queues = total_queues - 1
+        self.volume_threshold = [36000 / i for i in
+                                 range(1,self.num_queues + 1)]
+        if self.num_queues == 0:
+            self.volume_threshold = [0]
 
         self.main_queue = set()
         self.secondary_queues = [set() for i in range(self.num_queues)]
@@ -152,12 +152,13 @@ class WaitingQueue(object):
         ''' Method for updating the priority of jobs that spent
         more time than the threshold in the backfill queue '''
 
+        if len(self.secondary_queues)==0:
+            return
         for i in range(len(self.secondary_queues)-1, 0, -1):
             self.update_queue(self.secondary_queues[i],
                               self.secondary_queues[i-1],
                               time_threshold,
                               current_time)
-
         self.update_queue(self.secondary_queues[0], self.main_queue,
                           time_threshold, current_time)
         if len(self.main_queue)==0 and self.total_secondary_jobs() > 0:
@@ -178,6 +179,8 @@ class WaitingQueue(object):
     def total_secondary_jobs(self):
         ''' Method for returning the total jobs in all the
         secondary queues '''
+        if len(self.secondary_queues)==0:
+            return 0
         return sum([len(queue) for queue in self.secondary_queues])
 
     def get_priority_jobs(self):
@@ -186,7 +189,7 @@ class WaitingQueue(object):
 
     def get_secondary_jobs(self, index=0):
         ''' Return all the low priority jobs '''
-        return self.secondary_queues[0]
+        return self.secondary_queues[index]
 
 
 class Runtime(object):
