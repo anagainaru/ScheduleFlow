@@ -732,11 +732,11 @@ class BatchScheduler(Scheduler):
 class OnlineScheduler(Scheduler):
     ''' Online scheduler (default LJF completly online) '''
     
-    def __init__(self, system, logger=None):
+    def __init__(self, system, total_queues=1, logger=None):
         ''' Constructor method forces the baso to use only one
         waiting queue ''' 
         super(OnlineScheduler, self).__init__(system, logger,
-                                              total_queues=1)
+                                              total_queues)
 
     def __str__(self):
         return "Online "+super(OnlineScheduler, self).__str__()

@@ -269,6 +269,20 @@ class TestOnlineScheduler(unittest.TestCase):
         self.assertNotEqual(len(ap_list), 0)
         self.assertEqual(ap_list[0][1].request_walltime, max_exec)
 
+    def test_multiple_wait_queues(self):
+        sch = ScheduleFlow.OnlineScheduler(ScheduleFlow.System(100),
+                                           total_queues=10)
+        max_procs = 0
+        np.random.seed(0)
+        # all jobs will be included in the lowest priority queue
+        for i in range(10):
+            procs = np.random.randint(10, 100)
+            max_procs = procs if max_procs < procs else max_procs
+            sch.submit_job(ScheduleFlow.Application(procs, 0, 10, [10]))
+        ap_list = sch.trigger_schedule()
+        self.assertNotEqual(len(ap_list), 0)
+        self.assertEqual(ap_list[0][1].nodes, max_procs)
+
     def test_largest_job(self):
         sch = ScheduleFlow.OnlineScheduler(ScheduleFlow.System(100))
         max_procs = 0
