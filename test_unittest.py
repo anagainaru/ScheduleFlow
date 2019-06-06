@@ -531,6 +531,66 @@ class TestRuntime(unittest.TestCase):
             exec_order = sorted([workload[job][0][0] for job in workload])
             self.assertListEqual(exec_order, [i * 10 for i in range(100)])
 
+    def test_online_waiting_queues(self):
+        for SchedulerType in ScheduleFlow.Scheduler.__subclasses__():
+            sch = SchedulerType(ScheduleFlow.System(10),
+                                               total_queues=2)
+            job_list = set()
+            job_list.add(ScheduleFlow.Application(10, 0, 7000, [7000]))
+            job_list.add(ScheduleFlow.Application(10, 1, 300, [300]))
+            job_list.add(ScheduleFlow.Application(10, 6000, 1000, [1000]))
+            runtime = Runtime(job_list)
+            runtime(sch)
+            workload = runtime.get_stats()
+            exec_order = sorted(
+                    [(job.walltime, workload[job][0][0]) for job in workload],
+                    key=lambda job:job[1])
+            self.assertListEqual([i[0] for i in exec_order], [7000, 300, 1000])
+            sch = SchedulerType(ScheduleFlow.System(10),
+                                               total_queues=1)
+            job_list = set()
+            job_list.add(ScheduleFlow.Application(10, 0, 7000, [7000]))
+            job_list.add(ScheduleFlow.Application(10, 1, 300, [300]))
+            job_list.add(ScheduleFlow.Application(10, 6000, 1000, [1000]))
+            runtime = Runtime(job_list)
+            runtime(sch)
+            workload = runtime.get_stats()
+            exec_order = sorted(
+                    [(job.walltime, workload[job][0][0]) for job in workload],
+                    key=lambda job:job[1])
+            self.assertListEqual([i[0] for i in exec_order], [7000, 1000, 300])
+
+    def test_batch_waiting_queues(self):
+        sch = ScheduleFlow.BatchScheduler(ScheduleFlow.System(10),
+                                        total_queues=2)
+        job_list = set()
+        job_list.add(ScheduleFlow.Application(10, 0, 5000, [7000]))
+        job_list.add(ScheduleFlow.Application(5, 0, 9000, [10000]))
+        job_list.add(ScheduleFlow.Application(10, 0, 100, [100]))
+        job_list.add(ScheduleFlow.Application(10, 0, 900, [1000]))
+        job_list.add(ScheduleFlow.Application(10, 0, 900, [900]))
+        runtime = Runtime(job_list)
+        runtime(sch)
+        workload = runtime.get_stats()
+        self.assertEqual(
+            max([workload[i][len(workload[i])-1][1] for i in workload]),
+            16000)
+        # using 2 priority queues uses the small jobs for backfill
+        sch = ScheduleFlow.BatchScheduler(ScheduleFlow.System(10),
+                                        total_queues=1)
+        job_list = set()
+        job_list.add(ScheduleFlow.Application(10, 0, 5000, [7000]))
+        job_list.add(ScheduleFlow.Application(5, 0, 9000, [10000]))
+        job_list.add(ScheduleFlow.Application(10, 0, 100, [100]))
+        job_list.add(ScheduleFlow.Application(10, 0, 900, [1000]))
+        job_list.add(ScheduleFlow.Application(10, 0, 900, [900]))
+        runtime = Runtime(job_list)
+        runtime(sch)
+        workload = runtime.get_stats()
+        self.assertEqual(
+            max([workload[i][len(workload[i])-1][1] for i in workload]),
+            19000)
+
     def test_same_start(self):
         for SchedulerType in ScheduleFlow.Scheduler.__subclasses__():
             sch = SchedulerType(ScheduleFlow.System(100))
