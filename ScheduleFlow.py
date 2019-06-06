@@ -584,13 +584,14 @@ class Scheduler(object):
 class BatchScheduler(Scheduler):
     ''' Reservation based scheduler (default LJF batch scheduler) '''
 
-    def __init__(self, system, batch_size=100, logger=None):
+    def __init__(self, system, batch_size=100, total_queues=1, logger=None):
         ''' Constructor method extends the base to specify the batch size,
         i.e. number of jobs in the wait queue to examime to create the
         reservation. Jobs in the waiting queue are ordered based on their
         submission time '''
 
-        super(BatchScheduler, self).__init__(system, logger)
+        super(BatchScheduler, self).__init__(system, logger,
+                                             total_queues=total_queues)
         self.batch_size = batch_size
 
     def __str__(self):
@@ -599,20 +600,18 @@ class BatchScheduler(Scheduler):
     def __repr__(self):
         return "Batch "+super(BatchScheduler, self).__repr__()
 
-    def get_batch_jobs(self):
-        ''' Method that returns the first batch_size jobs in the waiting
-        queue ordered by their submission time '''
+    def __get_jobs(self, queue, batch_size):
+        ''' Method that returns the first batch_size jobs (by submission)
+        in the queue ordered by their volume '''
 
-        wait_queue = self.waiting_queue.get_priority_jobs()
-        if len(wait_queue) == 0:
+        if len(queue) == 0:
             return []
-
         # get jobs in the queue ordered by their submission times
-        batch_list = sorted(wait_queue, key=lambda job:job.submission_time)
+        batch_list = sorted(queue, key=lambda job:job.submission_time)
         # ger all jobs that share submission times that could be included
         # in the current batch
         max_submission = max([job.submission_time for job in
-                              batch_list[:self.batch_size]])
+                              batch_list[:batch_size]])
         batch_list = [job for job in batch_list if
                       job.submission_time <= max_submission]
 
@@ -620,7 +619,30 @@ class BatchScheduler(Scheduler):
         batch_sorted = sorted(batch_list, key=lambda job:
                               job.nodes * job.request_walltime, reverse=True)
         # return the first batch_size entries
-        return batch_sorted[:self.batch_size]
+        return batch_sorted[:batch_size]
+
+    def get_batch_jobs(self):
+        ''' Method that returns the first batch_size jobs (by submission)
+        in the main waiting queue ordered by their volume. If the waiting
+        queue jobs from secondary queues will be updated to the main one '''
+
+        # make sure the wait queue is empty only if there are no more jobs
+        self.waiting_queue.fill_priority_queue()
+        return self.__get_jobs(self.waiting_queue.get_priority_jobs(),
+                               self.batch_size)
+
+    def get_backfill_jobs(self):
+        ''' Method that returns the first batch_size jobs from each waiting
+        queue ordered by their volume '''
+
+        batch_list = []
+        batch_list += self.__get_jobs(self.waiting_queue.get_priority_jobs(),
+                                      self.batch_size)
+        for i in range(self.waiting_queue.num_queues):
+            batch_list += self.__get_jobs(
+                self.waiting_queue.get_secondary_jobs(i),
+                self.batch_size)
+        return batch_list
 
     def create_job_reservation(self, job, reserved_jobs):
         ''' Method that implements a greedy algotithm for finding a place
@@ -694,7 +716,7 @@ class BatchScheduler(Scheduler):
 
         # try to fit any of the remaining jobs into the gaps created by the
         # schedule (for the next batch list)
-        batch_jobs = self.get_batch_jobs()
+        batch_jobs = self.get_backfill_jobs()
         for job in batch_jobs:
             ts = self.create_job_reservation(job, selected_jobs)
             if ts != -1:
@@ -717,7 +739,7 @@ class BatchScheduler(Scheduler):
         self.logger.info(r'[Backfill %d] Reservations: %s' %
                          (min_ts, reserved_jobs))
 
-        batch_jobs = self.get_batch_jobs()
+        batch_jobs = self.get_backfill_jobs()
         selected_jobs = []
         for job in batch_jobs:
             tm = super(BatchScheduler, self).fit_job_in_schedule(
