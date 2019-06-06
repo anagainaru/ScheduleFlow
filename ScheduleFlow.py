@@ -452,18 +452,18 @@ class Scheduler(object):
     def __init__(self, system, logger=None, total_queues=1):
         ''' Base construnction method that takes a System object '''
         self.system = system
-        self.priority_queue = _intScheduleFlow.WaitingQueue(
+        self.waiting_queue = _intScheduleFlow.WaitingQueue(
                 total_queues=total_queues)
         self.running_jobs = set()
         self.logger = logger or logging.getLogger(__name__)
 
     def __str__(self):
         return 'Scheduler: %s; %s; %d jobs running' % (
-            self.system, self.priority_queue, len(self.running_jobs))
+            self.system, self.waiting_queue, len(self.running_jobs))
 
     def __repr__(self):
         return 'Scheduler(Queued jobs: %d; Running: %d)' % (
-            len(self.priority_queue.get_all_jobs()),
+            len(self.waiting_queue.get_all_jobs()),
             len(self.running_jobs))
 
     def submit_job(self, job):
@@ -471,7 +471,7 @@ class Scheduler(object):
 
         assert (job.nodes <= self.system.get_total_nodes()),\
             "Submitted jobs cannot ask for more nodes that the system"
-        self.priority_queue.add(job)
+        self.waiting_queue.add(job)
 
     def allocate_job(self, job):
         ''' Base method for allocating the job for running on the system '''
@@ -599,7 +599,7 @@ class BatchScheduler(Scheduler):
         ''' Method that returns the first batch_size jobs in the waiting
         queue ordered by their submission time '''
 
-        wait_queue = self.priority_queue.get_priority_jobs()
+        wait_queue = self.waiting_queue.get_priority_jobs()
         if len(wait_queue) == 0:
             return []
 
@@ -686,7 +686,7 @@ class BatchScheduler(Scheduler):
             # find a place for the job in the current schedule
             ts = self.build_schedule(job, selected_jobs)
             selected_jobs[job] = ts
-            self.priority_queue.remove(job)
+            self.waiting_queue.remove(job)
 
         # try to fit any of the remaining jobs into the gaps created by the
         # schedule (for the next batch list)
@@ -695,7 +695,7 @@ class BatchScheduler(Scheduler):
             ts = self.create_job_reservation(job, selected_jobs)
             if ts != -1:
                 selected_jobs[job] = ts
-                self.priority_queue.remove(job)
+                self.waiting_queue.remove(job)
 
         # return (start_time, job) list in the current batch
         return [(selected_jobs[job], job) for job in selected_jobs]
@@ -721,7 +721,7 @@ class BatchScheduler(Scheduler):
             if tm != -1:
                 selected_jobs.append((tm, job))
                 reserved_jobs[job] = tm
-                self.priority_queue.remove(job)
+                self.waiting_queue.remove(job)
         return selected_jobs
 
 
@@ -733,7 +733,6 @@ class OnlineScheduler(Scheduler):
         waiting queue ''' 
         super(OnlineScheduler, self).__init__(system, logger,
                                               total_queues=1)
-        self.wait_queue = self.priority_queue.get_priority_jobs()
 
     def __str__(self):
         return "Online "+super(OnlineScheduler, self).__str__()
@@ -745,18 +744,20 @@ class OnlineScheduler(Scheduler):
         ''' Method that overwrites the base one to indicate that a new
         schedule needs to be triggered after each job end '''
 
+        time = job.submission_time + min(job.walltime, job.request_walltime)
+        self.waiting_queue.update_priority(time)
         super(OnlineScheduler, self).clear_job(job)
         return 0  # trigger a new schedule starting now (timestamp 0)
 
-    def get_next_job(self, nodes):
-        ''' Method to extract the largest volume job (nodes * requested time)
+    def __get_next_queued_job(self, nodes, queue):
+        ''' Method to extract the largest volume job from the queue
         in the waiting queue that fits the space given by the `nodes` '''
 
         try:
             max_volume = max([job.nodes * job.request_walltime for job
-                              in self.wait_queue if job.nodes <= nodes])
+                              in queue if job.nodes <= nodes])
             largest_jobs = [
-                job for job in self.wait_queue if job.nodes *
+                job for job in queue if job.nodes *
                 job.request_walltime == max_volume and job.nodes <= nodes]
         except BaseException:
             # there are no jobs that fit the given space
@@ -765,6 +766,24 @@ class OnlineScheduler(Scheduler):
         min_time = min([job.submission_time for job in largest_jobs])
         return [job for job in largest_jobs
                 if job.submission_time == min_time][0]
+    
+    def get_next_job(self, nodes):
+        ''' Method to extract the largest volume job (nodes * requested time)
+        in the waiting queue that fits the space given by the `nodes`. The job
+        searches the main and secondary waiting queues in order of their
+        priority '''
+
+        job = self.__get_next_queued_job(
+            nodes, self.waiting_queue.get_priority_jobs())
+        if job != -1:
+            return job
+        # there are no jobs in the main queue, start searching secondary queues
+        for i in range(self.waiting_queue.num_queues):
+            job = self.__get_next_queued_job(
+                nodes, self.waiting_queue.get_secondary_jobs(i))
+            if job != -1:
+                return job
+        return -1
 
     def trigger_schedule(self):
         ''' Method for chosing the next jobs to run. For the online
@@ -772,9 +791,14 @@ class OnlineScheduler(Scheduler):
         in the available nodes in the system until no job fits or there
         are no more nodes left in the system '''
 
-        self.logger.info('Wait queue: %d' %(len(self.wait_queue)))
+        #if self.waiting_queue.total_priority_jobs() == 0:
+        #    self.waiting_queue.update_priority(0)
+
+        jobs_in_waiting_queue = self.waiting_queue.total_priority_jobs() +\
+                                self.waiting_queue.total_secondary_jobs()
+        self.logger.info('Wait queue: %d' %(jobs_in_waiting_queue))
         selected_jobs = []
-        if len(self.wait_queue) == 0:
+        if jobs_in_waiting_queue == 0:
             return []
         free_nodes = self.system.get_free_nodes()
         while free_nodes > 0:
@@ -784,7 +808,7 @@ class OnlineScheduler(Scheduler):
             if job == -1:
                 break
             selected_jobs.append((0, job))
-            self.wait_queue.remove(job)
+            self.waiting_queue.remove(job)
             free_nodes -= job.nodes
         return selected_jobs
  

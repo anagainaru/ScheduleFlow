@@ -59,6 +59,10 @@ class TestWaitingQueue(unittest.TestCase):
         wq.add(ScheduleFlow.Application(2, 0, 800, [500]))
         self.assertEqual(wq.total_priority_jobs(), 1)
         self.assertEqual(wq.total_secondary_jobs(), 2)
+    
+    def test_invalid_wq(self):
+        with self.assertRaises(AssertionError):
+            wq = WaitingQueue(total_queues=0)
 
     def test_remove_fail(self):
         wq = WaitingQueue()
@@ -85,6 +89,8 @@ class TestWaitingQueue(unittest.TestCase):
         wq.add(ScheduleFlow.Application(10, 0, 1800, [1800]))
         wq.add(ScheduleFlow.Application(2, 0, 800, [500]))
         wq.update_priority(0)
+        self.assertEqual(len(wq.get_priority_jobs()),0)
+        wq.fill_priority_queue(0) 
         self.assertEqual(len(wq.get_priority_jobs()),1)
 
     def test_update_priority(self):
@@ -280,7 +286,7 @@ class TestOnlineScheduler(unittest.TestCase):
         np.random.seed(0)
         num_jobs = np.random.randint(1, 101)
         for i in range(num_jobs):
-            exect = np.random.randint(10, 100)
+            exect = np.random.randint(36000, 360000)
             sch.submit_job(ScheduleFlow.Application(
                 1, np.random.randint(0, 100), exect, [exect]))
         ap_list = sch.trigger_schedule()
