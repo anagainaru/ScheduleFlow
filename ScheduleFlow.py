@@ -449,12 +449,11 @@ class System(object):
 class Scheduler(object):
     ''' Base class that needs to be extended by all Scheduler classes '''
 
-    def __init__(self, system, logger=None, use_priority_queues=True):
+    def __init__(self, system, logger=None, total_queues=1):
         ''' Base construnction method that takes a System object '''
         self.system = system
-        #self.wait_queue = set()
         self.priority_queue = _intScheduleFlow.WaitingQueue(
-                use_priority_queues=False)#use_priority_queues)
+                total_queues=total_queues)
         self.running_jobs = set()
         self.logger = logger or logging.getLogger(__name__)
 
@@ -733,7 +732,7 @@ class OnlineScheduler(Scheduler):
         ''' Constructor method forces the baso to use only one
         waiting queue ''' 
         super(OnlineScheduler, self).__init__(system, logger,
-                                              use_priority_queues=False)
+                                              total_queues=1)
         self.wait_queue = self.priority_queue.get_priority_jobs()
 
     def __str__(self):

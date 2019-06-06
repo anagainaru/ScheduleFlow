@@ -97,6 +97,27 @@ class TestWaitingQueue(unittest.TestCase):
         wq.update_priority(1900) 
         self.assertEqual(len(wq.get_priority_jobs()),2)
 
+    def test_one_queue(self):
+        wq = WaitingQueue(total_queues=1)
+        wq.add(ScheduleFlow.Application(10, 0, 3600, [4500]))
+        wq.add(ScheduleFlow.Application(10, 0, 180, [180]))
+        self.assertEqual(wq.total_priority_jobs(), 2)
+        wq.update_priority(3600)
+        self.assertEqual(wq.total_priority_jobs(), 2)
+
+    def test_multiple_queues(self):
+        wq = WaitingQueue(total_queues=3)
+        wq.add(ScheduleFlow.Application(10, 0, 4300, [4500]))
+        wq.add(ScheduleFlow.Application(10, 0, 1200, [1800]))
+        wq.add(ScheduleFlow.Application(10, 1900, 3800, [3500]))
+        self.assertEqual(wq.total_priority_jobs(), 1)
+        self.assertEqual(wq.total_secondary_jobs(), 2)
+        self.assertEqual(len(wq.get_secondary_jobs()), 1)
+        wq.update_priority(1900)
+        self.assertEqual(len(wq.get_secondary_jobs()), 2)
+        wq.update_priority(3800)
+        self.assertEqual(wq.total_priority_jobs(), 3)
+
 
 # test the system class
 class TestSystem(unittest.TestCase):
