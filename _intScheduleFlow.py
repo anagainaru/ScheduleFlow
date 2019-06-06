@@ -89,6 +89,8 @@ class WaitingQueue(object):
         ''' Creates two waiting queues, one for large jobs having high
         priority and one for backfilling jobs '''
         
+        assert (total_queues > 0), 'The waiting queue must contain'\
+            'at least one queue (%d requested)' %(total_queues)
         self.num_queues = total_queues - 1
         self.volume_threshold = [36000 / i for i in
                                  range(1,self.num_queues + 1)]
@@ -161,6 +163,11 @@ class WaitingQueue(object):
                               current_time)
         self.update_queue(self.secondary_queues[0], self.main_queue,
                           time_threshold, current_time)
+
+    def fill_priority_queue(self, current_time):
+        ''' Method called when the main queue is empty for bringing to it
+        the highest priority largest job from the secondary queues '''
+        
         if len(self.main_queue)==0 and self.total_secondary_jobs() > 0:
             # get the first priority queue that has at least one job
             idx = min([i for i in range(len(self.secondary_queues)) if
