@@ -91,7 +91,7 @@ class TestWaitingQueue(unittest.TestCase):
         wq.add(ScheduleFlow.Application(2, 0, 800, [500]))
         wq.update_priority(0)
         self.assertEqual(len(wq.get_priority_jobs()),0)
-        wq.fill_priority_queue(0) 
+        wq.fill_priority_queue() 
         self.assertEqual(len(wq.get_priority_jobs()),1)
 
     def test_update_priority(self):
