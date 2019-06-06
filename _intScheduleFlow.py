@@ -164,7 +164,7 @@ class WaitingQueue(object):
         self.update_queue(self.secondary_queues[0], self.main_queue,
                           time_threshold, current_time)
 
-    def fill_priority_queue(self, current_time):
+    def fill_priority_queue(self):
         ''' Method called when the main queue is empty for bringing to it
         the highest priority largest job from the secondary queues '''
         
@@ -177,7 +177,6 @@ class WaitingQueue(object):
                               job.nodes*job.request_walltime)
             self.secondary_queues[idx].remove(longest_job)
             self.main_queue.add(longest_job)
-            self.__last_update[longest_job] = current_time
 
     def total_jobs(self):
         ''' Method for returning the total jobs in all queues '''
