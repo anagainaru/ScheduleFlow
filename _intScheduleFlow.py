@@ -102,12 +102,12 @@ class WaitingQueue(object):
         self.__last_update = {}
 
     def __str__(self):
-        return 'Wait queue: %d priority; %d secondary' % (
-            len(self.main_queue), self.total_secondary_jobs())
+        return 'Wait queue: total of %d' % (
+            len(self.secondary_queues) + 1)
 
     def __repr__(self):
-        return 'WaitQueue(%d priority; %d backfill)' % (
-            len(self.main_queue), self.total_secondary_jobs())
+        return 'WaitQueue(total %d queues)' % (
+            len(self.secondary_queues) + 1)
 
     def add(self, job):
         ''' Method for adding a job into the waiting queues based on

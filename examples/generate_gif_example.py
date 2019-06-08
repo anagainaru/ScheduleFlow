@@ -4,20 +4,26 @@ import ScheduleFlow
 import numpy as np
 import os
 
-def run_scenario(num_processing_units, job_list):
+def run_scenario(num_processing_units, job_list, wait_queues=1):
     simulator = ScheduleFlow.Simulator(check_correctness=True,
                                        generate_gif=True,
                                        output_file_handler=sys.stdout)
     sch = ScheduleFlow.BatchScheduler(
-        ScheduleFlow.System(num_processing_units))
-    simulator.create_scenario(sch, job_list=job_list,
-                              scenario_name="test_batch")
+        ScheduleFlow.System(num_processing_units),
+        total_queues=wait_queues)
+    simulator.create_scenario(
+        sch,
+        job_list=job_list,
+        scenario_name="test_batch_"+str(wait_queues))
     simulator.run()
 
     sch = ScheduleFlow.OnlineScheduler(
-        ScheduleFlow.System(num_processing_units))
-    simulator.create_scenario(sch, job_list=job_list,
-                              scenario_name="test_online")
+        ScheduleFlow.System(num_processing_units),
+        total_queues=wait_queues)
+    simulator.create_scenario(
+        sch,
+        job_list=job_list,
+        scenario_name="test_online_"+str(wait_queues))
     simulator.run()
 
 
