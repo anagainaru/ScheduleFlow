@@ -598,7 +598,7 @@ class TestRuntime(unittest.TestCase):
                                     total_queues=num_queues)
                 job_list = set()
                 job_list.add(ScheduleFlow.Application(10, 0, 7000, [7000]))
-                job_list.add(ScheduleFlow.Application(10, 16000, 1000, [1000]))
+                job_list.add(ScheduleFlow.Application(1, 16000, 1000, [1000]))
                 runtime = Runtime(job_list)
                 runtime(sch)
                 workload = runtime.get_stats()
