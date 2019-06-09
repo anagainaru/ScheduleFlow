@@ -1,4 +1,4 @@
-#  Copyright (c) 2019-2020 by the Cabana authors
+#  Copyright (c) 2019-2020 by the ScheduleFlow authors
 #   All rights reserved.
 
 #   This file is part of the ScheduleFlow package. ScheduleFlow is
@@ -528,10 +528,6 @@ class StatsEngine():
         self.__makespan = max([max([i[1] for i in self.__execution_log[job]])
                                for job in self.__execution_log])
     
-    def __add_metric_list(self, metric_name):
-        self.__metrics |= set([metric for metric in self.__metric_mapping
-                              if metric_name in metric])
-
     def set_metrics(self, metric_list):
         ''' Add the metrics of interest for the current simulation '''
 
@@ -540,12 +536,8 @@ class StatsEngine():
                 return self.__metrics
         self.__metrics = set()
         for metric in metric_list:
-            if "all" in metric[:4]:
-                self.__add_metric_list(metric[4:])
-                continue
-            if metric not in self.__metric_mapping:
-                continue
-            self.__metrics.add(metric)
+            self.__metrics |= set([m for m in self.__metric_mapping
+                                   if metric in m])
 
         # set order is not deterministic when parsed
         self.__metrics = list(self.__metrics)

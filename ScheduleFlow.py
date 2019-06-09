@@ -44,15 +44,30 @@ class Simulator():
         if "ScheduleFlow_PATH" not in os.environ:
             os.environ["ScheduleFlow_PATH"] = "."
 
-    def run_scenario(self, scenario_name, scheduler, job_list):
+    def __str__(self):
+        return 'Simulator: Generate gif %s, Check correctness %s, Loops %s' \
+                ', Output file %s, Number of jobs %d' % (
+                        self.__generate_gif, self.__check_correctness,
+                        self.__loops, self.__fp, len(self.job_list))
+
+    def __repr__(self):
+        return 'Simulator(GIF: %s, Check_correctness: %s, Loops: %s' \
+                ', Output: %s, Jobs: %d)' % (
+                        self.__generate_gif, self.__check_correctness,
+                        self.__loops, self.__fp, len(self.job_list))
+
+    def run_scenario(self, scheduler, job_list, scenario_name="ScheduleFlow",
+                     metrics=["all"]):
         ''' Method for directly runnning a scenario (includes creating
         the scenario and calling the run method'''
 
         assert (len(job_list)>0), "The job list cannot be empty"
-        self.create_scenario(self, scenario_name, scheduler, job_list)
-        self.run()
+        self.create_scenario(scheduler, job_list=job_list,
+                             scenario_name=scenario_name)
+        return self.run(metrics=metrics)
 
-    def create_scenario(self, scenario_name, scheduler, job_list=[]):
+    def create_scenario(self, scheduler, job_list=[],
+                        scenario_name="ScheduleFlow"):
         ''' Method for setting the properties of the current scenario '''
 
         self.__scheduler = scheduler
@@ -70,8 +85,9 @@ class Simulator():
         return self.add_applications(job_list)
 
     def get_execution_log(self):
-        ''' Method that returns the execution log. The log is a dictionary,
-        where log[job] = list of (start, end) for each running instance '''
+        ''' Method that returns the  a copy of the execution log.
+        The log is a dictionary, where log[job] = list of (start, end)
+        for each running instance '''
         return self.__execution_log
 
     def add_applications(self, job_list):
@@ -152,26 +168,45 @@ class Simulator():
                 check_fail += 1
         return check_fail
 
-    def test_correctness(self):
+    def test_correctness(self, execution_log=[]):
         ''' Method for checking the correctness of the execution of a
         given list of jobs. Job list contains the jobs with their initial
         information, workload contains execution information for each
         job '''
-        assert (len(self.__execution_log) > 0), \
+        if len(execution_log) == 0:
+            execution_log = self.__execution_log
+
+        assert (len(execution_log) > 0), \
             "ERR - Trying to test correctness on an empty execution log"
 
         check_fail = 0
-        for job in self.__execution_log:
+        for job in execution_log:
             pass_check = self.__sanity_check_job_execution(
-                self.__execution_log[job], job)
+                execution_log[job], job)
             if not pass_check:
                 self.logger.error("%s did not pass the sanity check: %s" %
-                                  (job, self.__execution_log[job]))
+                                  (job, execution_log[job]))
                 check_fail += 1
-                continue
 
-        check_fail += self.__sainity_check_schedule(self.__execution_log)
+        schedule_fail = self.__sainity_check_schedule(execution_log)
+        if schedule_fail > 0:
+            self.logger.error("Full schedule did not pass sanity check")
+        check_fail += schedule_fail
         return check_fail
+
+    def get_stats_metrics(self, metrics, execution_log=[]):
+        ''' Method for returning  values for the given set of metrics
+        on the current execution log or on a different provided log'''
+        if len(execution_log) == 0:
+            execution_log = self.__execution_log
+        assert (len(execution_log) > 0), \
+            "ERR - Trying to test correctness on an empty execution log"
+
+        stats = _intScheduleFlow.StatsEngine(
+                self.__system.get_total_nodes())
+        stats.set_execution_output(execution_log)
+        stats.set_metrics(metrics)
+        return stats.get_metric_values()
 
     def run(self, metrics=["all"]):
         ''' Main method of the simulator that triggers the start of
@@ -179,6 +214,7 @@ class Simulator():
 
         assert (len(self.job_list) > 0), "Cannot run an empty scenario"
         check = 0
+        average_stats = {}
         for i in range(self.__loops):
             runtime = _intScheduleFlow.Runtime(self.job_list)
             runtime(self.__scheduler)
@@ -196,6 +232,12 @@ class Simulator():
             self.logger.info(self.stats)
             if self.__fp is not None:
                 self.stats.print_to_file(self.__fp, self.__scenario_name, i)
+            if len(average_stats) == 0:
+                average_stats = self.stats.get_metric_values()
+            else:
+                tmp = self.stats.get_metric_values()
+                average_stats = {i : average_stats[i] + tmp[i] 
+                                 for i in average_stats}
 
         if check == 0:
             self.logger.info("PASS correctness test")
@@ -207,8 +249,9 @@ class Simulator():
             self.__viz_handler.set_execution_log(self.__execution_log)
             self.horizontal_ax = self.__viz_handler.generate_scenario_gif(
                 self.__scenario_name)
-            self.logger.info(r"GIF generated draw/%s" % (self.__scenario_name))
-        return self.stats.get_metric_values()
+            self.logger.info(r"GIF generated draw/%s" % 
+                    (self.__scenario_name))
+        return {i : average_stats[i]/self.__loops for i in average_stats}
 
 
 class Application(object):
@@ -252,8 +295,8 @@ class Application(object):
             self.resubmit_factor = 1
         else:
             assert (resubmit_factor > 1),\
-                r"""Increase factor for an execution request time must be
-                over 1: received %d""" % (resubmit_factor)
+                'Increase factor for an execution request time must be ' \
+                'over 1: received %d' % (resubmit_factor)
             self.resubmit_factor = resubmit_factor
 
         # Entries in the execution log: (JobChangeType, old_value)
@@ -264,17 +307,17 @@ class Application(object):
                      self.request_sequence[:]))
 
     def __str__(self):
-        return r"""Job %d: %d nodes; %3.1f submission time; %3.1f total
-               execution time (%3.1f requested)""" % (
+        return 'Job %d: %d nodes; %3.1f submission time; %3.1f total ' \
+               'execution time (%3.1f requested)' % (
                self.job_id, self.nodes, self.submission_time, self.walltime,
                self.request_walltime)
 
     def __repr__(self):
-        return r'Job(%d, %3.1f, %3.1f, %3.1f, %d)' % (self.nodes,
-                                                      self.submission_time,
-                                                      self.walltime,
-                                                      self.request_walltime,
-                                                      self.job_id)
+        return 'Job(Nodes: %d, Submission: %3.1f, Walltime: %3.1f, ' \
+               'Request: %3.1f)' % (self.nodes,
+                                    self.submission_time,
+                                    self.walltime,
+                                    self.request_walltime)
 
     def __lt__(self, job):
         return self.job_id < job.job_id
@@ -374,7 +417,11 @@ class System(object):
         self.__free_nodes = total_nodes
 
     def __str__(self):
-        return r'System of %d nodes (%d currently free)' % (
+        return 'System: %d total nodes (%d currently free)' % (
+            self.__total_nodes, self.__free_nodes)
+
+    def __repr__(self):
+        return 'System(Nodes: %d, Free: %d)' % (
             self.__total_nodes, self.__free_nodes)
 
     def get_free_nodes(self):
@@ -410,8 +457,12 @@ class Scheduler(object):
         self.logger = logger or logging.getLogger(__name__)
 
     def __str__(self):
-        return r'Scheduler: %s; %d jobs in queue; %d jobs running' % (
+        return 'Scheduler: %s; %d jobs in queue; %d jobs running' % (
             self.system, len(self.wait_queue), len(self.running_jobs))
+
+    def __repr__(self):
+        return 'Scheduler(Queued jobs: %d; Running: %d)' % (
+            len(self.wait_queue), len(self.running_jobs))
 
     def submit_job(self, job):
         ''' Base method to add a job in the waiting queue '''
@@ -535,6 +586,12 @@ class BatchScheduler(Scheduler):
 
         super(BatchScheduler, self).__init__(system, logger)
         self.batch_size = batch_size
+
+    def __str__(self):
+        return "Batch "+super(BatchScheduler, self).__str__()
+
+    def __repr__(self):
+        return "Batch "+super(BatchScheduler, self).__repr__()
 
     def get_batch_jobs(self):
         ''' Method that returns the first batch_size jobs in the waiting
@@ -669,6 +726,12 @@ class BatchScheduler(Scheduler):
 class OnlineScheduler(Scheduler):
     ''' Online scheduler (default LJF completly online) '''
 
+    def __str__(self):
+        return "Online "+super(OnlineScheduler, self).__str__()
+
+    def __repr__(self):
+        return "Online "+super(OnlineScheduler, self).__repr__()
+
     def clear_job(self, job):
         ''' Method that overwrites the base one to indicate that a new
         schedule needs to be triggered after each job end '''
@@ -700,6 +763,7 @@ class OnlineScheduler(Scheduler):
         in the available nodes in the system until no job fits or there
         are no more nodes left in the system '''
 
+        self.logger.info('Wait queue: %d' %(len(self.wait_queue)))
         selected_jobs = []
         if len(self.wait_queue) == 0:
             return []
@@ -714,37 +778,29 @@ class OnlineScheduler(Scheduler):
             self.wait_queue.remove(job)
             free_nodes -= job.nodes
         return selected_jobs
-
+ 
     def fit_job_in_schedule(self, job, reserved_jobs, min_ts):
         ''' Method that overwrites the base class that implements a
         reservation based algorithm. For the base method all jobs
         need to be fitted in the reservation window and cannot exceed
         the end. Online methods do not have this limitation '''
 
-        ts = super(OnlineScheduler, self).fit_job_in_schedule(
-            job, reserved_jobs, min_ts)
-        if ts != -1:
-            return ts
-        # check for the end of the schedule for a fit regardless of how long
-        # the job might run
         if len(reserved_jobs) == 0:
             return -1
+        if job.submission_time > min_ts:
+            return -1
+
         gap_list = super(OnlineScheduler, self).create_gaps_list(
             reserved_jobs, min_ts)
         if len(gap_list) == 0:
             return -1
-        # look only at the gaps at the end of the reservation window (i.e. end
-        # of the gap is max)
-        end_window = max([gap[1] for gap in gap_list])
-        if job.submission_time >= end_window:
-            return -1
-        end_gaps = [gap for gap in gap_list if gap[1] == end_window]
-        for gap in end_gaps:
+        # keep only the gaps that start from the submission time
+        gap_list = [gap for gap in gap_list if gap[0]==min_ts]
+        for gap in gap_list:
             if job.nodes <= gap[2]:
                 # there is room for the current job starting with ts
                 self.logger.info(
                     r'[OnlineScheduler] Found space for %s: timestamp %d' %
-                    (job, max(
-                        gap[0], job.submission_time)))
-                return max(gap[0], job.submission_time)
+                    (job, gap[0]))
+                return gap[0]
         return -1
