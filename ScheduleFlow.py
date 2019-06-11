@@ -456,6 +456,8 @@ class Scheduler(object):
                 total_queues=total_queues)
         self.running_jobs = set()
         self.logger = logger or logging.getLogger(__name__)
+        self.__reservations = {}
+        self.__gaps_list = []
 
     def __str__(self):
         return 'Scheduler: %s; %s; %d jobs running' % (
@@ -506,6 +508,27 @@ class Scheduler(object):
         to run from the waiting queue at the current schedule cycle '''
         return []
 
+    def create_gaps_list_new(self, reserved_jobs, min_ts):
+        total_nodes = self.system.get_total_nodes()
+        # find which jobs are not already in the reservation list
+        new_jobs = [job for job in reserved_jobs if
+                    job not in self.__reservations]
+        for job in new_jobs:
+            start = reserved_jobs[job]
+            end = reserved_jobs[job] + job.request_walltime
+            
+            intersect_gaps = [segment for segment in self.__gaps_list if
+                              segment[0] <= end and segment[1] >= start]
+            if len(intersect_gaps) == 0:
+                self.__gaps_list.append([start, end, total_nodes - job.nodes])
+                continue
+            # increase the processing units of the gaps that are completely
+            # included inside the new job
+            include_gaps = [segment for segment in intersect_gaps if
+                            segment[0] >= start and segment[1] <= end]
+            for segment in include_gaps:
+                segment[3] -= job.nodes
+
     def create_gaps_list(self, reserved_jobs, min_ts):
         ''' Base method that extracts the gaps between the jobs in the given
         reservation. '''
@@ -525,13 +548,22 @@ class Scheduler(object):
         for event in order_reservations:
             free_nodes = self.system.get_total_nodes() - nodes
             if event[0] > ts and ts != -1 and free_nodes > 0:
-                gap_list.append(
-                    [ts, event[0], free_nodes])
                 # gap end is the same as the beginning of the current gap
-                prev = [gap for gap in gap_list if gap[1] == ts]
-                for gap in prev:
+                prev = [i for i in range(len(gap_list)) if
+                        gap_list[i][1] == ts]
+                prev = sorted(prev, reverse=True)
+                add=True
+                for idx in prev:
+                    gap = gap_list[idx]
                     gap_list.append([gap[0], event[0],
                                      min(gap[2], free_nodes)])
+                    if min(gap[2], free_nodes) == free_nodes:
+                        add=False
+                    else:
+                        del gap_list[idx]
+                if add:
+                    gap_list.append([ts, event[0], free_nodes])
+                    
             if event[1] == 1:  # job start
                 nodes += event[2].nodes
             else:  # job_end

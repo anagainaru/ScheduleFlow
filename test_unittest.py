@@ -250,10 +250,16 @@ class TestScheduler(unittest.TestCase):
             reservation[ScheduleFlow.Application(
                 1, 0, 50 - i, [50 - i])] = 250
         gap_list = sch.create_gaps_list(reservation, 0)
-        for i in range(num_jobs):
+        # test small gaps left by added jobs
+        for i in range(num_jobs - 1):
             self.assertEqual(
-                i + 1, len([gap for gap in gap_list if gap[2] == (9 - i)]))
-
+                [i + 1],
+                [gap[1]-gap[0] for gap in gap_list if gap[2] == (9 - i)])
+        # test the large job (between 250 and 300) for idle processes
+        self.assertEqual(
+            [50],
+            [gap[1]-gap[0] for gap in gap_list if gap[2] == 10 - num_jobs])
+        
 
 # test the online scheduler class
 class TestOnlineScheduler(unittest.TestCase):
