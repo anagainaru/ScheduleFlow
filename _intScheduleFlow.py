@@ -218,10 +218,11 @@ class ScheduleGaps(object):
         ''' Delete all gaps that end before the current timestamp '''
 
         gaps_idx = [idx for idx in range(len(self.__gaps_list)) if
-                    self.__gaps_list[idx] < current_time]
+                    self.__gaps_list[idx][1] < current_time]
         gaps_idx.sort(reverse=True)
         for idx in gaps_idx:
             del self.__gaps_list[idx]
+        return self.__gaps_list
 
     def __update_intersections(self, gaps_idx, start, end, procs, ops):
         ''' Update the gaps that intersect the new job that needs to be
@@ -236,8 +237,8 @@ class ScheduleGaps(object):
         max_end = max([self.__gaps_list[idx][1] for idx in gaps_idx])
         if start < min_start:
             if self.__total_nodes + procs * ops > 0:
-                new_gaps.append((start, min_start,
-                                 self.__total_nodes + procs * ops))
+                new_gaps.append([start, min_start,
+                                 self.__total_nodes + procs * ops])
             start = min_start
         if end > max_end:
             if self.__total_nodes + procs * ops > 0:
@@ -360,6 +361,14 @@ class ScheduleGaps(object):
             self.__gaps_list += new_gaps[:]
             self.__gaps_list.sort()
         return self.__gaps_list
+
+    def add(self, job_list):
+        ''' Method for adding jobs in the schedule '''
+        return self.update(job_list, -1)
+
+    def remove(self, job_list):
+        ''' Method for removing jobs from the schedule '''
+        return self.update(job_list, 1)
 
 
 class Runtime(object):

@@ -210,6 +210,92 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(ap.request_walltime, 180)
 
 
+# test the ScheduleGaps class
+class TestScheduleGaps(unittest.TestCase):
+    def test_add_jobs(self):
+        sch = ScheduleFlow.BatchScheduler(ScheduleFlow.System(10))
+        reservations = {}
+        reservations[ScheduleFlow.Application(5, 0, 2, [5])] = 0
+        reservations[ScheduleFlow.Application(3, 0, 1, [2])] = 3
+        reservations[ScheduleFlow.Application(9, 0, 3, [5])] = 5
+        reservations[ScheduleFlow.Application(1, 0, 2, [5])] = 5
+        reservations[ScheduleFlow.Application(10, 0, 3, [5])] = 10
+        gaps = sch.gaps_list.update(reservations, -1)
+        self.assertTrue(len(gaps) == 2)
+        self.assertEqual(set([i[2] for i in gaps]), set([2, 5]))
+        gaps = sch.gaps_list.update({ScheduleFlow.Application(2, 0, 1, [1]): 4}, -1)
+        self.assertEqual(max([i[1]-i[0] for i in gaps]), 4)
+
+    def test_add_job_over(self):
+        sch = ScheduleFlow.BatchScheduler(ScheduleFlow.System(10))
+        reservations = {}
+        reservations[ScheduleFlow.Application(3, 0, 5, [5])] = 3
+        reservations[ScheduleFlow.Application(7, 0, 10, [10])] = 0
+        gaps = sch.gaps_list.update(reservations, -1)
+        self.assertTrue(len(gaps) == 2)
+        self.assertEqual(min([i[0] for i in gaps]), 0)
+        self.assertEqual(max([i[1] for i in gaps]), 10)
+
+    def test_remove_middle_jobs(self):
+        sch = ScheduleFlow.BatchScheduler(ScheduleFlow.System(10))
+        reservations = {}
+        reservations[ScheduleFlow.Application(5, 0, 2, [5])] = 0
+        reservations[ScheduleFlow.Application(3, 0, 1, [2])] = 3
+        reservations[ScheduleFlow.Application(9, 0, 3, [5])] = 5
+        reservations[ScheduleFlow.Application(1, 0, 2, [5])] = 5
+        reservations[ScheduleFlow.Application(10, 0, 3, [5])] = 10
+        gaps = sch.gaps_list.update(reservations, -1)
+
+        gaps = sch.gaps_list.update({ScheduleFlow.Application(1, 0, 2, [5]): 5}, 1)
+        self.assertTrue(len(gaps) == 3)
+        self.assertEqual([i for i in gaps if i[0]==7][0], [7, 10, 1])
+
+    def test_reservation_batch(self):
+        sch = ScheduleFlow.BatchScheduler(ScheduleFlow.System(10))
+        reservations = {}
+        reservations[ScheduleFlow.Application(5, 0, 2, [5])] = 0
+        reservations[ScheduleFlow.Application(9, 0, 3, [5])] = 5
+        reservations[ScheduleFlow.Application(3, 0, 1, [2])] = 3
+        reservations[ScheduleFlow.Application(1, 0, 4, [10])] = 0
+        reservations[ScheduleFlow.Application(10, 0, 3, [5])] = 10
+        reservations[ScheduleFlow.Application(10, 0, 2, [5])] = 15
+        gaps = sch.gaps_list.add(reservations)
+        gaps = sch.gaps_list.remove(reservations)
+        # result is [[0, 3, 4], [2, 3, 9], [2, 5, 6], [4, 5, 10],
+        # [8, 10, 10], [13, 15, 10], [17, 20, 10]]
+        self.assertTrue(len([i for i in gaps if i[2] == 10]) == 4)
+        self.assertTrue(len([i for i in gaps if i[0] == 2]) == 2)
+        self.assertTrue(len([i for i in gaps if i[0] == 0]) == 1)
+
+    def test_trim(self):
+        sch = ScheduleFlow.BatchScheduler(ScheduleFlow.System(10))
+        reservations = {}
+        reservations[ScheduleFlow.Application(5, 0, 2, [5])] = 0
+        reservations[ScheduleFlow.Application(9, 0, 3, [5])] = 5
+        reservations[ScheduleFlow.Application(3, 0, 1, [2])] = 3
+        reservations[ScheduleFlow.Application(1, 0, 4, [10])] = 0
+        reservations[ScheduleFlow.Application(10, 0, 3, [5])] = 10
+        reservations[ScheduleFlow.Application(10, 0, 2, [5])] = 15
+        gaps = sch.gaps_list.add(reservations)
+        gaps = sch.gaps_list.trim(4)
+        self.assertTrue(len(gaps) == 1)
+
+    def test_clear(self):
+        sch = ScheduleFlow.BatchScheduler(ScheduleFlow.System(10))
+        reservations = {}
+        reservations[ScheduleFlow.Application(5, 0, 2, [5])] = 0
+        reservations[ScheduleFlow.Application(9, 0, 3, [5])] = 5
+        reservations[ScheduleFlow.Application(3, 0, 1, [2])] = 3
+        gaps = sch.gaps_list.add(reservations)
+        reservations = {}
+        reservations[ScheduleFlow.Application(1, 0, 4, [10])] = 0
+        reservations[ScheduleFlow.Application(10, 0, 3, [5])] = 10
+        reservations[ScheduleFlow.Application(10, 0, 2, [5])] = 15
+        sch.gaps_list.clear()
+        gaps = sch.gaps_list.add(reservations)
+        self.assertEqual(len(gaps), 1)
+
+
 # test the basic scheduler class
 class TestScheduler(unittest.TestCase):
     def test_invalid_stop(self):
@@ -222,44 +308,6 @@ class TestScheduler(unittest.TestCase):
         with self.assertRaises(AssertionError):
             sch.submit_job(ScheduleFlow.Application(20, 5, 10, [11]))
 
-    def test_empty_schedule(self):
-        for SchedulerType in ScheduleFlow.Scheduler.__subclasses__():
-            sch = SchedulerType(ScheduleFlow.System(10))
-            ap_list = sch.trigger_schedule()
-            self.assertEqual(len(ap_list), 0)
-
-    def test_gaps_full(self):
-        sch = ScheduleFlow.Scheduler(ScheduleFlow.System(10))
-        reservation = {}
-        for i in range(5):
-            reservation[ScheduleFlow.Application(5, 0, 50, [50])] = i * 50
-            reservation[ScheduleFlow.Application(5, 0, 50, [50])] = i * 50
-        gap_list = sch.create_gaps_list(reservation, 0)
-        self.assertEqual(len(gap_list), 0)
-
-    def test_gaps_random(self):
-        sch = ScheduleFlow.Scheduler(ScheduleFlow.System(10))
-        np.random.seed(0)
-        reservation = {}
-        for i in list(range(5)) + list(range(6, 10)):
-            reservation[ScheduleFlow.Application(5, 0, 50, [50])] = i * 50
-            reservation[ScheduleFlow.Application(5, 0, 50, [50])] = i * 50
-        # add random number of one node jobs with execution times <= 50
-        num_jobs = np.random.randint(1, 10)
-        for i in range(num_jobs):
-            reservation[ScheduleFlow.Application(
-                1, 0, 50 - i, [50 - i])] = 250
-        gap_list = sch.create_gaps_list(reservation, 0)
-        # test small gaps left by added jobs
-        for i in range(num_jobs - 1):
-            self.assertEqual(
-                [i + 1],
-                [gap[1]-gap[0] for gap in gap_list if gap[2] == (9 - i)])
-        # test the large job (between 250 and 300) for idle processes
-        self.assertEqual(
-            [50],
-            [gap[1]-gap[0] for gap in gap_list if gap[2] == 10 - num_jobs])
-        
 
 # test the online scheduler class
 class TestOnlineScheduler(unittest.TestCase):
