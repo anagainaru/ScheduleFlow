@@ -456,7 +456,8 @@ class Scheduler(object):
                 total_queues=total_queues)
         self.running_jobs = set()
         self.logger = logger or logging.getLogger(__name__)
-        self.gaps_list = _intScheduleFlow.ScheduleGaps(system.get_total_nodes())
+        self.gaps_in_schedule = _intScheduleFlow.ScheduleGaps(
+            system.get_total_nodes())
 
     def __str__(self):
         return 'Scheduler: %s; %s; %d jobs running' % (
@@ -551,7 +552,7 @@ class Scheduler(object):
         gap_list.sort()
         return gap_list
 
-    def fit_job_in_schedule(self, job, reserved_jobs, min_ts):
+    def fit_job_in_schedule(self, job, reserved_jobs):
         ''' Base method that fits a new job into an existing schedule.
         The `reserved_jobs` consists of a list of [start time, job].
         The base method assumes a reservation based scheduler: the end of
@@ -563,26 +564,23 @@ class Scheduler(object):
 
         if len(reserved_jobs) == 0:
             return -1
-        gap_list = self.create_gaps_list(reserved_jobs, min_ts)
-        if len(gap_list) == 0:
-            return -1
-
+        gap_list = self.gaps_in_schedule.get_gaps(job.submission_time,
+                                                  job.request_walltime,
+                                                  job.nodes)
         self.logger.debug(
             r'[Scheduler] Reservation list: %s; Gaps: %s' % (
                 reserved_jobs, gap_list))
 
-        # check every gap and return the first one where the new job fits
-        for gap in gap_list:
-            if gap[1] <= job.submission_time:
-                continue
-            ts = max(gap[0], job.submission_time)
-            if job.nodes <= gap[2] and job.request_walltime <= (gap[1] - ts):
-                # there is room for the current job starting with ts
-                self.logger.info(
-                    r'[Scheduler] Found space for %s: timestamp %d' %
-                    (job, ts))
-                return ts
-        return -1
+        if len(gap_list) == 0:
+            return -1
+        
+        ts = max(gap_list[0][0], job.submission_time)
+        # there is room for the current job starting with ts
+        self.logger.info(r'[Scheduler] Found space for %s: timestamp %d' %(
+            job, ts))
+        # update the gaps
+        self.gaps_in_schedule.add({job : ts})
+        return ts
 
     def backfill_request(self, stop_job, reserved_jobs, min_ts):
         ''' Base method for requesting a backfill phase. By default the
@@ -660,21 +658,18 @@ class BatchScheduler(Scheduler):
         for a new job into a reservation window that is given by the
         previously reserved jobs '''
 
-        gap_list = super(BatchScheduler, self).create_gaps_list(
-            reserved_jobs, 0)
+        gap_list = self.gaps_in_schedule.get_gaps(job.submission_time,
+                                                  job.request_walltime,
+                                                  job.nodes)
         if len(gap_list) == 0:
             return -1
-        # check every gap and return the first one where the new job fits
-        for gap in gap_list:
-            ts = gap[0]
-            if job.nodes <= gap[2] and job.request_walltime <= (gap[1] - ts):
-                # there is room for the current job starting with ts
-                self.logger.info(
-                    r'[Scheduler] Found inside reservation for %s at ts %d'
-                    % (job, ts))
-                return ts
-        return -1
 
+        ts = max(gap_list[0][0], job.submission_time)
+        self.logger.info(
+            r'[Scheduler] Found inside reservation for %s at ts %d'
+            % (job, ts))
+        return ts
+        
     def build_schedule(self, job, reservations):
         ''' Method for extending the existing reservation to include
         a new job. All jobs have to fit in the schedule, thus the reservation
@@ -686,23 +681,22 @@ class BatchScheduler(Scheduler):
                 (job))
             return 0
 
-        end_window = max([reservations[j] + j.request_walltime
-                          for j in reservations])
         ts = self.create_job_reservation(job, reservations)
         if ts != -1:
             return ts
+
+        end_window = max([reservations[j] + j.request_walltime
+                          for j in reservations])
         # check for the end of the schedule for a fit (after all jobs that do
         # not have other jobs starting in front)
-        gap_list = super(BatchScheduler, self).create_gaps_list(
-            reservations, 0)
+        gap_list = self.gaps_in_schedule.get_gaps(job.submission_time, 0, job.nodes)
         if len(gap_list) > 0:
             end_gaps = [gap for gap in gap_list if gap[1] == end_window]
-            for gap in end_gaps:
-                if job.nodes <= gap[2]:
-                    self.logger.info(
-                        r'[Scheduler] Found reservation for %s at timestamp %d'
-                        % (job, gap[0]))
-                    return gap[0]
+            if len(end_gaps) > 0:
+                self.logger.info(
+                    r'[Scheduler] Found reservation for %s at timestamp %d'
+                    % (job, end_gaps[0][0]))
+                return end_gaps[0][0]
 
         # there is no fit for the job to start anywhere inside the schedule
         # start the current job after the last job
@@ -723,6 +717,7 @@ class BatchScheduler(Scheduler):
             # find a place for the job in the current schedule
             ts = self.build_schedule(job, selected_jobs)
             selected_jobs[job] = ts
+            self.gaps_in_schedule.add({job : ts})
             self.waiting_queue.remove(job)
 
         # try to fit any of the remaining jobs into the gaps created by the
@@ -732,6 +727,7 @@ class BatchScheduler(Scheduler):
             ts = self.create_job_reservation(job, selected_jobs)
             if ts != -1:
                 selected_jobs[job] = ts
+                self.gaps_in_schedule.add({job : ts})
                 self.waiting_queue.remove(job)
 
         # return (start_time, job) list in the current batch
@@ -744,17 +740,16 @@ class BatchScheduler(Scheduler):
         is reserved '''
 
         reserved_jobs = reservation.copy()
-        for job in reserved_jobs:
-            if job == stop_job:
-                job.free_wasted_space()
-        self.logger.info(r'[Backfill %d] Reservations: %s' %
-                         (min_ts, reserved_jobs))
+        stop_job.free_wasted_space()
+        self.gaps_in_schedule.remove({stop_job : reservation[stop_job]})
+        self.logger.info(r'[Backfill for job %s] Reservations: %s' %
+                         (stop_job, reserved_jobs))
 
         batch_jobs = self.get_backfill_jobs()
         selected_jobs = []
         for job in batch_jobs:
             tm = super(BatchScheduler, self).fit_job_in_schedule(
-                job, reserved_jobs, min_ts)
+                job, reserved_jobs)
             if tm != -1:
                 selected_jobs.append((tm, job))
                 reserved_jobs[job] = tm
@@ -846,7 +841,7 @@ class OnlineScheduler(Scheduler):
             free_nodes -= job.nodes
         return selected_jobs
  
-    def fit_job_in_schedule(self, job, reserved_jobs, min_ts):
+    def fit_job_in_schedule(self, job, reserved_jobs):
         ''' Method that overwrites the base class that implements a
         reservation based algorithm. For the base method all jobs
         need to be fitted in the reservation window and cannot exceed
@@ -854,15 +849,13 @@ class OnlineScheduler(Scheduler):
 
         if len(reserved_jobs) == 0:
             return -1
-        if job.submission_time > min_ts:
-            return -1
 
         gap_list = super(OnlineScheduler, self).create_gaps_list(
-            reserved_jobs, min_ts)
+            reserved_jobs, job.submission_time)
         if len(gap_list) == 0:
             return -1
         # keep only the gaps that start from the submission time
-        gap_list = [gap for gap in gap_list if gap[0]==min_ts]
+        gap_list = [gap for gap in gap_list if gap[0]==job.submission_time]
         for gap in gap_list:
             if job.nodes <= gap[2]:
                 # there is room for the current job starting with ts

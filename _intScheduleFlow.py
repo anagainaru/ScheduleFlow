@@ -207,22 +207,29 @@ class ScheduleGaps(object):
     reservation schedule '''
 
     def __init__(self, total_nodes):
-        self.__gaps_list = []
+        self.gaps_list = []
         self.__total_nodes = total_nodes
+        self.__reserved_jobs = {}
 
     def clear(self):
         ''' Clear all entries in the gap list '''
-        self.__gaps_list = []
+        self.gaps_list = []
+        self.__reserved_jobs = {}
 
     def trim(self, current_time):
-        ''' Delete all gaps that end before the current timestamp '''
+        ''' Delete all gaps that end before the current startmp '''
 
-        gaps_idx = [idx for idx in range(len(self.__gaps_list)) if
-                    self.__gaps_list[idx][1] < current_time]
+        gaps_idx = [idx for idx in range(len(self.gaps_list)) if
+                    self.gaps_list[idx][1] < current_time]
         gaps_idx.sort(reverse=True)
         for idx in gaps_idx:
-            del self.__gaps_list[idx]
-        return self.__gaps_list
+            del self.gaps_list[idx]
+        job_list = [job for job in self.__reserved_jobs if
+                    (self.__reserved_jobs[job] + job.request_walltime) <
+                    current_time]
+        for job in job_list:
+            del self.__reserved_jobs[job]
+        return self.gaps_list
 
     def __update_intersections(self, gaps_idx, start, end, procs, ops):
         ''' Update the gaps that intersect the new job that needs to be
@@ -230,11 +237,13 @@ class ScheduleGaps(object):
         job which is characterized by start, end and procs. Ops indicates 
         if the job is being added (-1) or removed (1) '''
 
+        if len(gaps_idx) == 0:
+            return []
         new_gaps = []
         # check edges and create new gaps if the new job exceeds the [min, max]
         # start and end values are updated to reflect what is left of the job
-        min_start = min([self.__gaps_list[idx][0] for idx in gaps_idx])
-        max_end = max([self.__gaps_list[idx][1] for idx in gaps_idx])
+        min_start = min([self.gaps_list[idx][0] for idx in gaps_idx])
+        max_end = max([self.gaps_list[idx][1] for idx in gaps_idx])
         if start < min_start:
             if self.__total_nodes + procs * ops > 0:
                 new_gaps.append([start, min_start,
@@ -247,73 +256,99 @@ class ScheduleGaps(object):
             end = max_end
         
         intersect_gaps_idx = [idx for idx in gaps_idx if
-                              self.__gaps_list[idx][0] < start or
-                              self.__gaps_list[idx][1] > end]
+                              self.gaps_list[idx][0] < start or
+                              self.gaps_list[idx][1] > end]
 
         # check all gaps that still intersect the remaining of the job
         # (without edges outside existing gaps)
         intersect_gaps_idx.sort(reverse=True)
         for idx in intersect_gaps_idx:
-            if self.__gaps_list[idx][0] < start:
-                new_gaps.append([self.__gaps_list[idx][0], start,
-                                 self.__gaps_list[idx][2]])
-                self.__gaps_list[idx][0] = start
-            if self.__gaps_list[idx][1] > end:
-                new_gaps.append([end, self.__gaps_list[idx][1],
-                                 self.__gaps_list[idx][2]])
-                self.__gaps_list[idx][1] = end
-            self.__gaps_list[idx][2] = self.__gaps_list[idx][2] + procs * ops
-            if (self.__gaps_list[idx][2] > 0 and
-                    self.__gaps_list[idx][0] != self.__gaps_list[idx][1]):
-                new_gaps.append([self.__gaps_list[idx][0],
-                                self.__gaps_list[idx][1],
-                                self.__gaps_list[idx][2]])
-        new_gaps.sort()
+            if self.gaps_list[idx][0] < start:
+                new_gaps.append([self.gaps_list[idx][0], start,
+                                 self.gaps_list[idx][2]])
+                self.gaps_list[idx][0] = start
+            if self.gaps_list[idx][1] > end:
+                new_gaps.append([end, self.gaps_list[idx][1],
+                                 self.gaps_list[idx][2]])
+                self.gaps_list[idx][1] = end
+            self.gaps_list[idx][2] = self.gaps_list[idx][2] + procs * ops
+            if (self.gaps_list[idx][2] > 0 and
+                    self.gaps_list[idx][0] != self.gaps_list[idx][1]):
+                new_gaps.append([self.gaps_list[idx][0],
+                                self.gaps_list[idx][1],
+                                self.gaps_list[idx][2]])
         return new_gaps
 
     def __consolidate(self, gaps_list):
         ''' Method for removing duplicate gaps and merging smaller gaps
         into more inclusive ones '''
 
+        gaps_list.sort()
         remove_list = set()
+        # remove all entries whose start == end
+        #remove_list |= set([idx for idx in range(len(gaps_list)) if
+        #                    gaps_list[idx][0] == gaps_list[idx][1]])
+
         for i in range(len(gaps_list)):
             gap = gaps_list[i]
-            # remove gap if it can be merged with others
-            # e.g. [[0, 5, 3], [5, 12, 5]] becomes
-            # [[0, 12, 3], [5, 12, 5]]
-            prev = [idx for idx in range(len(gaps_list)) if
-                    gaps_list[idx][0] == gap[1] and
-                    idx not in remove_list]
-            prev = sorted(prev, reverse=True)
-            for idx in prev:
+            # merge overlapping gaps (e.g. [[0, 10, 3], [5, 12, 5]]
+            # becomes [[0, 12, 3], [5, 12, 5]]
+            overlap = [idx for idx in range(len(gaps_list)) if
+                       (gaps_list[idx][0] <= gap[1] and
+                        gaps_list[idx][1] >= gap[0] and
+                        idx not in remove_list) and idx != i]
+            for idx in overlap:
+                start = min(gaps_list[idx][0], gap[0])
+                end = max(gaps_list[idx][1], gap[1])
                 if gaps_list[idx][2] <= gap[2]:
-                    gaps_list[idx][0] = gap[0]
+                    gaps_list[idx][0] = start
+                    gaps_list[idx][1] = end
                     if gaps_list[idx][2] == gap[2]:
                         remove_list.add(i)
                 else:
-                    gap[1] = gaps_list[idx][1]
+                    if (start == gaps_list[idx][0] and 
+                        end == gaps_list[idx][1]):
+                        remove_list.add(i)
+                    else:
+                        gaps_list[i][0] = start
+                        gaps_list[i][1] = end
 
-        for idx in range(len(gaps_list)):
-            if idx in remove_list:
-                continue
-            gap = gaps_list[idx]
-            # remove gap if it is included in other gaps
-            # e.g. [0, 20, 3] includes [0, 10, 2]
-            if len([g for g in gaps_list if g[0]<=gap[0]
-                    and g[1]>=gap[1] and g[2]>=gap[2]]) > 1:
-                remove_list.add(idx)
-        remove_list = list(remove_list)
-        remove_list.sort(reverse=True)
+        remove_list = sorted(list(remove_list), reverse=True)
         for idx in remove_list:
             del gaps_list[idx]
 
+    def __fill_gap_to_neighbors(self, new_job):
+        ''' Add neighbor space on the left and right of the new job '''
+
+        new_gaps = []
+        left_gaps = [self.__reserved_jobs[job] + job.request_walltime
+                     for job in self.__reserved_jobs if
+                     self.__reserved_jobs[job] + job.request_walltime <=
+                     self.__reserved_jobs[new_job]]
+        if len(left_gaps) > 0 and max(left_gaps) < self.__reserved_jobs[new_job]:
+            new_gaps.append([max(left_gaps), self.__reserved_jobs[new_job],
+                             self.__total_nodes])
+        right_gaps = [self.__reserved_jobs[job] for job in self.__reserved_jobs
+                      if self.__reserved_jobs[job] >= new_job.request_walltime
+                      + self.__reserved_jobs[new_job]]
+        if len(right_gaps) and min(right_gaps) > (self.__reserved_jobs[new_job] +
+                                                  new_job.request_walltime):
+            new_gaps.append([self.__reserved_jobs[new_job] + new_job.request_walltime,
+                             min(right_gaps), self.__total_nodes])
+        return new_gaps
+
     def update(self, reserved_jobs, ops):
         ''' Method for updating the gaps in a schedule when new jobs are
-        included in the schedule or are ending and are creating backfill
+        included in the schedule or are ending and are creating backfillprocs
         space. Reserved_jobs represents the list of new jobs and ops
         indicates if the job is being added (-1) or removed (1) '''
 
         for job in reserved_jobs:
+            if ops == -1:
+                self.__reserved_jobs[job] = reserved_jobs[job]
+            else:
+                del self.__reserved_jobs[job]
+
             start = reserved_jobs[job]
             end = reserved_jobs[job] + job.request_walltime
             # for job ends the available space is between when the job ends
@@ -322,34 +357,48 @@ class ScheduleGaps(object):
                 start += job.walltime
             if start == end:
                 continue
+            procs = job.nodes
 
+            #print(job, start, end, self.gaps_list)
             # identify the gaps that are affected by the new job
-            affected_gaps_idx = [idx for idx in range(len(self.__gaps_list))
-                                 if self.__gaps_list[idx][0] <= end and
-                                 self.__gaps_list[idx][1] >= start]
-            if len(affected_gaps_idx) == 0:
-                free_nodes = job.nodes
-                if ops < 0:
-                    free_nodes = self.__total_nodes - job.nodes
-                if free_nodes > 0:
-                    self.__gaps_list.append([start, end, free_nodes])
-                continue
+            affected_gaps_idx = [idx for idx in range(len(self.gaps_list))
+                                 if self.gaps_list[idx][0] <= end and
+                                 self.gaps_list[idx][1] >= start]
 
+            # add empty gap between current job and the neighbors
             new_gaps = []
+            if len(affected_gaps_idx) == 0:
+                if ops < 0:
+                    new_gaps = self.__fill_gap_to_neighbors(job)
+
+                free_nodes = procs
+                if ops < 0:
+                    free_nodes = self.__total_nodes - procs
+                if free_nodes > 0:
+                    new_gaps.append([start, end, free_nodes])
+
+                if len(new_gaps) > 0 and new_gaps[0][0] < start:
+                    start = new_gaps[0][0]
+                    end = new_gaps[0][1]
+                    procs = 0
+                    affected_gaps_idx = [idx for idx in range(len(self.gaps_list))
+                                     if self.gaps_list[idx][0] <= end and
+                                     self.gaps_list[idx][1] >= start]
+
             # update the amount of free processing units for all the gaps
             # that are completely included inside the new job
             include_gaps_idx = [idx for idx in affected_gaps_idx if
-                                self.__gaps_list[idx][0] >= start and
-                                self.__gaps_list[idx][1] <= end]
+                                self.gaps_list[idx][0] >= start and
+                                self.gaps_list[idx][1] <= end]
             for idx in include_gaps_idx:
-                if self.__gaps_list[idx][2] + job.nodes * ops > 0:
-                    new_gaps.append([self.__gaps_list[idx][0],
-                                     self.__gaps_list[idx][1],
-                                     self.__gaps_list[idx][2] + job.nodes * ops])
+                if self.gaps_list[idx][2] + procs * ops > 0:
+                    new_gaps.append([self.gaps_list[idx][0],
+                                     self.gaps_list[idx][1],
+                                     self.gaps_list[idx][2] + procs * ops])
 
             # update gaps that intersect the new job
             new_gaps += self.__update_intersections(
-                affected_gaps_idx, start, end, job.nodes, ops)
+                affected_gaps_idx, start, end, procs, ops)
             # consolidate the new gaps
             self.__consolidate(new_gaps)
 
@@ -357,10 +406,10 @@ class ScheduleGaps(object):
             # add the consolidated new list of gaps
             affected_gaps_idx.sort(reverse=True)
             for idx in affected_gaps_idx:
-                del self.__gaps_list[idx]
-            self.__gaps_list += new_gaps[:]
-            self.__gaps_list.sort()
-        return self.__gaps_list
+                del self.gaps_list[idx]
+            self.gaps_list += new_gaps
+            self.gaps_list.sort()
+        return self.gaps_list
 
     def add(self, job_list):
         ''' Method for adding jobs in the schedule '''
@@ -370,6 +419,11 @@ class ScheduleGaps(object):
         ''' Method for removing jobs from the schedule '''
         return self.update(job_list, 1)
 
+    def get_gaps(self, start_time, length, nodes):
+        #print(self.gaps_list, start_time, length)
+        return [gaps for gaps in self.gaps_list if (gaps[1] >= start_time
+                and gaps[1] - max(start_time, gaps[0]) >= length and
+                gaps[2] >= nodes)]
 
 class Runtime(object):
     ''' Runtime class responsible for coordinating the submission and
@@ -441,11 +495,12 @@ class Runtime(object):
         job that is being submitted and if it is allowed to start it now
         inside an existing schedule '''
 
-        tm = self.scheduler.fit_job_in_schedule(job, self.__reserved_jobs,
-                                                self.__current_time)
+        tm = -1
+        if can_start:
+            tm = self.scheduler.fit_job_in_schedule(job, self.__reserved_jobs)
         # check if the job can fit in the current reservations
         # if yes and if it is allowed, send it for execution
-        if tm != -1 and can_start:
+        if tm != -1:
             self.__logger.debug(
                 r'[Timestamp %d] Job submission %s fit at time %d' %
                 (self.__current_time, job, tm))
