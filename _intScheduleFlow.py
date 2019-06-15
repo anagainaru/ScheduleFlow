@@ -244,15 +244,18 @@ class ScheduleGaps(object):
         # start and end values are updated to reflect what is left of the job
         min_start = min([self.gaps_list[idx][0] for idx in gaps_idx])
         max_end = max([self.gaps_list[idx][1] for idx in gaps_idx])
+        available_procs = self.__total_nodes
+        if ops > 0:
+            available_procs = 0
         if start < min_start:
-            if self.__total_nodes + procs * ops > 0:
+            if available_procs + procs * ops > 0:
                 new_gaps.append([start, min_start,
-                                 self.__total_nodes + procs * ops])
+                                 available_procs + procs * ops])
             start = min_start
         if end > max_end:
-            if self.__total_nodes + procs * ops > 0:
+            if available_procs + procs * ops > 0:
                 new_gaps.append([max_end, end,
-                                 self.__total_nodes + procs * ops])
+                                 available_procs + procs * ops])
             end = max_end
         
         intersect_gaps_idx = [idx for idx in gaps_idx if
@@ -399,6 +402,7 @@ class ScheduleGaps(object):
             # update gaps that intersect the new job
             new_gaps += self.__update_intersections(
                 affected_gaps_idx, start, end, procs, ops)
+
             # consolidate the new gaps
             self.__consolidate(new_gaps)
 
@@ -413,10 +417,12 @@ class ScheduleGaps(object):
 
     def add(self, job_list):
         ''' Method for adding jobs in the schedule '''
+        #print("ADD jobs", job_list)
         return self.update(job_list, -1)
 
     def remove(self, job_list):
         ''' Method for removing jobs from the schedule '''
+        #print("REMOVE jobs", job_list)
         return self.update(job_list, 1)
 
     def get_gaps(self, start_time, length, nodes):
@@ -513,14 +519,14 @@ class Runtime(object):
     def __trigger_schedule_event(self):
         ''' Method for handling an event for triggering a new schedule. '''
 
-        ret_schedule = self.scheduler.trigger_schedule()
+        ret_schedule = self.scheduler.trigger_schedule(self.__current_time)
         self.__logger.debug(r'[Timestamp %d] Trigger schedule %s' % (
             self.__current_time, ret_schedule))
         # create a start job event for each job selected by the scheduler
         for apl in ret_schedule:
-            self.__reserved_jobs[apl[1]] = self.__current_time + apl[0]
+            self.__reserved_jobs[apl[1]] = apl[0] 
             self.__events.push(
-                (self.__current_time + apl[0], EventType.JobStart, apl[1]))
+                (apl[0], EventType.JobStart, apl[1]))
 
     def __job_end_event(self, job):
         ''' Method for handling a job end event '''
@@ -561,8 +567,8 @@ class Runtime(object):
             self.__current_time, job))
         self.scheduler.allocate_job(job)
         self.__log_start(job)
-        # create a job end event for the started job for timestamp
-        # current_time+execution_time
+        # create a job end event for the started job
+        # for timestamp current_time + execution_time
         execution = min(job.walltime, job.request_walltime)
         self.__events.push(
             (self.__current_time + execution, EventType.JobEnd, job))

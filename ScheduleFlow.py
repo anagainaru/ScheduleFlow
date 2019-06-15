@@ -501,7 +501,7 @@ class Scheduler(object):
         self.running_jobs.remove(job)
         return -1
 
-    def trigger_schedule(self):
+    def trigger_schedule(self, current_time):
         ''' Base method for triggering schedules guarantees the simulator
         will not crash if the child Schedulers do not implement it. The child
         methods implement different algorithms for choosing when/what jobs
@@ -663,14 +663,13 @@ class BatchScheduler(Scheduler):
                                                   job.nodes)
         if len(gap_list) == 0:
             return -1
-
         ts = max(gap_list[0][0], job.submission_time)
         self.logger.info(
             r'[Scheduler] Found inside reservation for %s at ts %d'
             % (job, ts))
         return ts
         
-    def build_schedule(self, job, reservations):
+    def build_schedule(self, job, reservations, current_time):
         ''' Method for extending the existing reservation to include
         a new job. All jobs have to fit in the schedule, thus the reservation
         will be increased if the job does not fit inside the current one '''
@@ -679,7 +678,7 @@ class BatchScheduler(Scheduler):
             self.logger.info(
                 r'[Scheduler] Found reservation slot for %s at beginning' %
                 (job))
-            return 0
+            return current_time
 
         ts = self.create_job_reservation(job, reservations)
         if ts != -1:
@@ -705,17 +704,18 @@ class BatchScheduler(Scheduler):
             (job, end_window))
         return end_window
 
-    def trigger_schedule(self):
+    def trigger_schedule(self, current_time):
         ''' Method for creating a schedule for the first `batch_size` jobs
         in the waiting queue ordered by their submission time.
         The implemented algorithm is greedyly fitting jobs in the batch list
          starting with the largest on the first available slot '''
 
+        self.gaps_in_schedule.clear()        
         batch_jobs = self.get_batch_jobs()
         selected_jobs = {}
         for job in batch_jobs:
             # find a place for the job in the current schedule
-            ts = self.build_schedule(job, selected_jobs)
+            ts = self.build_schedule(job, selected_jobs, current_time)
             selected_jobs[job] = ts
             self.gaps_in_schedule.add({job : ts})
             self.waiting_queue.remove(job)
@@ -740,7 +740,7 @@ class BatchScheduler(Scheduler):
         is reserved '''
 
         reserved_jobs = reservation.copy()
-        stop_job.free_wasted_space()
+        #stop_job.free_wasted_space()
         self.gaps_in_schedule.remove({stop_job : reservation[stop_job]})
         self.logger.info(r'[Backfill for job %s] Reservations: %s' %
                          (stop_job, reserved_jobs))
@@ -815,7 +815,7 @@ class OnlineScheduler(Scheduler):
                 return job
         return -1
 
-    def trigger_schedule(self):
+    def trigger_schedule(self, current_time):
         ''' Method for chosing the next jobs to run. For the online
         scheduler, the method iteratively choses the largest job that fits
         in the available nodes in the system until no job fits or there
@@ -836,7 +836,7 @@ class OnlineScheduler(Scheduler):
                 r'Reserve next job: %s; Free procs %s' % (job, free_nodes))
             if job == -1:
                 break
-            selected_jobs.append((0, job))
+            selected_jobs.append((current_time, job))
             self.waiting_queue.remove(job)
             free_nodes -= job.nodes
         return selected_jobs
