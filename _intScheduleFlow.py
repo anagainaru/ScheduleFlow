@@ -217,7 +217,7 @@ class ScheduleGaps(object):
         self.__reserved_jobs = {}
 
     def trim(self, current_time):
-        ''' Delete all gaps that end before the current startmp '''
+        ''' Delete all gaps that end before the current timestamp '''
 
         gaps_idx = [idx for idx in range(len(self.gaps_list)) if
                     self.gaps_list[idx][1] < current_time]
