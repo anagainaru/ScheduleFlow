@@ -40,7 +40,7 @@ class Simulator():
                                     "option is True. Updated number of "
                                     "loops to 1.")
             self.__loops = 1
-        
+
         if "ScheduleFlow_PATH" not in os.environ:
             os.environ["ScheduleFlow_PATH"] = "."
 
@@ -61,7 +61,7 @@ class Simulator():
         ''' Method for directly runnning a scenario (includes creating
         the scenario and calling the run method'''
 
-        assert (len(job_list)>0), "The job list cannot be empty"
+        assert (len(job_list) > 0), "The job list cannot be empty"
         self.create_scenario(scheduler, job_list=job_list,
                              scenario_name=scenario_name)
         return self.run(metrics=metrics)
@@ -236,7 +236,7 @@ class Simulator():
                 average_stats = self.stats.get_metric_values()
             else:
                 tmp = self.stats.get_metric_values()
-                average_stats = {i : average_stats[i] + tmp[i] 
+                average_stats = {i: average_stats[i] + tmp[i]
                                  for i in average_stats}
 
         if check == 0:
@@ -249,9 +249,9 @@ class Simulator():
             self.__viz_handler.set_execution_log(self.__execution_log)
             self.horizontal_ax = self.__viz_handler.generate_scenario_gif(
                 self.__scenario_name)
-            self.logger.info(r"GIF generated draw/%s" % 
-                    (self.__scenario_name))
-        return {i : average_stats[i]/self.__loops for i in average_stats}
+            self.logger.info(r"GIF generated draw/%s" % (
+                self.__scenario_name))
+        return {i: average_stats[i]/self.__loops for i in average_stats}
 
 
 class Application(object):
@@ -309,8 +309,8 @@ class Application(object):
     def __str__(self):
         return 'Job %d: %d nodes; %3.1f submission time; %3.1f total ' \
                'execution time (%3.1f requested)' % (
-               self.job_id, self.nodes, self.submission_time, self.walltime,
-               self.request_walltime)
+                       self.job_id, self.nodes, self.submission_time,
+                       self.walltime, self.request_walltime)
 
     def __repr__(self):
         return 'Job(Nodes: %d, Submission: %3.1f, Walltime: %3.1f, ' \
@@ -517,13 +517,13 @@ class Scheduler(object):
                 reserved_jobs, gap_list))
         if len(gap_list) == 0:
             return -1
-        
+
         ts = max(gap_list[0][0], job.submission_time)
         # there is room for the current job starting with ts
-        self.logger.info(r'[Scheduler] Found space for %s: timestamp %d' %(
+        self.logger.info(r'[Scheduler] Found space for %s: timestamp %d' % (
             job, ts))
         # update the gaps
-        self.gaps_in_schedule.add({job : ts})
+        self.gaps_in_schedule.add({job: ts})
         return ts
 
     def backfill_request(self, stop_job, reserved_jobs, min_ts):
@@ -532,7 +532,7 @@ class Scheduler(object):
         The child methods implement different algorithms for choosing
         jobs to use to fill the space left by the termination of stop_job '''
 
-        self.gaps_in_schedule.remove({stop_job : reserved_jobs[stop_job]})
+        self.gaps_in_schedule.remove({stop_job: reserved_jobs[stop_job]})
         return []
 
 
@@ -562,7 +562,7 @@ class BatchScheduler(Scheduler):
         if len(queue) == 0:
             return []
         # get jobs in the queue ordered by their submission times
-        batch_list = sorted(queue, key=lambda job:job.submission_time)
+        batch_list = sorted(queue, key=lambda job: job.submission_time)
         # ger all jobs that share submission times that could be included
         # in the current batch
         max_submission = max([job.submission_time for job in
@@ -614,7 +614,7 @@ class BatchScheduler(Scheduler):
             r'[Scheduler] Found inside reservation for %s at ts %d'
             % (job, ts))
         return ts
-        
+
     def build_schedule(self, job, reservations, current_time):
         ''' Method for extending the existing reservation to include
         a new job. All jobs have to fit in the schedule, thus the reservation
@@ -634,7 +634,8 @@ class BatchScheduler(Scheduler):
                           for j in reservations])
         # check for the end of the schedule for a fit (after all jobs that do
         # not have other jobs starting in front)
-        gap_list = self.gaps_in_schedule.get_gaps(job.submission_time, 0, job.nodes)
+        gap_list = self.gaps_in_schedule.get_gaps(job.submission_time, 0,
+                                                  job.nodes)
         if len(gap_list) > 0:
             end_gaps = [gap for gap in gap_list if gap[1] == end_window]
             if len(end_gaps) > 0:
@@ -657,14 +658,14 @@ class BatchScheduler(Scheduler):
          starting with the largest on the first available slot '''
 
         self.waiting_queue.update_priority(current_time)
-        self.gaps_in_schedule.clear()        
+        self.gaps_in_schedule.clear()
         batch_jobs = self.get_batch_jobs()
         selected_jobs = {}
         for job in batch_jobs:
             # find a place for the job in the current schedule
             ts = self.build_schedule(job, selected_jobs, current_time)
             selected_jobs[job] = ts
-            self.gaps_in_schedule.add({job : ts})
+            self.gaps_in_schedule.add({job: ts})
             self.waiting_queue.remove(job)
 
         # try to fit any of the remaining jobs into the gaps created by the
@@ -674,7 +675,7 @@ class BatchScheduler(Scheduler):
             ts = self.create_job_reservation(job, selected_jobs)
             if ts != -1:
                 selected_jobs[job] = ts
-                self.gaps_in_schedule.add({job : ts})
+                self.gaps_in_schedule.add({job: ts})
                 self.waiting_queue.remove(job)
 
         # return (start_time, job) list in the current batch
@@ -687,7 +688,7 @@ class BatchScheduler(Scheduler):
         is reserved '''
 
         reserved_jobs = reservation.copy()
-        self.gaps_in_schedule.remove({stop_job : reservation[stop_job]})
+        self.gaps_in_schedule.remove({stop_job: reservation[stop_job]})
         self.logger.info(r'[Backfill for job %s] Reservations: %s' %
                          (stop_job, reserved_jobs))
 
@@ -705,10 +706,10 @@ class BatchScheduler(Scheduler):
 
 class OnlineScheduler(Scheduler):
     ''' Online scheduler (default LJF completly online) '''
-    
+
     def __init__(self, system, total_queues=1, logger=None):
         ''' Constructor method forces the baso to use only one
-        waiting queue ''' 
+        waiting queue '''
         super(OnlineScheduler, self).__init__(system, logger,
                                               total_queues)
 
@@ -742,7 +743,7 @@ class OnlineScheduler(Scheduler):
         min_time = min([job.submission_time for job in largest_jobs])
         return [job for job in largest_jobs
                 if job.submission_time == min_time][0]
-    
+
     def get_next_job(self, nodes):
         ''' Method to extract the largest volume job (nodes * requested time)
         in the waiting queue that fits the space given by the `nodes`. The job
@@ -771,7 +772,7 @@ class OnlineScheduler(Scheduler):
         self.gaps_in_schedule.trim(current_time)
 
         jobs_in_waiting_queue = self.waiting_queue.total_jobs()
-        self.logger.info('Wait queue: %d' %(jobs_in_waiting_queue))
+        self.logger.info('Wait queue: %d' % (jobs_in_waiting_queue))
         selected_jobs = []
         if jobs_in_waiting_queue == 0:
             return []
@@ -783,11 +784,11 @@ class OnlineScheduler(Scheduler):
             if job == -1:
                 break
             selected_jobs.append((current_time, job))
-            self.gaps_in_schedule.add({job : current_time})
+            self.gaps_in_schedule.add({job: current_time})
             self.waiting_queue.remove(job)
             free_nodes -= job.nodes
         return selected_jobs
- 
+
     def fit_job_in_schedule(self, job, reserved_jobs):
         ''' Method that overwrites the base class that implements a
         reservation based algorithm. For the base method all jobs
@@ -807,6 +808,6 @@ class OnlineScheduler(Scheduler):
                 self.logger.info(
                     r'[OnlineScheduler] Found space for %s: timestamp %d' %
                     (job, gap[0]))
-                self.gaps_in_schedule.add({job : job.submission_time})
+                self.gaps_in_schedule.add({job: job.submission_time})
                 return job.submission_time
         return -1

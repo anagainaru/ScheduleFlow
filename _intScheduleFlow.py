@@ -88,12 +88,12 @@ class WaitingQueue(object):
     def __init__(self, total_queues=2):
         ''' Creates two waiting queues, one for large jobs having high
         priority and one for backfilling jobs '''
-        
+
         assert (total_queues > 0), 'The waiting queue must contain'\
-            'at least one queue (%d requested)' %(total_queues)
+            'at least one queue (%d requested)' % (total_queues)
         self.num_queues = total_queues - 1
         self.volume_threshold = [36000 / i for i in
-                                 range(1,self.num_queues + 1)]
+                                 range(1, self.num_queues + 1)]
         if self.num_queues == 0:
             self.volume_threshold = [0]
 
@@ -120,7 +120,7 @@ class WaitingQueue(object):
             return
         idx = max([i for i in range(len(self.volume_threshold)) if
                    self.volume_threshold[i] >= job_volume])
-        self.secondary_queues[idx].add(job)  
+        self.secondary_queues[idx].add(job)
 
     def remove(self, job):
         ''' Method for removing a job from the waiting queues '''
@@ -154,7 +154,7 @@ class WaitingQueue(object):
         ''' Method for updating the priority of jobs that spent
         more time than the threshold in the backfill queue '''
 
-        if len(self.secondary_queues)==0:
+        if len(self.secondary_queues) == 0:
             return
         for i in range(len(self.secondary_queues)-1, 0, -1):
             self.update_queue(self.secondary_queues[i],
@@ -167,8 +167,8 @@ class WaitingQueue(object):
     def fill_priority_queue(self):
         ''' Method called when the main queue is empty for bringing to it
         the highest priority largest job from the secondary queues '''
-        
-        if len(self.main_queue)==0 and self.total_secondary_jobs() > 0:
+
+        if len(self.main_queue) == 0 and self.total_secondary_jobs() > 0:
             # get the first priority queue that has at least one job
             idx = min([i for i in range(len(self.secondary_queues)) if
                        len(self.secondary_queues[i]) > 0])
@@ -189,7 +189,7 @@ class WaitingQueue(object):
     def total_secondary_jobs(self):
         ''' Method for returning the total jobs in all the
         secondary queues '''
-        if len(self.secondary_queues)==0:
+        if len(self.secondary_queues) == 0:
             return 0
         return sum([len(queue) for queue in self.secondary_queues])
 
@@ -231,17 +231,12 @@ class ScheduleGaps(object):
             del self.__reserved_jobs[job]
         return self.gaps_list
 
-    def __update_intersections(self, gaps_idx, start, end, procs, ops):
-        ''' Update the gaps that intersect the new job that needs to be
-        scheduled. Gaps_idx represent the list of gaps that intersect the
-        job which is characterized by start, end and procs. Ops indicates 
-        if the job is being added (-1) or removed (1) '''
+    def __overflow_intersections(self, gaps_idx, start, end, procs, ops):
+        ''' Method that creates new gaps if the new job exceeds the [min, max]
+        of existing gaps. The start and end values of the new job are updated
+        to reflect what is left of the job '''
 
-        if len(gaps_idx) == 0:
-            return []
         new_gaps = []
-        # check edges and create new gaps if the new job exceeds the [min, max]
-        # start and end values are updated to reflect what is left of the job
         min_start = min([self.gaps_list[idx][0] for idx in gaps_idx])
         max_end = max([self.gaps_list[idx][1] for idx in gaps_idx])
         available_procs = self.__total_nodes
@@ -257,7 +252,18 @@ class ScheduleGaps(object):
                 new_gaps.append([max_end, end,
                                  available_procs + procs * ops])
             end = max_end
-        
+        return (start, end, new_gaps)
+
+    def __update_intersections(self, gaps_idx, start, end, procs, ops):
+        ''' Update the gaps that intersect the new job that needs to be
+        scheduled. Gaps_idx represent the list of gaps that intersect the
+        job which is characterized by start, end and procs. Ops indicates
+        if the job is being added (-1) or removed (1) '''
+
+        if len(gaps_idx) == 0:
+            return []
+        (start, end, new_gaps) = self.__overflow_intersections(
+            gaps_idx, start, end, procs, ops)
         intersect_gaps_idx = [idx for idx in gaps_idx if
                               self.gaps_list[idx][0] < start or
                               self.gaps_list[idx][1] > end]
@@ -282,15 +288,28 @@ class ScheduleGaps(object):
                                 self.gaps_list[idx][2]])
         return new_gaps
 
+    def __update_included(self, gaps_idx, start, end, procs, ops):
+        ''' Update the gaps that are completely included by the new job.
+        Gaps_idx represent the list of gaps that intersect the
+        job which is characterized by start, end and procs '''
+
+        new_gaps = []
+        include_gaps_idx = [idx for idx in gaps_idx if
+                            self.gaps_list[idx][0] >= start and
+                            self.gaps_list[idx][1] <= end]
+        for idx in include_gaps_idx:
+            if self.gaps_list[idx][2] + procs * ops > 0:
+                new_gaps.append([self.gaps_list[idx][0],
+                                 self.gaps_list[idx][1],
+                                 self.gaps_list[idx][2] + procs * ops])
+        return new_gaps
+
     def __consolidate(self, gaps_list):
         ''' Method for removing duplicate gaps and merging smaller gaps
         into more inclusive ones '''
 
         gaps_list.sort()
         remove_list = set()
-        # remove all entries whose start == end
-        #remove_list |= set([idx for idx in range(len(gaps_list)) if
-        #                    gaps_list[idx][0] == gaps_list[idx][1]])
 
         for i in range(len(gaps_list)):
             gap = gaps_list[i]
@@ -308,13 +327,13 @@ class ScheduleGaps(object):
                     gaps_list[idx][1] = end
                     if gaps_list[idx][2] == gap[2]:
                         remove_list.add(i)
+                    continue
+
+                if start == gaps_list[idx][0] and end == gaps_list[idx][1]:
+                    remove_list.add(i)
                 else:
-                    if (start == gaps_list[idx][0] and 
-                        end == gaps_list[idx][1]):
-                        remove_list.add(i)
-                    else:
-                        gaps_list[i][0] = start
-                        gaps_list[i][1] = end
+                    gaps_list[i][0] = start
+                    gaps_list[i][1] = end
 
         remove_list = sorted(list(remove_list), reverse=True)
         for idx in remove_list:
@@ -324,21 +343,45 @@ class ScheduleGaps(object):
         ''' Add neighbor space on the left and right of the new job '''
 
         new_gaps = []
+        start = self.__reserved_jobs[new_job]
         left_gaps = [self.__reserved_jobs[job] + job.request_walltime
                      for job in self.__reserved_jobs if
                      self.__reserved_jobs[job] + job.request_walltime <=
-                     self.__reserved_jobs[new_job]]
-        if len(left_gaps) > 0 and max(left_gaps) < self.__reserved_jobs[new_job]:
-            new_gaps.append([max(left_gaps), self.__reserved_jobs[new_job],
-                             self.__total_nodes])
+                     start]
+        if len(left_gaps) > 0 and max(left_gaps) < start:
+            new_gaps.append([max(left_gaps), start, self.__total_nodes])
+        end = self.__reserved_jobs[new_job] + new_job.request_walltime
         right_gaps = [self.__reserved_jobs[job] for job in self.__reserved_jobs
-                      if self.__reserved_jobs[job] >= new_job.request_walltime
-                      + self.__reserved_jobs[new_job]]
-        if len(right_gaps) and min(right_gaps) > (self.__reserved_jobs[new_job] +
-                                                  new_job.request_walltime):
-            new_gaps.append([self.__reserved_jobs[new_job] + new_job.request_walltime,
-                             min(right_gaps), self.__total_nodes])
+                      if self.__reserved_jobs[job] >= end]
+        if len(right_gaps) and min(right_gaps) > end:
+            new_gaps.append([end, min(right_gaps), self.__total_nodes])
         return new_gaps
+
+    def __update_reserved_list(self, job, start, ops):
+        ''' Method that removes or stores information about the new job '''
+        if ops < 0:
+            self.__reserved_jobs[job] = start
+        else:
+            del self.__reserved_jobs[job]
+
+    def __fill_voids(self, job, start, end, procs, ops):
+        ''' Method called only for jobs that do not intersect any other gaps.
+        The void space between the new job and end/beginning of the neighbor
+        job needs to be represented by a gap '''
+
+        new_gaps = []
+        free_nodes = procs
+        if ops < 0:
+            new_gaps = self.__fill_gap_to_neighbors(job)
+            free_nodes = self.__total_nodes - procs
+        if free_nodes > 0:
+            new_gaps.append([start, end, free_nodes])
+
+        if len(new_gaps) > 0 and new_gaps[0][0] != start:
+            start = new_gaps[0][0]
+            end = new_gaps[0][1]
+            procs = 0
+        return (new_gaps, start, end, procs)
 
     def update(self, reserved_jobs, ops):
         ''' Method for updating the gaps in a schedule when new jobs are
@@ -347,14 +390,10 @@ class ScheduleGaps(object):
         indicates if the job is being added (-1) or removed (1) '''
 
         for job in reserved_jobs:
-            if ops == -1:
-                self.__reserved_jobs[job] = reserved_jobs[job]
-            else:
-                del self.__reserved_jobs[job]
-
+            self.__update_reserved_list(job, reserved_jobs[job], ops)
             start = reserved_jobs[job]
             end = reserved_jobs[job] + job.request_walltime
-            # for job ends the available space is between when the job ends
+            # for job ends, the available space is between when the job ends
             # and how much time was reserved for the job
             if ops > 0:
                 start += job.walltime
@@ -362,42 +401,26 @@ class ScheduleGaps(object):
                 continue
             procs = job.nodes
 
-            #print(job, start, end, self.gaps_list)
             # identify the gaps that are affected by the new job
             affected_gaps_idx = [idx for idx in range(len(self.gaps_list))
                                  if self.gaps_list[idx][0] <= end and
                                  self.gaps_list[idx][1] >= start]
 
-            # add empty gap between current job and the neighbors
             new_gaps = []
             if len(affected_gaps_idx) == 0:
-                if ops < 0:
-                    new_gaps = self.__fill_gap_to_neighbors(job)
-
-                free_nodes = procs
-                if ops < 0:
-                    free_nodes = self.__total_nodes - procs
-                if free_nodes > 0:
-                    new_gaps.append([start, end, free_nodes])
-
-                if len(new_gaps) > 0 and new_gaps[0][0] < start:
-                    start = new_gaps[0][0]
-                    end = new_gaps[0][1]
-                    procs = 0
-                    affected_gaps_idx = [idx for idx in range(len(self.gaps_list))
-                                     if self.gaps_list[idx][0] <= end and
-                                     self.gaps_list[idx][1] >= start]
+                # add empty gap between current job and the neighbors
+                (new_gaps, start, end, procs) = self.__fill_voids(
+                    job, start, end, procs, ops)
+                if procs == 0:
+                    affected_gaps_idx = [
+                        idx for idx in range(len(self.gaps_list))
+                        if self.gaps_list[idx][0] <= end and
+                        self.gaps_list[idx][1] >= start]
 
             # update the amount of free processing units for all the gaps
             # that are completely included inside the new job
-            include_gaps_idx = [idx for idx in affected_gaps_idx if
-                                self.gaps_list[idx][0] >= start and
-                                self.gaps_list[idx][1] <= end]
-            for idx in include_gaps_idx:
-                if self.gaps_list[idx][2] + procs * ops > 0:
-                    new_gaps.append([self.gaps_list[idx][0],
-                                     self.gaps_list[idx][1],
-                                     self.gaps_list[idx][2] + procs * ops])
+            new_gaps += self.__update_included(
+                affected_gaps_idx, start, end, procs, ops)
 
             # update gaps that intersect the new job
             new_gaps += self.__update_intersections(
@@ -417,19 +440,20 @@ class ScheduleGaps(object):
 
     def add(self, job_list):
         ''' Method for adding jobs in the schedule '''
-        #print("ADD jobs", job_list)
         return self.update(job_list, -1)
 
     def remove(self, job_list):
         ''' Method for removing jobs from the schedule '''
-        #print("REMOVE jobs", job_list)
         return self.update(job_list, 1)
 
     def get_gaps(self, start_time, length, nodes):
-        #print(self.gaps_list, start_time, length)
+        ''' Return all the gaps that can fit a job using a given number of
+        nodes, requiring a length walltime and that has to start the earliest
+        at start_time '''
         return [gaps for gaps in self.gaps_list if (gaps[1] >= start_time
                 and gaps[1] - max(start_time, gaps[0]) >= length and
                 gaps[2] >= nodes)]
+
 
 class Runtime(object):
     ''' Runtime class responsible for coordinating the submission and
@@ -524,7 +548,7 @@ class Runtime(object):
             self.__current_time, ret_schedule))
         # create a start job event for each job selected by the scheduler
         for apl in ret_schedule:
-            self.__reserved_jobs[apl[1]] = apl[0] 
+            self.__reserved_jobs[apl[1]] = apl[0]
             self.__events.push(
                 (apl[0], EventType.JobStart, apl[1]))
 
@@ -617,8 +641,9 @@ class TexGenerator():
             outf = open(os.environ["ScheduleFlow_PATH"]+'/draw/%s_%d.tex' % (
                 filename, i), 'w')
             # write header
-            outf.writelines([l for l in open(
-                os.environ["ScheduleFlow_PATH"]+"/draw/tex_header").readlines()])
+            outf.writelines(
+                [l for l in open(os.environ["ScheduleFlow_PATH"] +
+                                 "/draw/tex_header").readlines()])
             self.__print_execution_list(i + 1, outf)
             if i < self.__total_runs:
                 # write last job start and end times
@@ -629,8 +654,9 @@ class TexGenerator():
                 self.__print_makespan(max([r[1] for r in self.__run_list]),
                                       outf)
             # write footer
-            outf.writelines([l for l in open(
-                os.environ["ScheduleFlow_PATH"]+"/draw/tex_footer").readlines()])
+            outf.writelines(
+                [l for l in open(os.environ["ScheduleFlow_PATH"] +
+                                 "/draw/tex_footer").readlines()])
             outf.close()
 
     def __print_current_execution_info(self, execution, outf):
@@ -844,15 +870,15 @@ class StatsEngine():
         self.__execution_log = {}
         self.__makespan = -1
         self.__total_nodes = total_nodes
-        
+
         self.__metric_mapping = {
-            "system makespan" : self.total_makespan,
-            "system utilization" : self.system_utilization,
-            "job utilization" : self.average_job_utilization,
-            "job response time" : self.average_job_response_time,
-            "job stretch" : self.average_job_stretch,
-            "job wait time" : self.average_job_wait_time,
-            "job failures" : self.total_failures}
+            "system makespan": self.total_makespan,
+            "system utilization": self.system_utilization,
+            "job utilization": self.average_job_utilization,
+            "job response time": self.average_job_response_time,
+            "job stretch": self.average_job_stretch,
+            "job wait time": self.average_job_wait_time,
+            "job failures": self.total_failures}
         self.__metrics = [i for i in self.__metric_mapping]
         self.__metrics.sort()
 
@@ -878,7 +904,7 @@ class StatsEngine():
         self.__execution_log = execution_log
         self.__makespan = max([max([i[1] for i in self.__execution_log[job]])
                                for job in self.__execution_log])
-    
+
     def set_metrics(self, metric_list):
         ''' Add the metrics of interest for the current simulation '''
 
@@ -894,7 +920,7 @@ class StatsEngine():
         self.__metrics = list(self.__metrics)
         self.__metrics.sort()
         return self.__metrics
-    
+
     def total_makespan(self):
         ''' Time from simulation beginning last job end '''
         return self.__makespan
@@ -982,12 +1008,12 @@ class StatsEngine():
         if loop_id == 0:
             file_handler.write("Scenario name : ")
             for metric in self.__metrics:
-                file_handler.write("%s : " %(metric))
+                file_handler.write("%s : " % (metric))
             file_handler.write("\n")
 
         # print metric values
-        file_handler.write("%s : " %(scenario))
+        file_handler.write("%s : " % (scenario))
         for metric in self.__metrics:
-            file_handler.write("%.2f : " %
-            (self.__metric_mapping[metric]()))
+            file_handler.write("%.2f : " % (
+                self.__metric_mapping[metric]()))
         file_handler.write("\n")
