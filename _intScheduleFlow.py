@@ -476,6 +476,23 @@ class Runtime(object):
             self.__events.push(
                 (job.submission_time, EventType.JobSubmission, job))
 
+        # initialize the progress bar
+        self.__progressbar_width = min(50, len(workload))
+        self.total_jobs = len(workload)
+        sys.stdout.write("[%s]" % ("." * self.__progressbar_width))
+        sys.stdout.flush()
+        sys.stdout.write("\b" * (self.__progressbar_width + 1))
+        self.__progressbar_step = 1
+
+    def update_progressbar(self):
+        progress = int((self.total_jobs * self.__progressbar_step) /
+                       self.__progressbar_width)
+        if len(self.__finished_jobs) < progress:
+            return
+        sys.stdout.write("=")
+        sys.stdout.flush()
+        self.__progressbar_step += 1
+
     def __call__(self, sch):
         ''' Method for execution the simulation on a given scheduler '''
 
@@ -501,6 +518,8 @@ class Runtime(object):
                     self.__job_start_event(event[2])
                 elif event[1] == EventType.JobEnd:
                     trigger_schedule = self.__job_end_event(event[2])
+                    # update the progress bar
+                    self.update_progressbar()
                 elif event[1] == EventType.TriggerSchedule:
                     self.__trigger_schedule_event()
 
@@ -519,6 +538,9 @@ class Runtime(object):
         # at the end of the simulation return default values for all the jobs
         for job in self.__finished_jobs:
             job.restore_default_values()
+
+        # end the progress bar
+        sys.stdout.write("]\n")
 
     def __job_subimssion_event(self, job, can_start):
         ''' Method for handling a job submission event. The method takes the
