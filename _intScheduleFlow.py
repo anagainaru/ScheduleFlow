@@ -336,8 +336,11 @@ class ScheduleGaps(object):
                     gaps_list[i][1] = end
 
         remove_list = sorted(list(remove_list), reverse=True)
+        if len(remove_list)==0:
+            return 0
         for idx in remove_list:
             del gaps_list[idx]
+        return -1
 
     def __fill_gap_to_neighbors(self, new_job):
         ''' Add neighbor space on the left and right of the new job '''
@@ -427,7 +430,9 @@ class ScheduleGaps(object):
                 affected_gaps_idx, start, end, procs, ops)
 
             # consolidate the new gaps
-            self.__consolidate(new_gaps)
+            ret = -1
+            while ret < 0:
+                ret = self.__consolidate(new_gaps)
 
             # remove all affected gaps from the gap list and
             # add the consolidated new list of gaps

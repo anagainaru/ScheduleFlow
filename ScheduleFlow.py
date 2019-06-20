@@ -497,7 +497,7 @@ class Scheduler(object):
         to run from the waiting queue at the current schedule cycle '''
         return []
 
-    def fit_job_in_schedule(self, job, reserved_jobs):
+    def fit_job_in_schedule(self, job, reserved_jobs, current_time=0):
         ''' Base method that fits a new job into an existing schedule.
         The `reserved_jobs` consists of a list of [start time, job].
         The base method assumes a reservation based scheduler: the end of
@@ -509,7 +509,8 @@ class Scheduler(object):
 
         if len(reserved_jobs) == 0:
             return -1
-        gap_list = self.gaps_in_schedule.get_gaps(job.submission_time,
+        start_time = max(job.submission_time, current_time)
+        gap_list = self.gaps_in_schedule.get_gaps(start_time,
                                                   job.request_walltime,
                                                   job.nodes)
         self.logger.debug(
@@ -518,7 +519,7 @@ class Scheduler(object):
         if len(gap_list) == 0:
             return -1
 
-        ts = max(gap_list[0][0], job.submission_time)
+        ts = max(gap_list[0][0], start_time)
         # there is room for the current job starting with ts
         self.logger.info(r'[Scheduler] Found space for %s: timestamp %d' % (
             job, ts))
@@ -681,12 +682,13 @@ class BatchScheduler(Scheduler):
         # return (start_time, job) list in the current batch
         return [(selected_jobs[job], job) for job in selected_jobs]
 
-    def backfill_request(self, stop_job, reservation, min_ts):
+    def backfill_request(self, stop_job, reservation, current_time):
         ''' Method that implements a greedy algorithm to find jobs from
         the waiting queue that fit in the space left after the end of the
         `stop_job`. Larger jobs are inspected first and first slot available
         is reserved '''
 
+        self.gaps_in_schedule.trim(current_time)
         reserved_jobs = reservation.copy()
         self.gaps_in_schedule.remove({stop_job: reservation[stop_job]})
         self.logger.info(r'[Backfill for job %s] Reservations: %s' %
@@ -696,7 +698,7 @@ class BatchScheduler(Scheduler):
         selected_jobs = []
         for job in batch_jobs:
             tm = super(BatchScheduler, self).fit_job_in_schedule(
-                job, reserved_jobs)
+                job, reserved_jobs, current_time=current_time)
             if tm != -1:
                 selected_jobs.append((tm, job))
                 reserved_jobs[job] = tm
@@ -789,7 +791,7 @@ class OnlineScheduler(Scheduler):
             free_nodes -= job.nodes
         return selected_jobs
 
-    def fit_job_in_schedule(self, job, reserved_jobs):
+    def fit_job_in_schedule(self, job, reserved_jobs, current_time=0):
         ''' Method that overwrites the base class that implements a
         reservation based algorithm. For the base method all jobs
         need to be fitted in the reservation window and cannot exceed
