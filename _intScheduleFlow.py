@@ -336,8 +336,11 @@ class ScheduleGaps(object):
                     gaps_list[i][1] = end
 
         remove_list = sorted(list(remove_list), reverse=True)
+        if len(remove_list)==0:
+            return 0
         for idx in remove_list:
             del gaps_list[idx]
+        return -1
 
     def __fill_gap_to_neighbors(self, new_job):
         ''' Add neighbor space on the left and right of the new job '''
@@ -427,7 +430,9 @@ class ScheduleGaps(object):
                 affected_gaps_idx, start, end, procs, ops)
 
             # consolidate the new gaps
-            self.__consolidate(new_gaps)
+            ret = -1
+            while ret < 0:
+                ret = self.__consolidate(new_gaps)
 
             # remove all affected gaps from the gap list and
             # add the consolidated new list of gaps
@@ -476,6 +481,23 @@ class Runtime(object):
             self.__events.push(
                 (job.submission_time, EventType.JobSubmission, job))
 
+        # initialize the progress bar
+        self.__progressbar_width = min(50, len(workload))
+        self.total_jobs = len(workload)
+        sys.stdout.write("[%s]" % ("." * self.__progressbar_width))
+        sys.stdout.flush()
+        sys.stdout.write("\b" * (self.__progressbar_width + 1))
+        self.__progressbar_step = 1
+
+    def update_progressbar(self):
+        progress = int((self.total_jobs * self.__progressbar_step) /
+                       self.__progressbar_width)
+        if len(self.__finished_jobs) < progress:
+            return
+        sys.stdout.write("=")
+        sys.stdout.flush()
+        self.__progressbar_step += 1
+
     def __call__(self, sch):
         ''' Method for execution the simulation on a given scheduler '''
 
@@ -501,6 +523,8 @@ class Runtime(object):
                     self.__job_start_event(event[2])
                 elif event[1] == EventType.JobEnd:
                     trigger_schedule = self.__job_end_event(event[2])
+                    # update the progress bar
+                    self.update_progressbar()
                 elif event[1] == EventType.TriggerSchedule:
                     self.__trigger_schedule_event()
 
@@ -519,6 +543,9 @@ class Runtime(object):
         # at the end of the simulation return default values for all the jobs
         for job in self.__finished_jobs:
             job.restore_default_values()
+
+        # end the progress bar
+        sys.stdout.write("]\n")
 
     def __job_subimssion_event(self, job, can_start):
         ''' Method for handling a job submission event. The method takes the
