@@ -726,6 +726,7 @@ class OnlineScheduler(Scheduler):
         schedule needs to be triggered after each job end '''
 
         super(OnlineScheduler, self).clear_job(job)
+        self.gaps_in_schedule.completely_remove(job)
         return 0  # trigger a new schedule starting now (timestamp 0)
 
     def __get_next_queued_job(self, nodes, queue):
