@@ -218,17 +218,20 @@ class ScheduleGaps(object):
 
     def trim(self, current_time):
         ''' Delete all gaps that end before the current timestamp '''
-
-        gaps_idx = [idx for idx in range(len(self.gaps_list)) if
-                    self.gaps_list[idx][1] < current_time]
-        gaps_idx.sort(reverse=True)
-        for idx in gaps_idx:
-            del self.gaps_list[idx]
         job_list = [job for job in self.__reserved_jobs if
                     (self.__reserved_jobs[job] + job.request_walltime) <
                     current_time]
         for job in job_list:
             del self.__reserved_jobs[job]
+        if len(self.__reserved_jobs) == 0:
+            self.gaps_list = []
+            return []
+        gaps_idx = [idx for idx in range(len(self.gaps_list)) if
+                    self.gaps_list[idx][1] < current_time]
+        gaps_idx.sort(reverse=True)
+        for idx in gaps_idx:
+            del self.gaps_list[idx]
+
         return self.gaps_list
 
     def __overflow_intersections(self, gaps_idx, start, end, procs, ops):
@@ -396,9 +399,9 @@ class ScheduleGaps(object):
             self.__update_reserved_list(job, reserved_jobs[job], ops)
             start = reserved_jobs[job]
             end = reserved_jobs[job] + job.request_walltime
-            # for job ends, the available space is between when the job ends
-            # and how much time was reserved for the job
-            if ops > 0:
+            # for removing job backfills, the available space is between
+            # when the job ends and how much time was reserved for the job
+            if ops == 1:
                 start += job.walltime
             if start == end:
                 continue
@@ -448,14 +451,23 @@ class ScheduleGaps(object):
         return self.update(job_list, -1)
 
     def remove(self, job_list):
-        ''' Method for removing jobs from the schedule '''
+        ''' Method for removing the backfilling space of jobs from
+        the schedule '''
         return self.update(job_list, 1)
 
+    def completely_remove(self, job):
+        ''' Method for removing the entore jobs from the schedule '''
+        job_list = {}
+        if job not in self.__reserved_jobs:
+            return self.gaps_list
+        job_list[job] = self.__reserved_jobs[job]
+        return self.update(job_list, 2)
+    
     def get_gaps(self, start_time, length, nodes):
         ''' Return all the gaps that can fit a job using a given number of
         nodes, requiring a length walltime and that has to start the earliest
         at start_time '''
-        return [gaps for gaps in self.gaps_list if (gaps[1] >= start_time
+        return [gaps for gaps in self.gaps_list if (gaps[1] > start_time
                 and gaps[1] - max(start_time, gaps[0]) >= length and
                 gaps[2] >= nodes)]
 
