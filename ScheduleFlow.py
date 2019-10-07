@@ -399,15 +399,18 @@ class Application(object):
 
 
 class System(object):
-    ''' System class containing available resources (for now just nodes) '''
+    ''' System class containing available resources 
+        (default I/O bandwidth per core of 1 MB/s for both read/write) '''
 
-    def __init__(self, total_nodes):
+    def __init__(self, total_nodes, io_write_bw=1, io_read_bw=1):
         assert (total_nodes > 0),\
             r'Number of nodes of a system must be > 0: received %d' % (
             total_nodes)
 
         self.__total_nodes = total_nodes
         self.__free_nodes = total_nodes
+        self.__IO_write_bw = io_write_bw
+        self.__IO_read_bw = io_read_bw
 
     def __str__(self):
         return 'System: %d total nodes (%d currently free)' % (
@@ -422,6 +425,12 @@ class System(object):
 
     def get_total_nodes(self):
         return self.__total_nodes
+
+    def get_write_time(self, dump_size):
+        return dump_size * self.__IO_write_bw
+
+    def get_read_time(self, dump_size):
+        return dump_size * self.__IO_read_bw
 
     def start_job(self, nodes, jobid):
         ''' Method for aquiring resources in the system '''
