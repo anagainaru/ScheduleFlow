@@ -180,6 +180,12 @@ class TestApplication(unittest.TestCase):
         job_list.overwrite_request_sequence([190, 200])
         self.assertEqual(job_list.get_request_time(1), 190)
 
+    def test_checkpoint(self):
+        job = ScheduleFlow.Application(10, 0, 200, [100, 200, 300],
+                                       resubmit_factor=1.5)
+        set_checkpointing([20, 10, 50],
+                          resubmission_checkpointing=True)
+
     def test_invalid_job(self):
         with self.assertRaises(AssertionError):
             ScheduleFlow.Application(0, 0, 10, [11])
