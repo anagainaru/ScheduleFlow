@@ -306,6 +306,9 @@ class Application(object):
                     (JobChangeType.RequestSequenceOverwrite,
                      self.request_sequence[:]))
 
+        # By default checkpointing is False
+        self.checkpoiting = False
+
     def __str__(self):
         return 'Job %d: %d nodes; %3.1f submission time; %3.1f total ' \
                'execution time (%3.1f requested)' % (
@@ -321,6 +324,22 @@ class Application(object):
 
     def __lt__(self, job):
         return self.job_id < job.job_id
+
+    def set_checkpointing(self, checkpoit_size,
+                          resubmission_checkpointing=False):
+        ''' Method for setting the checkpoint/restart characteristics:
+            (1) what is the checkpoint size for each submission;
+            (2) is each submission checkpointed at the end;
+            (3) resubmit_factor resubmissions are checkpointed (if yes,
+            using what value for the checkpoint size '''
+        if resubmission_checkpointing:
+            self.checkpoiting = True
+        # negative values indicate no checkpoint
+        self.current_checkpoint = checkpoint_size[0]
+        if len(checkpoint_size)>1:
+            self.checkpoint_sequence = checkpoint_size[1:]
+        # once the checkpoint_sequnce becomes empty, resubmissions will be
+        # always or never checkpointed based on self.checkpointing
 
     def get_request_time(self, step):
         ''' Method for descovering the request time that the job will use
