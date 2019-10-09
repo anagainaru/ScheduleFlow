@@ -308,6 +308,8 @@ class Application(object):
 
         # By default checkpointing is False
         self.checkpoiting = False
+        self.current_checkpoint = -1
+        self.checkpoint_sequence = []
 
     def __str__(self):
         return 'Job %d: %d nodes; %3.1f submission time; %3.1f total ' \
@@ -325,7 +327,7 @@ class Application(object):
     def __lt__(self, job):
         return self.job_id < job.job_id
 
-    def set_checkpointing(self, checkpoit_size,
+    def set_checkpointing(self, checkpoint_size,
                           resubmission_checkpointing=False):
         ''' Method for setting the checkpoint/restart characteristics:
             (1) what is the checkpoint size for each submission;

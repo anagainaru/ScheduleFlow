@@ -183,8 +183,8 @@ class TestApplication(unittest.TestCase):
     def test_checkpoint(self):
         job = ScheduleFlow.Application(10, 0, 200, [100, 200, 300],
                                        resubmit_factor=1.5)
-        set_checkpointing([20, 10, 50],
-                          resubmission_checkpointing=True)
+        job.set_checkpointing([25, 20, 10, 50],
+                              resubmission_checkpointing=True)
 
     def test_invalid_job(self):
         with self.assertRaises(AssertionError):
