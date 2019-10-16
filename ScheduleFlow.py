@@ -385,7 +385,7 @@ class Application(object):
 
     def update_submission(self, submission_time):
         ''' Method to update submission information including
-        the submission time and the walltime request '''
+        the submission time, the walltime request and the checkpoint size '''
 
         assert (submission_time >= 0),\
             r'Negative submission time received: %d' % (
@@ -404,6 +404,12 @@ class Application(object):
                                         self.request_walltime)
         if self.resubmit_factor == 1 and len(self.request_sequence) == 0:
             self.resubmit = False
+
+        if len(self.checkpoint_sequence) > 0:
+            self.__execution_log.append((JobChangeType.CheckpointSizeChange,
+                                         self.current_checkpoint))
+            self.current_checkpoint = self.checkpoint_sequence[0]
+            del self.checkpoint_sequence[0]
 
     def restore_default_values(self):
         ''' Method for restoring the initial submission values '''
