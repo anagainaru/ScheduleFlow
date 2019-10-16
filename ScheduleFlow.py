@@ -307,8 +307,7 @@ class Application(object):
                      self.request_sequence[:]))
 
         # By default checkpointing is False
-        self.checkpoiting = False
-        self.current_checkpoint = -1
+        self.current_checkpoint = 0
         self.checkpoint_sequence = []
 
     def __str__(self):
@@ -332,16 +331,23 @@ class Application(object):
         ''' Method for setting the checkpoint/restart characteristics:
             (1) what is the checkpoint size for each submission;
             (2) is each submission checkpointed at the end;
-            (3) resubmit_factor resubmissions are checkpointed (if yes,
-            using what value for the checkpoint size '''
-        if resubmission_checkpointing:
-            self.checkpoiting = True
-        # negative values indicate no checkpoint
+            (3) resubmit_factor resubmissions are checkpointed '''
+        # 0 or negative values indicate no checkpoint
         self.current_checkpoint = checkpoint_size[0]
         if len(checkpoint_size)>1:
             self.checkpoint_sequence = checkpoint_size[1:]
         # once the checkpoint_sequnce becomes empty, resubmissions will be
         # always or never checkpointed based on self.checkpointing
+
+    def get_checkpoint_size(self, step):
+        ''' Method for descoverying the checkpoint size that the job
+        will use for its consecutive "step"-th submission. '''
+
+        if step == 0 or len(self.checkpoint_sequence) == 0:
+            return self.current_checkpoint
+        if step < len(self.checkpoint_sequence):
+            return self.checkpoint_sequence[step - 1]
+        return self.checkpoint_sequence[-1]
 
     def get_request_time(self, step):
         ''' Method for descovering the request time that the job will use
@@ -355,8 +361,8 @@ class Application(object):
         if len(self.request_sequence) == 0:
             return self.request_walltime * pow(self.resubmit_factor, step)
 
-        if len(self.request_sequence) > step-1:
-            return self.request_sequence[step-1]
+        if step < len(self.request_sequence):
+            return self.request_sequence[step - 1]
 
         seq_len = len(self.request_sequence)
         return self.request_sequence[seq_len - 1] * pow(
