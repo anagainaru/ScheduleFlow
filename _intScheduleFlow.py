@@ -27,6 +27,7 @@ class JobChangeType(IntEnum):
     SubmissionChange = 0
     RequestChange = 1
     RequestSequenceOverwrite = 2
+    CheckpointSizeChange = 3
 
 
 class EventType(IntEnum):

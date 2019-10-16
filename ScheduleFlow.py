@@ -426,6 +426,13 @@ class Application(object):
         if restore is not None:
             self.request_walltime = restore[1]
 
+        restore = [i[1] for i in self.__execution_log if
+                   i[0] == JobChangeType.CheckpointSizeChange]
+        if len(restore) > 0:
+            self.current_chekpoint = restore[0]
+            if len(restore) > 1:
+                self.checkpoint_sequence = restore[1:]
+
         self.resubmit = True
         if self.resubmit_factor == 1 and len(self.request_sequence) == 0:
             self.resubmit = False
