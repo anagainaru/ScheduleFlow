@@ -428,9 +428,12 @@ class Application(object):
         restore = [i[1] for i in self.__execution_log if
                    i[0] == JobChangeType.CheckpointSizeChange]
         if len(restore) > 0:
-            self.current_chekpoint = restore[0]
+            restore_check = []
             if len(restore) > 1:
-                self.checkpoint_sequence = restore[1:]
+                restore_check = restore[1:]
+            restore_check += [self.current_checkpoint]
+            self.current_checkpoint = restore[0]
+            self.checkpoint_sequence = restore_check + self.checkpoint_sequence
 
         self.resubmit = True
         if self.resubmit_factor == 1 and len(self.request_sequence) == 0:
