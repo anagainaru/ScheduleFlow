@@ -210,6 +210,60 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(ap.request_walltime, 180)
 
 
+# test the checkpointing capabilities of the scheduler
+class TestCheckpointing(unittest.TestCase):
+    def test_default_checkpoint(self):
+        job = ScheduleFlow.Application(10, 0, 200, [100, 200, 300],
+                                       resubmit_factor=1.5)
+        self.assertTrue(job.current_checkpoint <= 0)
+        self.assertEqual(len(job.checkpoint_sequence), 0)
+        
+    def test_set_checkpoint(self):
+        job = ScheduleFlow.Application(10, 0, 200, [100, 200, 300],
+                                       resubmit_factor=1.5)
+        job.set_checkpointing([25, 20, 10, 50])
+        self.assertEqual(job.current_checkpoint, 25)
+        self.assertEqual(len(job.checkpoint_sequence), 3)
+    
+    def test_get_checkpoint(self):
+        job = ScheduleFlow.Application(10, 0, 200, [100, 200, 300],
+                                       resubmit_factor=1.5)
+        job.set_checkpointing([25])
+        self.assertEqual(job.get_checkpoint_size(100), 25)
+        job.set_checkpointing([25, 20, 10, 50])
+        self.assertEqual(job.get_checkpoint_size(2), 10)
+        self.assertEqual(job.get_checkpoint_size(100), 50)
+
+    def test_restore_no_checkpoint(self):
+        job = ScheduleFlow.Application(10, 0, 200, [100, 200, 300],
+                                       resubmit_factor=1.5)
+        job.update_submission(200)
+        job.update_submission(300)
+        job.update_submission(500)
+        self.assertTrue(job.current_checkpoint <= 0)
+        job.restore_default_values()
+        self.assertTrue(job.current_checkpoint <= 0)
+        self.assertEqual(job.request_sequence, [200, 300])
+        self.assertEqual(job.request_walltime, 100)
+
+    def test_restore_checkpoint(self):
+        job = ScheduleFlow.Application(10, 0, 200, [100, 200, 300],
+                                       resubmit_factor=1.5)
+        job.set_checkpointing([25, 10, 20, 15])
+        job.update_submission(200)
+        self.assertEqual(job.current_checkpoint, 10)
+        job.update_submission(300)
+        job.update_submission(500)
+        self.assertEqual(job.current_checkpoint, 15)
+        job.restore_default_values()
+        self.assertEqual(job.current_checkpoint, 25)
+        self.assertEqual(job.checkpoint_sequence, [10, 20, 15])
+        job.update_submission(200)
+        job.restore_default_values()
+        self.assertEqual(job.current_checkpoint, 25)
+        self.assertEqual(job.checkpoint_sequence, [10, 20, 15])
+
+
 # test the ScheduleGaps class
 class TestScheduleGaps(unittest.TestCase):
     def test_add_jobs(self):
