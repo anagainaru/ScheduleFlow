@@ -27,9 +27,9 @@ python -m unittest test_unittest.TestBatchScheduler $1
 
 echo "---------------------------------"
 echo "Test Runtime"
-python -m unittest test_unittest.TestRuntime $1
+python -m unittest test_unittest.TestRuntime $1 > /dev/null
 
 echo "---------------------------------"
 echo "Test Simulator"
-python -m unittest test_unittest.TestSimulator $1
+python -m unittest test_unittest.TestSimulator $1 > /dev/null
 

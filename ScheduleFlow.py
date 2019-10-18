@@ -436,6 +436,9 @@ class Application(object):
         if self.resubmit_factor == 1 and len(self.request_sequence) == 0:
             self.resubmit = False
 
+        # clear the execution log
+        self.__execution_log = []
+
 
 class System(object):
     ''' System class containing available resources 
