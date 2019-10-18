@@ -10,6 +10,10 @@ echo "Test System"
 python -m unittest test_unittest.TestSystem $1
 
 echo "---------------------------------"
+echo "Test Checkpointing"
+python -m unittest test_unittest.TestCheckpointing $1
+
+echo "---------------------------------"
 echo "Test Applications"
 python -m unittest test_unittest.TestApplication $1
 

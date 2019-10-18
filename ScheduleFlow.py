@@ -413,18 +413,22 @@ class Application(object):
     def restore_default_values(self):
         ''' Method for restoring the initial submission values '''
         restore = next((i for i in self.__execution_log if
-                        i[0] == JobChangeType.RequestSequenceOverwrite), None)
-        if restore is not None:
-            self.request_sequence = restore[1][:]
-        restore = next((i for i in self.__execution_log if
                         i[0] == JobChangeType.SubmissionChange), None)
         if restore is not None:
             self.submission_time = restore[1]
+
+        # restore the sequence of request times
+        restore = next((i for i in self.__execution_log if
+                        i[0] == JobChangeType.RequestSequenceOverwrite), None)
+        if restore is not None:
+            self.request_sequence = restore[1][:]
+        
         restore = next((i for i in self.__execution_log if
                         i[0] == JobChangeType.RequestChange), None)
         if restore is not None:
             self.request_walltime = restore[1]
 
+        # restore the sequence of checkpointing size
         restore = [i[1] for i in self.__execution_log if
                    i[0] == JobChangeType.CheckpointSizeChange]
         if len(restore) > 0:
@@ -441,6 +445,10 @@ class Application(object):
 
         # clear the execution log
         self.__execution_log = []
+        if len(self.request_sequence) > 0:
+            self.__execution_log.append(
+                    (JobChangeType.RequestSequenceOverwrite,
+                     self.request_sequence[:]))
 
 
 class System(object):
