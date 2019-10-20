@@ -480,10 +480,14 @@ class System(object):
         return self.__total_nodes
 
     def get_write_time(self, dump_size):
-        return dump_size * self.__IO_write_bw
+        if dump_size <= 0:
+            return 0
+        return int(dump_size * self.__IO_write_bw)
 
     def get_read_time(self, dump_size):
-        return dump_size * self.__IO_read_bw
+        if dump_size <= 0:
+            return 0
+        return int(dump_size * self.__IO_read_bw)
 
     def start_job(self, nodes, jobid):
         ''' Method for aquiring resources in the system '''
