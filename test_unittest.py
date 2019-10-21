@@ -442,55 +442,66 @@ class TestOnlineScheduler(unittest.TestCase):
         self.assertEqual(len(ap_list), num_jobs)
 
     def test_nofit_in_schedule(self):
-        sch = ScheduleFlow.OnlineScheduler(ScheduleFlow.System(10))
+        system = ScheduleFlow.System(10)
+        sch = ScheduleFlow.OnlineScheduler(system)
         reservation = {}
         for i in range(5):
             reservation[ScheduleFlow.Application(5, 0, 50, [50])] = i * 50
             reservation[ScheduleFlow.Application(5, 0, 50, [50])] = i * 50
-        ret = sch.fit_job_in_schedule(
-            ScheduleFlow.Application(1, 0, 50, [50]), reservation)
+        sch.gaps_in_schedule.add(reservation)
+        job = ScheduleFlow.Application(1, 0, 50, [50])
+        ret = sch.fit_job_in_schedule(job)
         self.assertEqual(ret, -1)
 
     def test_fit_middle(self):
-        sch = ScheduleFlow.OnlineScheduler(ScheduleFlow.System(10))
+        system = ScheduleFlow.System(10)
+        sch = ScheduleFlow.OnlineScheduler(system)
         reservation = {}
         for i in list(range(5)) + list(range(6, 10)):
-            reservation[ScheduleFlow.Application(5, 0, 50, [50])] = i * 50
-            reservation[ScheduleFlow.Application(5, 0, 50, [50])] = i * 50
+            job = ScheduleFlow.Application(5, 0, 50, [50])
+            reservation[job] = i * 50
+            job = ScheduleFlow.Application(5, 0, 50, [50])
+            reservation[job] = i * 50
         # add random number of one node jobs ( < 8 total jobs )
         # with execution times <= 50
         num_jobs = np.random.randint(1, 8)
         for i in range(num_jobs):
-            reservation[ScheduleFlow.Application(
-                1, 0, 50 - i, [50 - i])] = 250
+            job = ScheduleFlow.Application(
+                1, 0, 50 - i, [50 - i])
+            reservation[job] = 250
         sch.gaps_in_schedule.add(reservation)
         # try to fit an application of execution time = 40 and 2 nodes whose
         # submission time is 5 over when the gap is available
-        ret = sch.fit_job_in_schedule(
-            ScheduleFlow.Application(2, 255, 40, [40]), reservation)
+        job = ScheduleFlow.Application(2, 255, 40, [40])
+        ret = sch.fit_job_in_schedule(job)
         self.assertEqual(ret, 255)
 
     def test_fit_end(self):
-        sch = ScheduleFlow.OnlineScheduler(ScheduleFlow.System(10))
+        system = ScheduleFlow.System(10)
+        sch = ScheduleFlow.OnlineScheduler(system)
         reservation = {}
         for i in range(5):
-            reservation[ScheduleFlow.Application(5, 0, 50, [50])] = i * 50
-            reservation[ScheduleFlow.Application(5, 0, 50, [50])] = i * 50
-        reservation[ScheduleFlow.Application(4, 0, 10, [10])] = 250
+            job = ScheduleFlow.Application(5, 0, 50, [50])
+            reservation[job] = i * 50
+            job = ScheduleFlow.Application(5, 0, 50, [50])
+            reservation[job] = i * 50
+        job = ScheduleFlow.Application(4, 0, 10, [10])
+        reservation[job] = 250
         sch.gaps_in_schedule.add(reservation)
         # fit a job that is larger than the gap at the end
         ret = sch.fit_job_in_schedule(
-            ScheduleFlow.Application(6, 255, 50, [50]), reservation)
+            ScheduleFlow.Application(6, 255, 50, [50]))
         self.assertEqual(ret, 255)
         ret = sch.fit_job_in_schedule(
-            ScheduleFlow.Application(6, 265, 50, [50]), reservation)
+            ScheduleFlow.Application(6, 265, 50, [50]))
         self.assertEqual(ret, -1)
 
 
 # test the batch scheduler class
 class TestBatchScheduler(unittest.TestCase):
     def test_nofit_end(self):
-        sch = ScheduleFlow.BatchScheduler(ScheduleFlow.System(10), 15)
+        system = ScheduleFlow.System(10)
+        sch = ScheduleFlow.BatchScheduler(system, 15)
         reservation = {}
         for i in range(5):
             reservation[ScheduleFlow.Application(5, 0, 50, [50])] = i * 50
@@ -499,7 +510,7 @@ class TestBatchScheduler(unittest.TestCase):
         sch.gaps_in_schedule.add(reservation)
         # fit a job that is larger than the gap at the end
         ret = sch.fit_job_in_schedule(
-            ScheduleFlow.Application(6, 0, 50, [50]), reservation)
+            ScheduleFlow.Application(6, 0, 50, [50]))
         self.assertEqual(ret, -1)
 
     def test_fit_end(self):
@@ -513,7 +524,7 @@ class TestBatchScheduler(unittest.TestCase):
         # 5 over when the gap is available)
         sch.gaps_in_schedule.add(reservation)
         ret = sch.fit_job_in_schedule(
-            ScheduleFlow.Application(6, 255, 5, [5]), reservation)
+            ScheduleFlow.Application(6, 255, 5, [5]))
         self.assertEqual(ret, 255)
 
     def test_one_node_jobs(self):

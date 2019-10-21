@@ -567,7 +567,7 @@ class Runtime(object):
 
         tm = -1
         if can_start:
-            tm = self.scheduler.fit_job_in_schedule(job, self.__reserved_jobs)
+            tm = self.scheduler.fit_job_in_schedule(job)
         # check if the job can fit in the current reservations
         # if yes and if it is allowed, send it for execution
         if tm != -1:

@@ -563,7 +563,7 @@ class Scheduler(object):
         to run from the waiting queue at the current schedule cycle '''
         return []
 
-    def fit_job_in_schedule(self, job, reserved_jobs, current_time=0):
+    def fit_job_in_schedule(self, job, current_time=0):
         ''' Base method that fits a new job into an existing schedule.
         The `reserved_jobs` consists of a list of [start time, job].
         The base method assumes a reservation based scheduler: the end of
@@ -573,15 +573,12 @@ class Scheduler(object):
         The method returns -1 if the job does not fit into the schedule
         and timestamp otherwise '''
 
-        if len(reserved_jobs) == 0:
-            return -1
         start_time = max(job.submission_time, current_time)
         gap_list = self.gaps_in_schedule.get_gaps(start_time,
                                                   job.request_walltime,
                                                   job.nodes)
         self.logger.debug(
-            r'[Scheduler] Reservation list: %s; Gaps: %s' % (
-                reserved_jobs, gap_list))
+            r'[Scheduler] Schedule job: %s; Gaps: %s' % (job, gap_list))
         if len(gap_list) == 0:
             return -1
 
@@ -764,7 +761,7 @@ class BatchScheduler(Scheduler):
         selected_jobs = []
         for job in batch_jobs:
             tm = super(BatchScheduler, self).fit_job_in_schedule(
-                job, reserved_jobs, current_time=current_time)
+                job, current_time=current_time)
             if tm != -1:
                 selected_jobs.append((tm, job))
                 reserved_jobs[job] = tm
@@ -858,14 +855,11 @@ class OnlineScheduler(Scheduler):
             free_nodes -= job.nodes
         return selected_jobs
 
-    def fit_job_in_schedule(self, job, reserved_jobs, current_time=0):
+    def fit_job_in_schedule(self, job, current_time=0):
         ''' Method that overwrites the base class that implements a
         reservation based algorithm. For the base method all jobs
         need to be fitted in the reservation window and cannot exceed
         the end. Online methods do not have this limitation '''
-
-        if len(reserved_jobs) == 0:
-            return -1
 
         gap_list = self.gaps_in_schedule.get_gaps(job.submission_time,
                                                   0, job.nodes)
