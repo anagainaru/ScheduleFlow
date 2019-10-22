@@ -173,12 +173,8 @@ class TestApplication(unittest.TestCase):
     def test_sequence_overwrite(self):
         job_list = ScheduleFlow.Application(10, 0, 200, [100],
                                             resubmit_factor=1.5)
-        with self.assertRaises(AssertionError):
-            job_list.overwrite_request_sequence([100, 150])
-        with self.assertRaises(AssertionError):
-            job_list.overwrite_request_sequence([200, 150])
         job_list.overwrite_request_sequence([190, 200])
-        self.assertEqual(job_list.get_request_time(1), 190)
+        self.assertEqual(job_list.get_request_time(0), 190)
 
     def test_invalid_job(self):
         with self.assertRaises(AssertionError):
@@ -190,9 +186,10 @@ class TestApplication(unittest.TestCase):
         with self.assertRaises(AssertionError):
             ScheduleFlow.Application(10, -2, 10, [11])
         with self.assertRaises(AssertionError):
-            ScheduleFlow.Application(10, 0, 10, [7, 12, 10])
-        with self.assertRaises(AssertionError):
             ScheduleFlow.Application(10, 0, 10, [])
+        ap = ScheduleFlow.Application(10, 0, 10, [5, 3])
+        with self.assertRaises(AssertionError):
+            ap.update_submission(5)
 
     def test_invalid_factor(self):
         with self.assertRaises(AssertionError):
@@ -211,7 +208,7 @@ class TestApplication(unittest.TestCase):
 
     def __check_initial_data(self, job):
         self.assertEqual(job.submission_time, 0)
-        self.assertEqual(job.request_sequence, [200, 300])
+        self.assertEqual(job.request_sequence, [100, 200, 300])
         self.assertEqual(job.request_walltime, 100)
         self.assertEqual(job.current_checkpoint, 25)
         self.assertEqual(job.checkpoint_sequence, [25, 10, 20, 15])
@@ -241,7 +238,7 @@ class TestApplication(unittest.TestCase):
         self.assertTrue(job.current_checkpoint <= 0)
         job.restore_default_values()
         self.assertTrue(job.current_checkpoint <= 0)
-        self.assertEqual(job.request_sequence, [200, 300])
+        self.assertEqual(job.request_sequence, [100, 200, 300])
         self.assertEqual(job.request_walltime, 100)
 
 
@@ -681,7 +678,7 @@ class TestRuntime(unittest.TestCase):
             for job in workload:
                 self.assertEqual(job.submission_time, 0)
                 self.assertEqual(job.request_walltime, 80)
-                self.assertEqual(job.request_sequence[0], 100)
+                self.assertEqual(job.request_sequence[1], 100)
 
     def test_empty_workload(self):
         for SchedulerType in ScheduleFlow.Scheduler.__subclasses__():

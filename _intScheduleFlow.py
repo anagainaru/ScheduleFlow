@@ -25,10 +25,7 @@ class JobChangeType(IntEnum):
     that can be applied to an Application properties '''
 
     SubmissionChange = 0
-    RequestChange = 1
-    RequestSequenceOverwrite = 2
-    CheckpointSizeChange = 3
-    WalltimeChange = 4
+    WalltimeChange = 1
 
 
 class EventType(IntEnum):

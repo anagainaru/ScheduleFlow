@@ -278,16 +278,13 @@ class Application(object):
         assert (nodes > 0),\
             'Number of nodes for a job must be > 0 : received %d' % (
             nodes)
-        assert (all(requested_walltimes[i] < requested_walltimes[i + 1]
-                for i in range(len(requested_walltimes) - 1))),\
-            'Request time sequence is not sorted in increasing order'
 
         self.nodes = nodes
         self.submission_time = submission_time
         self.walltime = walltime
         self.request_walltime = requested_walltimes[0]
         self.job_id = -1
-        self.request_sequence = requested_walltimes[1:]
+        self.request_sequence = requested_walltimes[:]
         # keep track of the number of submission
         self.submission_count = 0
         
@@ -304,10 +301,6 @@ class Application(object):
 
         # Entries in the execution log: (JobChangeType, old_value)
         self.__execution_log = []
-        if len(self.request_sequence) > 0:
-            self.__execution_log.append(
-                    (JobChangeType.RequestSequenceOverwrite,
-                     self.request_sequence[:]))
 
         # By default checkpointing is False
         self.checkpoiting = False
@@ -405,17 +398,13 @@ class Application(object):
         value by the job resubmission factor. Method used to compute stats'''
 
         assert (step >= 0), "Cannot compute the resuest time for step < 0"
-        if step == 0:
-            return self.request_walltime
-        if len(self.request_sequence) == 0:
-            return self.request_walltime * pow(self.resubmit_factor, step)
 
         if step < len(self.request_sequence):
-            return self.request_sequence[step - 1]
+            return self.request_sequence[step]
 
         seq_len = len(self.request_sequence)
-        return self.request_sequence[seq_len - 1] * pow(
-            self.resubmit_factor, step - seq_len)
+        return self.request_sequence[-1] * pow(
+            self.resubmit_factor, step - seq_len + 1)
 
     def get_total_request_time(self, step):
         ''' Method for getting the value for the request time used on
@@ -440,17 +429,7 @@ class Application(object):
     def overwrite_request_sequence(self, request_sequence):
         ''' Method for overwriting the sequence of future walltime
         requests '''
-
-        assert (all(request_sequence[i] <
-                request_sequence[i + 1] for i in
-                range(len(request_sequence) - 1))),\
-            r'Request time sequence is not sorted in increasing order'
-        if len(request_sequence) > 0:
-            assert (request_sequence[0] > self.request_walltime),\
-                r'Request time sequence is not sorted in increasing order'
-        self.request_sequence = request_sequence[:]
-        self.__execution_log.append((JobChangeType.RequestSequenceOverwrite,
-                                     self.request_sequence[:]))
+        self.request_sequence = request_sequence
 
     def update_submission(self, submission_time):
         ''' Method to update submission information including
@@ -461,25 +440,27 @@ class Application(object):
             submission_time)
         self.__execution_log.append((JobChangeType.SubmissionChange,
                                      self.submission_time))
-        self.__execution_log.append((JobChangeType.RequestChange,
-                                     self.request_walltime))
+        #self.__execution_log.append((JobChangeType.RequestChange,
+        #                             self.request_walltime))
         self.__execution_log.append((JobChangeType.WalltimeChange,
                                      self.walltime))
         self.submission_count += 1
         # update submission time
         self.submission_time = submission_time
+
+        old_request_gap = self.walltime - self.request_walltime
         # in case of a checkpoint, update walltime
         if self.current_checkpoint > 0:
             self.walltime = self.walltime - self.request_walltime
         # update the requested time
-        if len(self.request_sequence) > 0:
-            self.request_walltime = self.request_sequence[0]
-            del self.request_sequence[0]
-        else:
-            self.request_walltime = int(self.resubmit_factor *
-                                        self.request_walltime)
-        if self.resubmit_factor == 1 and len(self.request_sequence) == 0:
-            self.resubmit = False
+        self.request_walltime = self.get_request_time(
+            self.submission_count)
+        assert (old_request_gap > (self.walltime - self.request_walltime)),\
+            "The new request walltime has to be greater than the last one"
+
+        if self.resubmit_factor == 1:
+            if self.submission_count >= len(self.request_sequence) - 1:
+                self.resubmit = False
         # update the checkpoiting
         if self.checkpoiting:
             self.current_checkpoint = self.get_checkpoint_size(
@@ -498,15 +479,7 @@ class Application(object):
             self.walltime = restore[1]
 
         # restore the sequence of request times
-        restore = next((i for i in self.__execution_log if
-                        i[0] == JobChangeType.RequestSequenceOverwrite), None)
-        if restore is not None:
-            self.request_sequence = restore[1][:]
-        
-        restore = next((i for i in self.__execution_log if
-                        i[0] == JobChangeType.RequestChange), None)
-        if restore is not None:
-            self.request_walltime = restore[1]
+        self.request_walltime =  self.get_request_time(0)
 
         # restore first checkpoint
         self.current_checkpoint = self.get_checkpoint_size(0)
@@ -517,10 +490,6 @@ class Application(object):
 
         # clear the execution log
         self.__execution_log = []
-        if len(self.request_sequence) > 0:
-            self.__execution_log.append(
-                    (JobChangeType.RequestSequenceOverwrite,
-                     self.request_sequence[:]))
 
 
 class System(object):
