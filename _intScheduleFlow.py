@@ -28,6 +28,7 @@ class JobChangeType(IntEnum):
     RequestChange = 1
     RequestSequenceOverwrite = 2
     CheckpointSizeChange = 3
+    WalltimeChange = 4
 
 
 class EventType(IntEnum):
@@ -114,8 +115,9 @@ class WaitingQueue(object):
         ''' Method for adding a job into the waiting queues based on
         their total volume '''
 
+        request_walltime = job.get_current_total_request_time()
         self.__last_update[job] = job.submission_time
-        job_volume = job.request_walltime * job.nodes
+        job_volume = request_walltime * job.nodes
         if job_volume > self.volume_threshold[0]:
             self.main_queue.add(job)
             return
@@ -175,7 +177,7 @@ class WaitingQueue(object):
                        len(self.secondary_queues[i]) > 0])
             # move the longest job from the backfill queue
             longest_job = max(self.secondary_queues[idx], key=lambda job:
-                              job.nodes*job.request_walltime)
+                              job.nodes*job.get_current_total_request_time())
             self.secondary_queues[idx].remove(longest_job)
             self.main_queue.add(longest_job)
 
@@ -220,7 +222,8 @@ class ScheduleGaps(object):
     def trim(self, current_time):
         ''' Delete all gaps that end before the current timestamp '''
         job_list = [job for job in self.__reserved_jobs if
-                    (self.__reserved_jobs[job] + job.request_walltime) <
+                    (self.__reserved_jobs[job] +\
+                     job.get_current_total_request_time()) <
                     current_time]
         for job in job_list:
             del self.__reserved_jobs[job]
@@ -349,15 +352,17 @@ class ScheduleGaps(object):
     def __fill_gap_to_neighbors(self, new_job):
         ''' Add neighbor space on the left and right of the new job '''
 
-        new_gaps = []
+        new_gaps = [] 
         start = self.__reserved_jobs[new_job]
-        left_gaps = [self.__reserved_jobs[job] + job.request_walltime
+        left_gaps = [self.__reserved_jobs[job] +\
+                     job.get_current_total_request_time()
                      for job in self.__reserved_jobs if
-                     self.__reserved_jobs[job] + job.request_walltime <=
-                     start]
+                     self.__reserved_jobs[job] +\
+                     job.get_current_total_request_time() <= start]
         if len(left_gaps) > 0 and max(left_gaps) < start:
             new_gaps.append([max(left_gaps), start, self.__total_nodes])
-        end = self.__reserved_jobs[new_job] + new_job.request_walltime
+        end = self.__reserved_jobs[new_job] +\
+              new_job.get_current_total_request_time()
         right_gaps = [self.__reserved_jobs[job] for job in self.__reserved_jobs
                       if self.__reserved_jobs[job] >= end]
         if len(right_gaps) and min(right_gaps) > end:
@@ -399,7 +404,8 @@ class ScheduleGaps(object):
         for job in reserved_jobs:
             self.__update_reserved_list(job, reserved_jobs[job], ops)
             start = reserved_jobs[job]
-            end = reserved_jobs[job] + job.request_walltime
+            request_walltime = job.get_current_total_request_time()
+            end = reserved_jobs[job] + request_walltime
             # for removing job backfills, the available space is between
             # when the job ends and how much time was reserved for the job
             if ops == 1:
@@ -555,6 +561,7 @@ class Runtime(object):
 
         # at the end of the simulation return default values for all the jobs
         for job in self.__finished_jobs:
+            self.__log_finalize(job)
             job.restore_default_values()
 
         # end the progress bar
@@ -633,7 +640,8 @@ class Runtime(object):
         self.__log_start(job)
         # create a job end event for the started job
         # for timestamp current_time + execution_time
-        execution = min(job.walltime, job.request_walltime)
+        execution = min(job.walltime,
+                        job.get_current_total_request_time())
         self.__events.push(
             (self.__current_time + execution, EventType.JobEnd, job))
 
@@ -651,6 +659,11 @@ class Runtime(object):
             "Logging the end of a job that did not start"
         last_execution = len(self.__finished_jobs[job]) - 1
         self.__finished_jobs[job][last_execution][1] = self.__current_time
+
+    def __log_finalize(self, job):
+        # if the last submission used a checkpoint, the log
+        # must include the read time for the last checkpoint
+        self.__finished_jobs[job][-1][1] += job.get_checkpoint_read_time()
 
     def get_stats(self):
         ''' Method for returning the log containing every jon start and
@@ -892,7 +905,7 @@ class VizualizationEngine():
             run_list.append((start, end, job.nodes,
                              requested_time, job.job_id,
                              i + 1))
-            requested_time = job.get_request_time(i + 1)
+            requested_time = job.get_total_request_time(i + 1)
 
         # check succesful execution (last run)
         start = execution_list[len(execution_list) - 1][0]

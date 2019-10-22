@@ -114,7 +114,7 @@ class Simulator():
         # check that first start is after the submission time
         if execution_list[0][0] < job.submission_time:
             return False
-        requested_time = job.request_walltime
+        requested_time = job.get_current_total_request_time()
         for i in range(len(execution_list)-1):
             # check that resubmissions start after end of previous
             if execution_list[i][1] > execution_list[i + 1][0]:
@@ -125,7 +125,7 @@ class Simulator():
             if not np.isclose(end-start, requested_time,
                               rtol=1e-3):
                 return False
-            requested_time = job.get_request_time(i + 1)
+            requested_time = job.get_total_request_time(i + 1)
 
         # check len of last execution
         start = execution_list[len(execution_list)-1][0]
@@ -288,6 +288,9 @@ class Application(object):
         self.request_walltime = requested_walltimes[0]
         self.job_id = -1
         self.request_sequence = requested_walltimes[1:]
+        # keep track of the number of submission
+        self.submission_count = 0
+        
         self.resubmit = True
         if resubmit_factor == -1:
             if len(self.request_sequence) == 0:
@@ -307,8 +310,11 @@ class Application(object):
                      self.request_sequence[:]))
 
         # By default checkpointing is False
+        self.checkpoiting = False
         self.current_checkpoint = 0
         self.checkpoint_sequence = []
+        # by default the job is not running on any system
+        self.system = None
 
     def __str__(self):
         return 'Job %d: %d nodes; %3.1f submission time; %3.1f total ' \
@@ -326,15 +332,21 @@ class Application(object):
     def __lt__(self, job):
         return self.job_id < job.job_id
 
+    def assign_system(self, system):
+        self.system = system
+
     def set_checkpointing(self, checkpoint_size_list):
         ''' Method for setting the checkpoint/restart characteristics:
             (1) what is the checkpoint size for each submission;
             (2) is each submission checkpointed at the end;
             (3) resubmit_factor resubmissions are checkpointed '''
+        
+        assert(len(checkpoint_size_list) > 0),\
+            "Cannot set an empty checkpoint list"
+        self.checkpoiting = True
         # 0 or negative values indicate no checkpoint
         self.current_checkpoint = checkpoint_size_list[0]
-        if len(checkpoint_size_list)>1:
-            self.checkpoint_sequence = checkpoint_size_list[1:]
+        self.checkpoint_sequence = checkpoint_size_list[:]
         # once the checkpoint_sequnce becomes empty, resubmissions will be
         # always or never checkpointed based on self.checkpointing
 
@@ -342,19 +354,57 @@ class Application(object):
         ''' Method for descoverying the checkpoint size that the job
         will use for its consecutive "step"-th submission. '''
 
-        if step == 0 or len(self.checkpoint_sequence) == 0:
-            return self.current_checkpoint
+        if step < 0 or len(self.checkpoint_sequence) == 0:
+            return 0
         if step < len(self.checkpoint_sequence):
-            return self.checkpoint_sequence[step - 1]
+            return self.checkpoint_sequence[step]
         return self.checkpoint_sequence[-1]
+
+    def get_checkpoint_read_time(self, system=None):
+        ''' Method that returns the time to read the previous checkpoint '''
+        if not self.checkpoiting:
+            return 0
+
+        sel_system = system
+        if sel_system is None:
+            sel_system = self.system
+        assert(sel_system is not None),\
+            "Job must be running on a system to compute the request time"
+
+        read_checkpoint = 0
+        if self.submission_count > 0:
+            prev_check = self.get_checkpoint_size(self.submission_count - 1)
+            read_checkpoint = sel_system.get_read_time(prev_check)
+        return read_checkpoint
+
+    def get_current_total_request_time(self, system=None):
+        ''' Method for getting the value for the current request time
+        for a given system including the time to checkpoint at the end
+        (if it's required) and the time to read the latest checkpoint
+        (if necessary) '''
+
+        if not self.checkpoiting:
+            return self.request_walltime
+
+        sel_system = system
+        if sel_system is None:
+            sel_system = self.system
+        assert(sel_system is not None),\
+            "Job must be running on a system to compute the request time"
+        
+        write_checkpoint = sel_system.get_write_time(
+            self.current_checkpoint)
+        read_checkpoint = self.get_checkpoint_read_time(system=sel_system)
+        return read_checkpoint + write_checkpoint + self.request_walltime
 
     def get_request_time(self, step):
         ''' Method for descovering the request time that the job will use
         for its consecutive "step"-th submission. First submission will use
         the provided request time. Following submissions will either use the
         values provided in the request sequence or will increase the last
-        value by the job resubmission factor. '''
+        value by the job resubmission factor. Method used to compute stats'''
 
+        assert (step >= 0), "Cannot compute the resuest time for step < 0"
         if step == 0:
             return self.request_walltime
         if len(self.request_sequence) == 0:
@@ -366,6 +416,26 @@ class Application(object):
         seq_len = len(self.request_sequence)
         return self.request_sequence[seq_len - 1] * pow(
             self.resubmit_factor, step - seq_len)
+
+    def get_total_request_time(self, step):
+        ''' Method for getting the value for the request time used on
+        the "stept"-th submission on a given system including the time
+        to checkpoint at the end (if it's required) and the time to read
+        the latest checkpoint (if necessary) '''
+
+        if not self.checkpoiting:
+            return self.get_request_time(step)
+        
+        assert(self.system is not None),\
+            "Job must be running on a system to compute the request time"
+        request_walltime = self.get_request_time(step)
+        write_checkpoint = self.system.get_write_time(
+            self.get_checkpoint_size(step))
+        read_checkpoint = 0
+        if step > 0:
+            read_checkpoint = self.system.get_read_time(
+                self.get_checkpoint_size(step - 1))
+        return read_checkpoint + write_checkpoint + request_walltime
 
     def overwrite_request_sequence(self, request_sequence):
         ''' Method for overwriting the sequence of future walltime
@@ -393,8 +463,15 @@ class Application(object):
                                      self.submission_time))
         self.__execution_log.append((JobChangeType.RequestChange,
                                      self.request_walltime))
-
+        self.__execution_log.append((JobChangeType.WalltimeChange,
+                                     self.walltime))
+        self.submission_count += 1
+        # update submission time
         self.submission_time = submission_time
+        # in case of a checkpoint, update walltime
+        if self.current_checkpoint > 0:
+            self.walltime = self.walltime - self.request_walltime
+        # update the requested time
         if len(self.request_sequence) > 0:
             self.request_walltime = self.request_sequence[0]
             del self.request_sequence[0]
@@ -403,19 +480,22 @@ class Application(object):
                                         self.request_walltime)
         if self.resubmit_factor == 1 and len(self.request_sequence) == 0:
             self.resubmit = False
-
-        if len(self.checkpoint_sequence) > 0:
-            self.__execution_log.append((JobChangeType.CheckpointSizeChange,
-                                         self.current_checkpoint))
-            self.current_checkpoint = self.checkpoint_sequence[0]
-            del self.checkpoint_sequence[0]
+        # update the checkpoiting
+        if self.checkpoiting:
+            self.current_checkpoint = self.get_checkpoint_size(
+                self.submission_count)
 
     def restore_default_values(self):
         ''' Method for restoring the initial submission values '''
+        # restore submission and walltime
         restore = next((i for i in self.__execution_log if
                         i[0] == JobChangeType.SubmissionChange), None)
         if restore is not None:
             self.submission_time = restore[1]
+        restore = next((i for i in self.__execution_log if
+                        i[0] == JobChangeType.WalltimeChange), None)
+        if restore is not None:
+            self.walltime = restore[1]
 
         # restore the sequence of request times
         restore = next((i for i in self.__execution_log if
@@ -428,16 +508,8 @@ class Application(object):
         if restore is not None:
             self.request_walltime = restore[1]
 
-        # restore the sequence of checkpointing size
-        restore = [i[1] for i in self.__execution_log if
-                   i[0] == JobChangeType.CheckpointSizeChange]
-        if len(restore) > 0:
-            restore_check = []
-            if len(restore) > 1:
-                restore_check = restore[1:]
-            restore_check += [self.current_checkpoint]
-            self.current_checkpoint = restore[0]
-            self.checkpoint_sequence = restore_check + self.checkpoint_sequence
+        # restore first checkpoint
+        self.current_checkpoint = self.get_checkpoint_size(0)
 
         self.resubmit = True
         if self.resubmit_factor == 1 and len(self.request_sequence) == 0:
@@ -482,12 +554,12 @@ class System(object):
     def get_write_time(self, dump_size):
         if dump_size <= 0:
             return 0
-        return int(dump_size * self.__IO_write_bw)
+        return int(dump_size / self.__IO_write_bw)
 
     def get_read_time(self, dump_size):
         if dump_size <= 0:
             return 0
-        return int(dump_size * self.__IO_read_bw)
+        return int(dump_size / self.__IO_read_bw)
 
     def start_job(self, nodes, jobid):
         ''' Method for aquiring resources in the system '''
@@ -532,11 +604,11 @@ class Scheduler(object):
 
         assert (job.nodes <= self.system.get_total_nodes()),\
             "Submitted jobs cannot ask for more nodes that the system"
+        job.assign_system(self.system)
         self.waiting_queue.add(job)
 
     def allocate_job(self, job):
         ''' Base method for allocating the job for running on the system '''
-
         self.system.start_job(job.nodes, job.job_id)
         self.running_jobs.add(job)
 
@@ -574,8 +646,10 @@ class Scheduler(object):
         and timestamp otherwise '''
 
         start_time = max(job.submission_time, current_time)
+        request_walltime = job.get_current_total_request_time(
+            system = self.system)
         gap_list = self.gaps_in_schedule.get_gaps(start_time,
-                                                  job.request_walltime,
+                                                  request_walltime,
                                                   job.nodes)
         self.logger.debug(
             r'[Scheduler] Schedule job: %s; Gaps: %s' % (job, gap_list))
@@ -587,6 +661,7 @@ class Scheduler(object):
         self.logger.info(r'[Scheduler] Found space for %s: timestamp %d' % (
             job, ts))
         # update the gaps
+        job.assign_system(self.system)
         self.gaps_in_schedule.add({job: ts})
         return ts
 
@@ -636,7 +711,8 @@ class BatchScheduler(Scheduler):
 
         # sort the list by the size of the job (nodes*request_walltime)
         batch_sorted = sorted(batch_list, key=lambda job:
-                              job.nodes * job.request_walltime, reverse=True)
+                              job.nodes * job.get_current_total_request_time(),
+                              reverse=True)
         # return the first batch_size entries
         return batch_sorted[:batch_size]
 
@@ -668,8 +744,9 @@ class BatchScheduler(Scheduler):
         for a new job into a reservation window that is given by the
         previously reserved jobs '''
 
+        request_walltime = job.get_current_total_request_time()
         gap_list = self.gaps_in_schedule.get_gaps(job.submission_time,
-                                                  job.request_walltime,
+                                                  request_walltime,
                                                   job.nodes)
         if len(gap_list) == 0:
             return -1
@@ -694,7 +771,7 @@ class BatchScheduler(Scheduler):
         if ts != -1:
             return ts
 
-        end_window = max([reservations[j] + j.request_walltime
+        end_window = max([reservations[j] + j.get_current_total_request_time()
                           for j in reservations])
         # check for the end of the schedule for a fit (after all jobs that do
         # not have other jobs starting in front)
@@ -797,11 +874,12 @@ class OnlineScheduler(Scheduler):
         in the waiting queue that fits the space given by the `nodes` '''
 
         try:
-            max_volume = max([job.nodes * job.request_walltime for job
-                              in queue if job.nodes <= nodes])
+            max_volume = max([job.nodes * job.get_current_total_request_time()
+                              for job in queue if job.nodes <= nodes])
             largest_jobs = [
                 job for job in queue if job.nodes *
-                job.request_walltime == max_volume and job.nodes <= nodes]
+                job.get_current_total_request_time() == max_volume
+                and job.nodes <= nodes]
         except BaseException:
             # there are no jobs that fit the given space
             return -1
@@ -871,6 +949,7 @@ class OnlineScheduler(Scheduler):
                 self.logger.info(
                     r'[OnlineScheduler] Found space for %s: timestamp %d' %
                     (job, gap[0]))
+                job.assign_system(self.system)
                 self.gaps_in_schedule.add({job: job.submission_time})
                 return job.submission_time
         return -1
