@@ -168,7 +168,7 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(job_list.get_request_time(1), 200)
         self.assertEqual(job_list.get_request_time(4), 675)
         job_list = ScheduleFlow.Application(10, 0, 200, [100, 200, 300])
-        self.assertEqual(job_list.get_request_time(4), 300)
+        self.assertEqual(job_list.get_request_time(4), -1)
 
     def test_sequence_overwrite(self):
         job_list = ScheduleFlow.Application(10, 0, 200, [100],
@@ -194,7 +194,13 @@ class TestApplication(unittest.TestCase):
     def test_invalid_factor(self):
         with self.assertRaises(AssertionError):
             ScheduleFlow.Application(7, 5, 10, [11],
-                                     resubmit_factor=0.2)
+                                     resubmit_factor=-2)
+        # valid factor at creation but not at update
+        job = ScheduleFlow.Application(7, 5, 10, [9],
+                                       resubmit_factor=1)
+        with self.assertRaises(AssertionError):
+            job.update_submission(9)
+
 
     def test_request_list_factor(self):
         ap = ScheduleFlow.Application(7, 5, 100, [70, 80, 90],
@@ -276,6 +282,14 @@ class TestCheckpointing(unittest.TestCase):
         job.update_submission(60)
         self.assertEqual(job.get_current_total_request_time(), 105)
         self.assertEqual(job.walltime, 150)
+        # check that all submissions read the last checkpoint
+        system = ScheduleFlow.System(10, io_read_bw=2)
+        job = ScheduleFlow.Application(10, 0, 200, [50, 80, 130])
+        job.set_checkpointing([10, -1])
+        job.assign_system(system)
+        job.update_submission(60)
+        job.update_submission(145)
+        self.assertEqual(job.get_current_total_request_time(), 135)
 
     def test_nofit_in_schedule(self):
         system = ScheduleFlow.System(10, io_read_bw=2)
@@ -316,8 +330,6 @@ class TestCheckpointing(unittest.TestCase):
         self.assertEqual(ret, 120)
 
     def test_one_app_all_checkpoint(self):
-    #def test_simulation_correctness(self):
-        #sim = ScheduleFlow.Simulator(check_correctness=True)
         sim = ScheduleFlow.Simulator()
         job_list = [ScheduleFlow.Application(10, 0, 200, [50, 80, 130])]
         job_list[0].set_checkpointing([10, 20, 10])
@@ -339,7 +351,32 @@ class TestCheckpointing(unittest.TestCase):
             job_list=job_list)
         ret = sim.run()
         self.assertEqual(ret['job failures'], 2)
-        self.assertEqual(ret['job response time'], 225)
+        self.assertEqual(ret['job response time'], 230)
+    
+    def test_simulation_correctness(self):
+        sim = ScheduleFlow.Simulator(check_correctness=True)
+        job_list = [
+                    ScheduleFlow.Application(5, 0, 500, [200],
+                                             resubmit_factor=1.5),
+                    ScheduleFlow.Application(5, 0, 500, [100, 200, 300, 400]),
+                    ScheduleFlow.Application(5, 0, 500, [300, 100]),
+                    ScheduleFlow.Application(5, 0, 400, [200, 300, 200]),
+                    ScheduleFlow.Application(5, 0, 350, [200, 100, 200],
+                                             resubmit_factor=1.5),
+                    ScheduleFlow.Application(5, 0, 700, [200],
+                                             resubmit_factor=1)
+                    ]
+        job_list[0].set_checkpointing([100])
+        job_list[1].set_checkpointing([100, -1, 10])
+        job_list[2].set_checkpointing([100])
+        job_list[3].set_checkpointing([-1, 100, -1])
+        job_list[4].set_checkpointing([100, -1])
+        job_list[5].set_checkpointing([50])
+        sim.create_scenario(
+            ScheduleFlow.BatchScheduler(ScheduleFlow.System(10)),
+            job_list=job_list)
+        sim.run()
+        self.assertEqual(sim.test_correctness(), 0)
 
 
 # test the ScheduleGaps class
