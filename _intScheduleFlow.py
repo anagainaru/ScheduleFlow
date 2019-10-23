@@ -637,6 +637,8 @@ class Runtime(object):
         # create a job end event for the started job
         # for timestamp current_time + execution_time
         execution = job.walltime + job.get_checkpoint_read_time()
+        # execution time is the walltime + time to read the last checkpoint
+        # in case of successful run or the total request time
         if job.walltime > job.request_walltime:
             execution = job.get_current_total_request_time()
         self.__events.push(

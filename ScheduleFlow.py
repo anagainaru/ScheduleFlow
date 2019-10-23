@@ -293,7 +293,7 @@ class Application(object):
         self.walltime = walltime
         self.request_walltime = requested_walltimes[0]
         self.job_id = -1
-        self.request_sequence = requested_walltimes[:]
+        self.request_sequence = requested_walltimes
         # keep track of the number of submission
         self.submission_count = 0
         
@@ -308,10 +308,10 @@ class Application(object):
                 'over 0: received %d' % (resubmit_factor)
             self.resubmit_factor = resubmit_factor
 
-        # Entries in the execution log: (JobChangeType, old_value)
+        # entries in the execution log: (JobChangeType, old_value)
         self.__execution_log = []
 
-        # By default checkpointing is False
+        # by default checkpointing is False
         self.checkpointing = False
         self.current_checkpoint = 0
         self.checkpoint_sequence = []
@@ -338,19 +338,18 @@ class Application(object):
         self.system = system
 
     def set_checkpointing(self, checkpoint_size_list):
-        ''' Method for setting the checkpoint/restart characteristics:
-            (1) what is the checkpoint size for each submission;
-            (2) is each submission checkpointed at the end;
-            (3) resubmit_factor resubmissions are checkpointed '''
+        ''' Method for setting the checkpoint size for each submission
+            Entries with 0 or negative values indicate no checkpoint
+            for the respective submission. Submissions after the entries
+            in the list will use the last value '''
         
         assert(len(checkpoint_size_list) > 0),\
             "Cannot set an empty checkpoint list"
         self.checkpointing = True
-        # 0 or negative values indicate no checkpoint
+        # sequences containing negative values on the last position indicate
+        # not to checkpoint for future resubmissions 
         self.current_checkpoint = checkpoint_size_list[0]
         self.checkpoint_sequence = checkpoint_size_list
-        # once the checkpoint_sequnce becomes empty, resubmissions will be
-        # always or never checkpointed based on self.checkpointing
 
     def get_checkpoint_size(self, step):
         ''' Method for descoverying the checkpoint size that the job
@@ -377,7 +376,7 @@ class Application(object):
             step = self.submission_count
         read_checkpoint = 0
         if step > 0:
-            # take latest checkpoint size before the step that is positive
+            # take the last checkpoint size (that is not negative)
             prev_check = [self.get_checkpoint_size(i) for i in range(step)
                           if self.get_checkpoint_size(i) > 0]
             if len(prev_check) > 0:
@@ -536,11 +535,13 @@ class System(object):
         return self.__total_nodes
 
     def get_write_time(self, dump_size):
+        ''' Method for returning the write time for data of size dump_size '''
         if dump_size <= 0:
             return 0
         return int(dump_size / self.__IO_write_bw)
 
     def get_read_time(self, dump_size):
+        ''' Method for returning the read time for data of size dump_size '''
         if dump_size <= 0:
             return 0
         return int(dump_size / self.__IO_read_bw)
