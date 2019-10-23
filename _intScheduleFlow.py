@@ -219,7 +219,7 @@ class ScheduleGaps(object):
     def trim(self, current_time):
         ''' Delete all gaps that end before the current timestamp '''
         job_list = [job for job in self.__reserved_jobs if
-                    (self.__reserved_jobs[job] +\
+                    (self.__reserved_jobs[job] +
                      job.get_current_total_request_time()) <
                     current_time]
         for job in job_list:
@@ -340,7 +340,7 @@ class ScheduleGaps(object):
                     gaps_list[i][1] = end
 
         remove_list = sorted(list(remove_list), reverse=True)
-        if len(remove_list)==0:
+        if len(remove_list) == 0:
             return 0
         for idx in remove_list:
             del gaps_list[idx]
@@ -349,17 +349,17 @@ class ScheduleGaps(object):
     def __fill_gap_to_neighbors(self, new_job):
         ''' Add neighbor space on the left and right of the new job '''
 
-        new_gaps = [] 
+        new_gaps = []
         start = self.__reserved_jobs[new_job]
-        left_gaps = [self.__reserved_jobs[job] +\
+        left_gaps = [self.__reserved_jobs[job] +
                      job.get_current_total_request_time()
                      for job in self.__reserved_jobs if
-                     self.__reserved_jobs[job] +\
+                     self.__reserved_jobs[job] +
                      job.get_current_total_request_time() <= start]
         if len(left_gaps) > 0 and max(left_gaps) < start:
             new_gaps.append([max(left_gaps), start, self.__total_nodes])
-        end = self.__reserved_jobs[new_job] +\
-              new_job.get_current_total_request_time()
+        end = self.__reserved_jobs[new_job] \
+            + new_job.get_current_total_request_time()
         right_gaps = [self.__reserved_jobs[job] for job in self.__reserved_jobs
                       if self.__reserved_jobs[job] >= end]
         if len(right_gaps) and min(right_gaps) > end:
@@ -466,7 +466,7 @@ class ScheduleGaps(object):
             return self.gaps_list
         job_list[job] = self.__reserved_jobs[job]
         return self.update(job_list, 2)
-    
+
     def get_gaps(self, start_time, length, nodes):
         ''' Return all the gaps that can fit a job using a given number of
         nodes, requiring a length walltime and that has to start the earliest

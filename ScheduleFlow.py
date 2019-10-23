@@ -140,7 +140,7 @@ class Simulator():
             # in case the last submission was checkpointed, the expected
             # time must also include the checkpoint read time
             expected_time += job.get_checkpoint_read_time(
-                step = len(execution_list)-1)
+                step=len(execution_list) - 1)
         else:
             expected_time = requested_time
         if not np.isclose(end-start, expected_time,
@@ -296,7 +296,7 @@ class Application(object):
         self.request_sequence = requested_walltimes
         # keep track of the number of submission
         self.submission_count = 0
-        
+
         self.resubmit = True
         if resubmit_factor == -1:
             if len(self.request_sequence) == 0:
@@ -342,12 +342,12 @@ class Application(object):
             Entries with 0 or negative values indicate no checkpoint
             for the respective submission. Submissions after the entries
             in the list will use the last value '''
-        
+
         assert(len(checkpoint_size_list) > 0),\
             "Cannot set an empty checkpoint list"
         self.checkpointing = True
         # sequences containing negative values on the last position indicate
-        # not to checkpoint for future resubmissions 
+        # not to checkpoint for future resubmissions
         self.current_checkpoint = checkpoint_size_list[0]
         self.checkpoint_sequence = checkpoint_size_list
 
@@ -397,7 +397,7 @@ class Application(object):
             sel_system = self.system
         assert(sel_system is not None),\
             "Job must be running on a system to compute the request time"
-        
+
         write_checkpoint = sel_system.get_write_time(
             self.current_checkpoint)
         read_checkpoint = self.get_checkpoint_read_time(system=sel_system)
@@ -431,7 +431,7 @@ class Application(object):
 
         if not self.checkpointing:
             return self.get_request_time(step)
-        
+
         assert(self.system is not None),\
             "Job must be running on a system to compute the request time"
         request_walltime = self.get_request_time(step)
@@ -493,7 +493,7 @@ class Application(object):
             self.walltime = restore[1]
 
         # restore the sequence of request times
-        self.request_walltime =  self.get_request_time(0)
+        self.request_walltime = self.get_request_time(0)
 
         # restore first checkpoint
         self.current_checkpoint = self.get_checkpoint_size(0)
@@ -507,7 +507,7 @@ class Application(object):
 
 
 class System(object):
-    ''' System class containing available resources 
+    ''' System class containing available resources
         (default I/O bandwidth per core of 1 MB/s for both read/write) '''
 
     def __init__(self, total_nodes, io_write_bw=1, io_read_bw=1):
@@ -632,7 +632,7 @@ class Scheduler(object):
 
         start_time = max(job.submission_time, current_time)
         request_walltime = job.get_current_total_request_time(
-            system = self.system)
+            system=self.system)
         gap_list = self.gaps_in_schedule.get_gaps(start_time,
                                                   request_walltime,
                                                   job.nodes)
