@@ -301,11 +301,11 @@ class Application(object):
         if resubmit_factor == -1:
             if len(self.request_sequence) == 0:
                 self.resubmit = False
-            self.resubmit_factor = 1
+            self.resubmit_factor = 0
         else:
-            assert (resubmit_factor > 1),\
+            assert (resubmit_factor > 0),\
                 'Increase factor for an execution request time must be ' \
-                'over 1: received %d' % (resubmit_factor)
+                'over 0: received %d' % (resubmit_factor)
             self.resubmit_factor = resubmit_factor
 
         # Entries in the execution log: (JobChangeType, old_value)
@@ -416,6 +416,10 @@ class Application(object):
         if step < len(self.request_sequence):
             return self.request_sequence[step]
 
+        # if the resubmit factor is not set, there are no more submissions
+        if self.resubmit_factor == 0:
+            return -1
+
         seq_len = len(self.request_sequence)
         return self.request_sequence[-1] * pow(
             self.resubmit_factor, step - seq_len + 1)
@@ -469,7 +473,7 @@ class Application(object):
         assert (old_request_gap > (self.walltime - self.request_walltime)),\
             "The new request walltime has to be greater than the last one"
 
-        if self.resubmit_factor == 1:
+        if self.resubmit_factor == 0:
             if self.submission_count >= len(self.request_sequence) - 1:
                 self.resubmit = False
         # update the checkpoiting
@@ -496,7 +500,7 @@ class Application(object):
         self.current_checkpoint = self.get_checkpoint_size(0)
 
         self.resubmit = True
-        if self.resubmit_factor == 1 and len(self.request_sequence) == 0:
+        if self.resubmit_factor == 0 and len(self.request_sequence) == 0:
             self.resubmit = False
 
         # clear the execution log
