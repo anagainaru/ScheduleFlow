@@ -114,7 +114,8 @@ class Simulator():
         # check that first start is after the submission time
         if execution_list[0][0] < job.submission_time:
             return False
-        requested_time = job.get_current_total_request_time()
+        requested_time = job.get_total_request_time(0)
+        expected_time = 0
         for i in range(len(execution_list)-1):
             # check that resubmissions start after end of previous
             if execution_list[i][1] > execution_list[i + 1][0]:
@@ -125,15 +126,23 @@ class Simulator():
             if not np.isclose(end-start, requested_time,
                               rtol=1e-3):
                 return False
+            if job.get_checkpoint_size(i) > 0:
+                expected_time += job.get_request_time(i)
             requested_time = job.get_total_request_time(i + 1)
 
         # check len of last execution
         start = execution_list[len(execution_list)-1][0]
         end = execution_list[len(execution_list)-1][1]
-        expected_time = requested_time
-        if end - start >= job.walltime:
+        walltime_left = job.walltime - expected_time
+        if job.get_request_time(len(execution_list) - 1) >= walltime_left:
             # if run was successful, exected time is the job walltime
-            expected_time = job.walltime
+            expected_time = walltime_left
+            # in case the last submission was checkpointed, the expected
+            # time must also include the checkpoint read time
+            expected_time += job.get_checkpoint_read_time(
+                step = len(execution_list)-1)
+        else:
+            expected_time = requested_time
         if not np.isclose(end-start, expected_time,
                           rtol=1e-3):
             return False
@@ -364,10 +373,15 @@ class Application(object):
         assert(sel_system is not None),\
             "Job must be running on a system to compute the request time"
 
+        if step is None:
+            step = self.submission_count
         read_checkpoint = 0
-        if self.submission_count > 0:
-            prev_check = self.get_checkpoint_size(self.submission_count - 1)
-            read_checkpoint = sel_system.get_read_time(prev_check)
+        if step > 0:
+            # take latest checkpoint size before the step that is positive
+            prev_check = [self.get_checkpoint_size(i) for i in range(step)
+                          if self.get_checkpoint_size(i) > 0]
+            if len(prev_check) > 0:
+                read_checkpoint = sel_system.get_read_time(prev_check[-1])
         return read_checkpoint
 
     def get_current_total_request_time(self, system=None):
@@ -422,8 +436,7 @@ class Application(object):
             self.get_checkpoint_size(step))
         read_checkpoint = 0
         if step > 0:
-            read_checkpoint = self.system.get_read_time(
-                self.get_checkpoint_size(step - 1))
+            read_checkpoint = self.get_checkpoint_read_time(step=step)
         return read_checkpoint + write_checkpoint + request_walltime
 
     def overwrite_request_sequence(self, request_sequence):
@@ -440,8 +453,6 @@ class Application(object):
             submission_time)
         self.__execution_log.append((JobChangeType.SubmissionChange,
                                      self.submission_time))
-        #self.__execution_log.append((JobChangeType.RequestChange,
-        #                             self.request_walltime))
         self.__execution_log.append((JobChangeType.WalltimeChange,
                                      self.walltime))
         self.submission_count += 1

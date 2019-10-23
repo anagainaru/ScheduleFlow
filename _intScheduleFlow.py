@@ -637,8 +637,9 @@ class Runtime(object):
         self.__log_start(job)
         # create a job end event for the started job
         # for timestamp current_time + execution_time
-        execution = min(job.walltime,
-                        job.get_current_total_request_time())
+        execution = job.walltime + job.get_checkpoint_read_time()
+        if job.walltime > job.request_walltime:
+            execution = job.get_current_total_request_time()
         self.__events.push(
             (self.__current_time + execution, EventType.JobEnd, job))
 
@@ -654,13 +655,7 @@ class Runtime(object):
 
         assert (job in self.__finished_jobs),\
             "Logging the end of a job that did not start"
-        last_execution = len(self.__finished_jobs[job]) - 1
-        self.__finished_jobs[job][last_execution][1] = self.__current_time
-
-    def __log_finalize(self, job):
-        # if the last submission used a checkpoint, the log
-        # must include the read time for the last checkpoint
-        self.__finished_jobs[job][-1][1] += job.get_checkpoint_read_time()
+        self.__finished_jobs[job][-1][1] = self.__current_time
 
     def get_stats(self):
         ''' Method for returning the log containing every jon start and
