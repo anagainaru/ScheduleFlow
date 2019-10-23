@@ -11,7 +11,7 @@ python -m unittest test_unittest.TestSystem $1
 
 echo "---------------------------------"
 echo "Test Checkpointing"
-python -m unittest test_unittest.TestCheckpointing $1
+python -m unittest test_unittest.TestCheckpointing $1 > /dev/null
 
 echo "---------------------------------"
 echo "Test Applications"

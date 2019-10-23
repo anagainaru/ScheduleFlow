@@ -558,7 +558,6 @@ class Runtime(object):
 
         # at the end of the simulation return default values for all the jobs
         for job in self.__finished_jobs:
-            self.__log_finalize(job)
             job.restore_default_values()
 
         # end the progress bar

@@ -312,7 +312,7 @@ class Application(object):
         self.__execution_log = []
 
         # By default checkpointing is False
-        self.checkpoiting = False
+        self.checkpointing = False
         self.current_checkpoint = 0
         self.checkpoint_sequence = []
         # by default the job is not running on any system
@@ -345,10 +345,10 @@ class Application(object):
         
         assert(len(checkpoint_size_list) > 0),\
             "Cannot set an empty checkpoint list"
-        self.checkpoiting = True
+        self.checkpointing = True
         # 0 or negative values indicate no checkpoint
         self.current_checkpoint = checkpoint_size_list[0]
-        self.checkpoint_sequence = checkpoint_size_list[:]
+        self.checkpoint_sequence = checkpoint_size_list
         # once the checkpoint_sequnce becomes empty, resubmissions will be
         # always or never checkpointed based on self.checkpointing
 
@@ -362,9 +362,9 @@ class Application(object):
             return self.checkpoint_sequence[step]
         return self.checkpoint_sequence[-1]
 
-    def get_checkpoint_read_time(self, system=None):
+    def get_checkpoint_read_time(self, system=None, step=None):
         ''' Method that returns the time to read the previous checkpoint '''
-        if not self.checkpoiting:
+        if not self.checkpointing:
             return 0
 
         sel_system = system
@@ -390,7 +390,7 @@ class Application(object):
         (if it's required) and the time to read the latest checkpoint
         (if necessary) '''
 
-        if not self.checkpoiting:
+        if not self.checkpointing:
             return self.request_walltime
 
         sel_system = system
@@ -430,7 +430,7 @@ class Application(object):
         to checkpoint at the end (if it's required) and the time to read
         the latest checkpoint (if necessary) '''
 
-        if not self.checkpoiting:
+        if not self.checkpointing:
             return self.get_request_time(step)
         
         assert(self.system is not None),\
@@ -476,8 +476,8 @@ class Application(object):
         if self.resubmit_factor == 0:
             if self.submission_count >= len(self.request_sequence) - 1:
                 self.resubmit = False
-        # update the checkpoiting
-        if self.checkpoiting:
+        # update the checkpointing
+        if self.checkpointing:
             self.current_checkpoint = self.get_checkpoint_size(
                 self.submission_count)
 
