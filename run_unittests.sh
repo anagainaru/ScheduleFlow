@@ -2,23 +2,22 @@
 
 # bash run_unittest.sh -v (for verbose)
 
-echo "Test Event Queue"
+echo "Test Queues"
 python -m unittest test_unittest.TestEventQueue $1
+python -m unittest test_unittest.TestWaitingQueue $1
 
 echo "---------------------------------"
 echo "Test System"
 python -m unittest test_unittest.TestSystem $1
 
 echo "---------------------------------"
-echo "Test Checkpointing"
+echo "Test Applications"
+python -m unittest test_unittest.TestApplication $1
 python -m unittest test_unittest.TestCheckpointing $1 > /dev/null
 
 echo "---------------------------------"
-echo "Test Applications"
-python -m unittest test_unittest.TestApplication $1
-
-echo "---------------------------------"
 echo "Test Basic Scheduler"
+python -m unittest test_unittest.TestScheduleGaps $1
 python -m unittest test_unittest.TestScheduler $1
 
 echo "---------------------------------"
