@@ -392,6 +392,29 @@ class ScheduleGaps(object):
             procs = 0
         return (new_gaps, start, end, procs)
 
+    def __free_hidden_gaps(self, affected_gaps_idx, start, end, procs):
+        hidden_gaps = []
+        # for each gap end
+        for idx in affected_gaps_idx:
+            gap_start = self.gaps_list[idx][1]
+            # find all the gaps that start before this end
+            gaps = [self.gaps_list[i][1] for i in affected_gaps_idx
+                    if i != idx and
+                    self.gaps_list[i][0] < gap_start]
+            # if the max of these gaps does not exceed the gap end,
+            # there might be a hidden gap with no available space
+            if len(gaps) == 0 or max(gaps) <= gap_start:
+                # find the end of the hidden gap as the min of the
+                gaps = [self.gaps_list[i][0] for i in
+                        affected_gaps_idx if
+                        self.gaps_list[i][0] > gap_start]
+                if len(gaps) == 0:
+                    if gap_start != end:
+                        hidden_gaps.append([gap_start, end, procs])
+                else:
+                    hidden_gaps.append([gap_start, min(gaps), procs])
+        return hidden_gaps
+
     def update(self, reserved_jobs, ops):
         ''' Method for updating the gaps in a schedule when new jobs are
         included in the schedule or are ending and are creating backfillprocs
@@ -431,10 +454,12 @@ class ScheduleGaps(object):
             # that are completely included inside the new job
             new_gaps += self.__update_included(
                 affected_gaps_idx, start, end, procs, ops)
-
             # update gaps that intersect the new job
             new_gaps += self.__update_intersections(
                 affected_gaps_idx, start, end, procs, ops)
+            if ops==1:
+                new_gaps += self.__free_hidden_gaps(
+                    affected_gaps_idx, start, end, procs)
 
             # consolidate the new gaps
             ret = -1
