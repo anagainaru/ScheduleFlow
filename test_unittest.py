@@ -440,6 +440,16 @@ class TestScheduleGaps(unittest.TestCase):
         self.assertTrue(len(gaps) == 3)
         self.assertEqual([i for i in gaps if i[0] == 7][0], [7, 10, 1])
 
+    def test_free_hidden_gaps(self):
+        sch = ScheduleFlow.BatchScheduler(ScheduleFlow.System(10))
+        reservations = {}
+        reservations[ScheduleFlow.Application(2, 0, 5, [5])] = 0
+        reservations[ScheduleFlow.Application(8, 0, 3, [3])] = 5
+        reservations[ScheduleFlow.Application(2, 0, 1, [10])] = 0
+        gaps = sch.gaps_in_schedule.add(reservations)
+        gaps = sch.gaps_in_schedule.remove(reservations)
+        self.assertTrue([0, 10, 2] in gaps)
+
     def test_reservation_batch(self):
         sch = ScheduleFlow.BatchScheduler(ScheduleFlow.System(10))
         reservations = {}
@@ -451,11 +461,11 @@ class TestScheduleGaps(unittest.TestCase):
         reservations[ScheduleFlow.Application(10, 0, 2, [5])] = 15
         gaps = sch.gaps_in_schedule.add(reservations)
         gaps = sch.gaps_in_schedule.remove(reservations)
-        # result is [[0, 3, 4], [2, 3, 9], [2, 5, 6], [4, 5, 10],
-        # [8, 10, 10], [13, 15, 10], [17, 20, 10]]
+        # result is [[0, 5, 4], [0, 10, 1], [2, 3, 9], [2, 5, 6],
+        # [4, 5, 10], [8, 10, 10], [13, 15, 10], [17, 20, 10]]
         self.assertTrue(len([i for i in gaps if i[2] == 10]) == 4)
         self.assertTrue(len([i for i in gaps if i[0] == 2]) == 2)
-        self.assertTrue(len([i for i in gaps if i[0] == 0]) == 1)
+        self.assertTrue(len([i for i in gaps if i[0] == 0]) == 2)
 
     def test_trim(self):
         sch = ScheduleFlow.BatchScheduler(ScheduleFlow.System(10))
