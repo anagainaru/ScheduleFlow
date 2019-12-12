@@ -1,0 +1,128 @@
+.reveal,
+.reveal h1,
+.reveal h2,
+.reveal h3,
+.reveal h4,
+.reveal h5,
+.reveal h6 {
+    font-family: 'Roboto', sans-serif;
+}
+
+.reveal body {
+    color: #6B6B6B;
+    word-wrap: break-word;
+    font-family: 'Roboto', sans-serif;
+    line-height: 1.7;
+    font-size: 16px;
+}
+
+.reveal h1 {
+    color: #01657f;
+    font-weight: 500;
+    font-size: 38px;
+    font-family: 'Roboto', sans-serif;
+    line-height: 1.1;
+}
+
+.reveal h2 {
+    color: #444;
+    font-size: 28px;
+    font-weight: 700;
+    font-family: 'Roboto', sans-serif;
+    line-height: 56px;
+    margin-bottom: 20px;
+    margin-top: 20px;
+}
+
+.reveal h3 {
+    color: #444;
+    font-size: 20px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 20px;
+    margin-top: 20px;
+}
+
+.reveal h4 {
+    color: #444;
+    font-size: 16px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 700;
+    line-height: 56px;
+    margin-bottom: 0px;
+    margin-top: 20px;
+}
+
+.reveal h5 {
+    color: #444;
+    font-size: 14px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 10px;
+    margin-top: 20px;
+}
+
+
+.reveal cite {
+  color: #ddab56;
+  font-family: 'Roboto', sans-serif;
+  font-weight: bold;
+  font-size: 18px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  margin-left: 50px;
+  padding-left: 15px;
+  border-left: 5px solid #ddab56;
+}
+
+.reveal .box {
+  color: #ddab56;
+  font-family: 'Roboto', sans-serif;
+  font-weight: bold;
+  font-size: 16px;
+  border-left: 5px solid #ddab56;
+  margin-left: 50px;
+  padding-left: 15px;
+  padding-right: 15px;
+  margin-right: 30px;
+}
+
+.reveal small {
+  color: #333;
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+}
+
+.reveal a {
+    color: #01657f;
+}
+
+.external-link:after {
+    content: "\f08e";
+    font-family: FontAwesome;
+    font-style: normal;
+    font-weight: normal;
+    text-decoration: inherit;
+    padding-left: 0.2em;
+}
+
+.background-dark {
+   padding: 15px 15px 5px;
+    display: inline-block;
+    margin: 5px 0 15px;
+    border-radius: 5px;
+    background-color: #323a45;
+    max-width: 53rem;
+}
+
+.background-dark a {
+    color: #b0b0b1;
+    text-decoration: underline;
+}
+
+.background-dark p {
+    color: #ffffff;
+}
+
