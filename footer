@@ -1,0 +1,76 @@
+<style type="text/css">
+    /* 1. Style header/footer <div> so they are positioned as desired. */
+    #header-left {
+        position: absolute;
+        top: 10px;
+        left: 20px;
+    }
+    #header-right {
+        position: absolute;
+        top: 0%;
+        right: 0%;
+    }
+    #footer-left {
+        position: absolute;
+        bottom: 0%;
+        left: 0%;
+        background-color: #333333;
+        color: #F8F8F8;
+	width: 33%;
+	font-size: 12px;
+	text-align: center;
+    }
+    #footer-middle {
+        position: absolute;
+        bottom: 0%;
+        left: 33%;
+        background-color: #006680;
+        color: #F8F8F8;
+	width: 33%;
+	font-size: 12px;
+	text-align: center;
+    }
+    #footer-right {
+        position: absolute;
+        bottom: 0%;
+        right: 0%;
+        background-color: #F8F8F8;
+        color: #2C5135;
+        width: 34%;
+	font-size: 12px;
+	text-align: center;
+    }
+    #logo {
+        position: absolute;
+        bottom: 14px;
+        right: 0%;
+    }
+</style>
+
+<!-- 2. Create hidden header/footer <div> -->
+<div id="hidden" style="display:none;">
+    <div id="header">
+	<div id="footer-left">Ana Gainaru</div>
+	<div id="footer-middle">Acelasi titlu ca al prezentarii</div>
+	<div id="footer-right">December 16th, 2019</div>
+	<div id="logo"><img src="figures/logo.png" width=120></div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+<script type="text/javascript">
+    // 3. On Reveal.js ready event, copy header/footer <div> into each `.slide-background` <div>
+    var header = $('#header').html();
+    if ( window.location.search.match( /print-pdf/gi ) ) {
+        Reveal.addEventListener( 'ready', function( event ) {
+            $('.slide-background').append(header);
+        });
+    }
+    else {
+        $('div.reveal').append(header);
+   }
+</script>
+
+</body>
+
+</html>
