@@ -13254,46 +13254,18 @@ a.anchor-link {
 <h1 id="About-me">About me<a class="anchor-link" href="#About-me">&#182;</a></h1><p><cite> www.ana-gainaru.com (anagainaru Github) </cite></p>
 <p><img src="figures/aboutme.png" width="200" align="left" /></p>
 <p><br /><br />
-PhD in Computer Science
+PhD in Computer Science <br />
 <small> Failure prediction, Hybrid checkpointing <br />
         Fault tolerance framework for Blue Waters </small></p>
 <p><br /><br />
-HPC Architect
+HPC Architect <br />
 <small> Collective communication <br />
          HW custom application optimization</small></p>
 <p><br /><br />
-Research Assistant Professor
+Research Assistant Professor <br />
 <small>Scheduling <br />
             Heterogeneous, dynamic applications</small></p>
 
-</div>
-</div>
-</div></section></section><section><section>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="About-me">About me<a class="anchor-link" href="#About-me">&#182;</a></h1><p>www.ana-gainaru.com (anagainaru Github)</p>
-<div style="-webkit-column-count: 3; -moz-column-count: 3; column-count: 3; -webkit-column-rule: 1px dotted #e0e0e0; -moz-column-rule: 1px dotted #e0e0e0; column-rule: 1px dotted #e0e0e0;">
-    <div style="display: inline-block;">
-        <h3>PhD in Computer Science</h3>
-        Failure prediction, Hybrid checkpointing <br />
-        Fault tolerance framework for Blue Waters <br />
-        <img src="figures/uiuc.png" width="150" /> <br />
-        <img src="figures/ncsa.png" width="150" />
-    </div>
-    <div style="display: inline-block;">
-        <h3>HPC Architect</h3>
-        Collective communication <br />
-         HW custom application optimization<br />
-        <img src="figures/mellanox.jpg" width="150" />
-    </div>
-    <div style="display: inline-block;">
-        <h3>Research Assistant Professor</h3>
-        Scheduling <br />
-            Heterogeneous, dynamic applications<br />
-        <img src="figures/logo.png" width="180" />
-    </div>
-</div>
 </div>
 </div>
 </div></section></section><section><section>
@@ -13379,9 +13351,10 @@ Applications running on &lt; 10 nodes: 79%
 Applications running on &lt; 100 nodes: 98%
 Average number of nodes: 15 (max 10,417)</code></pre>
 <p><br/><br/>
-<cite> Small jobs are distributed almost uniformly throughout the year </cite></p>
+Applications run between a few minutes and over 100 hours 
+<br/></p>
+<p><cite> Small jobs are distributed almost uniformly throughout the year </cite></p>
 <p><small> Over 80% of the days run multiple small jobs (average volume of 100 node hours) </small></p>
-<p><small> Applications run between a few minutes and over 100 hours </small></p>
 
 </div>
 </div>
@@ -13390,9 +13363,9 @@ Average number of nodes: 15 (max 10,417)</code></pre>
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="Second-generation-applications">Second generation applications<a class="anchor-link" href="#Second-generation-applications">&#182;</a></h1><p><img src="figures/app_variability.png" alt="Variability"></p>
-<p>Variability in execution time and memory usage
+<p>Variability in execution time and memory usage <br/>
 <small>
-(a) Variability factor (ratio between maximum variability over execution time) for MultiAtlas, a second generation application (blue) and a traditional application that ran on the Mira supercomputer (orange) <br/>
+(a) Variability factor (ratio between maximum variability over execution time) for MultiAtlas, a second generation application (blue) and a traditional application that ran on the Mira supercomputer (orange) <br/><br />
 (b) Memory usage variability within multiple phases of the MultiAtlas code
 </small></p>
 
@@ -13402,7 +13375,8 @@ Average number of nodes: 15 (max 10,417)</code></pre>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Performance-variability">Performance variability<a class="anchor-link" href="#Performance-variability">&#182;</a></h1><ol>
+<h1 id="Performance-variability">Performance variability<a class="anchor-link" href="#Performance-variability">&#182;</a></h1><p><img src="figures/correlation.png" align="right" alt="correlation" width="300" /></p>
+<ol>
 <li>Intrinsic to the code</li>
 <li>Dependent on the input data (size or characteristics)</li>
 <li>Due to system failures</li>
@@ -13421,9 +13395,102 @@ Average number of nodes: 15 (max 10,417)</code></pre>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Research-Statement">Research Statement<a class="anchor-link" href="#Research-Statement">&#182;</a></h1><p>Update the HPC software stack to the new generation of applications.</p>
-<p>Directions</p>
+<h1 id="Research-Statement">Research Statement<a class="anchor-link" href="#Research-Statement">&#182;</a></h1><p><cite> Update the HPC software stack for the new generation of applications </cite></p>
 
+</div>
+</div>
+</div><div class="fragment">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Directions:</p>
+<p><strong>(1) Understand performance variability</strong></p>
+<ul>
+<li>At system, middleware, application levels</li>
+</ul>
+
+</div>
+</div>
+</div></div><div class="fragment">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><img src="figures/intrepid_congestion.png" alt="Congestion"></p>
+<p><code>Congestion caused by sharing resource</code></p>
+
+</div>
+</div>
+</div></div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Research-Statement">Research Statement<a class="anchor-link" href="#Research-Statement">&#182;</a></h1><p><cite> Update the HPC software stack for the new generation of applications </cite></p>
+<p>Directions:</p>
+<p><strong>(1) Understand performance variability</strong></p>
+<ul>
+<li>At system, middleware, application levels</li>
+</ul>
+<p>Fault tolerance</p>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Research-Statement">Research Statement<a class="anchor-link" href="#Research-Statement">&#182;</a></h1><p><cite> Update the HPC software stack for the new generation of applications </cite></p>
+<p>Directions:</p>
+<p><strong>(1) Understand performance variability</strong></p>
+<ul>
+<li>At system, middleware, application levels</li>
+</ul>
+<p>Scheduling</p>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Research-Statement">Research Statement<a class="anchor-link" href="#Research-Statement">&#182;</a></h1><p><cite> Update the HPC software stack for the new generation of applications </cite></p>
+<p>Directions:</p>
+<p><strong>(1) Understand performance variability</strong></p>
+<ul>
+<li>At system, middleware, application levels</li>
+</ul>
+<p>Multi atlas</p>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Research-Statement">Research Statement<a class="anchor-link" href="#Research-Statement">&#182;</a></h1><p><cite> Update the HPC software stack for the new generation of applications </cite></p>
+<p>Directions:</p>
+<p><strong>(1) Understand performance variability</strong></p>
+<ul>
+<li>At system, middleware, application levels</li>
+</ul>
+<p><strong>(2) Design new middleware to adapt to the needs of unpredictable applications</strong></p>
+<ul>
+<li>On-going work in I/O, scheduling and fault tolerance</li>
+</ul>
+
+</div>
+</div>
+</div></section></section><section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Fault-tolerance">Fault tolerance<a class="anchor-link" href="#Fault-tolerance">&#182;</a></h1>
+</div>
+</div>
+</div></section></section><section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Scheduling">Scheduling<a class="anchor-link" href="#Scheduling">&#182;</a></h1>
 </div>
 </div>
 </div></section></section><section><section>
