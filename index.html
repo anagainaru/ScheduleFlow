@@ -13289,16 +13289,120 @@ a.anchor-link {
 
 </div>
 </div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="HPC-Evolution">HPC Evolution<a class="anchor-link" href="#HPC-Evolution">&#182;</a></h1><p><img src="figures/hpc.png" alt="HPC systems"></p>
+<ul>
+<li>NUMA</li>
+<li>Hardware threading</li>
+</ul>
+
+</div>
+</div>
 </div><div class="fragment">
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><img src="figures/jaguar.jpg" alt="Jaguar" align="right" width="150"/></p>
-<p><strong>NUMA</strong></p>
+<ul>
+<li>Accelerators, Memory hierarchy </li>
+<li>High-bandwidth memory</li>
+<li>Burst buffers, Vectorization</li>
+</ul>
 
 </div>
 </div>
-</div></div></section></section><section><section>
+</div></div><div class="fragment">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><cite> Summit/Sierra: PCIe, NVLink, NVMe, NV-SLI, NVSwitch, GPUDirect, Unified Virtual Memory </cite></p>
+
+</div>
+</div>
+</div></div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="HPC-Evolution">HPC Evolution<a class="anchor-link" href="#HPC-Evolution">&#182;</a></h1><p><img src="figures/hpc.png" alt="HPC systems"></p>
+<p><strong>Unknowns to come</strong></p>
+<ul>
+<li>Chiplet architectures</li>
+<li>Configurable Spatial Accelerator architecture</li>
+<li>Computing on switch</li>
+</ul>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="HPC-Evolution">HPC Evolution<a class="anchor-link" href="#HPC-Evolution">&#182;</a></h1><p>Top500 June 2018 <br/>
+<small> Only 55 systems that have both HPL and HPCG information </small></p>
+<p><img src="figures/hpcg_hpl.png" alt="HPL"></p>
+<p><cite> Two orders of magnitude performance gap </cite></p>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="XSEDE">XSEDE<a class="anchor-link" href="#XSEDE">&#182;</a></h1><p><img src="figures/cumulative_walltime.png"  width="350" align="right" /></p>
+<p>Workloads running on Stempede (representative of all XSEDE systems)</p>
+
+<pre><code>Applications running on one node: 33%
+Applications running on &lt; 10 nodes: 79%
+Applications running on &lt; 100 nodes: 98%
+Average number of nodes: 15 (max 10,417)</code></pre>
+<p><cite> Small jobs are distributed almost uniformly throughout the year </cite></p>
+<p><small> Over 80% of the days run multiple small jobs (average volume of 100 node hours) </small></p>
+<p><small> Applications run between a few minutes and over 100 hours </small></p>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Second-generation-applications">Second generation applications<a class="anchor-link" href="#Second-generation-applications">&#182;</a></h1><p><img src="figures/app_variability.png" alt="Variability"></p>
+<p>Variability in execution time and memory usage</p>
+<ul>
+<li>(a) Variability factor (ratio between maximum variability over execution time) for MultiAtlas, a second generation application (blue) and a traditional application that ran on the Mira supercomputer (orange)</li>
+<li>(b) Memory usage variability within multiple phases of the MultiAtlas code</li>
+</ul>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Performance-variability">Performance variability<a class="anchor-link" href="#Performance-variability">&#182;</a></h1><ol>
+<li>Intrinsic to the code</li>
+<li>Dependent on the input data (size or characteristics)</li>
+<li>Due to system failures</li>
+<li>Due to resource contention</li>
+<li>Due to other runtime decisions (scheduling policies)</li>
+</ol>
+<p><strong>Same input data and execution parameters</strong></p>
+<ul>
+<li>Task based GEMM has 20% variation on CPU (over 50% on GPUs)</li>
+<li>Multi Atlas has over 10x variation when running on one node (around 7% intrinsic to the code)</li>
+</ul>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Research-Statement">Research Statement<a class="anchor-link" href="#Research-Statement">&#182;</a></h1>
+</div>
+</div>
+</div></section></section><section><section>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -13432,7 +13536,7 @@ require(
 <div id="hidden" style="display:none;">
     <div id="header">
 	<div id="footer-left">Ana Gainaru</div>
-	<div id="footer-middle">HPC for All - talk at INRIA</div>
+	<div id="footer-middle">HPC for All</div>
 	<div id="footer-right"> December 16th, 2019</div>
 	<div id="logo"><img src="figures/logo.png" width=120></div>
     </div>
