@@ -51,8 +51,8 @@
 <div id="hidden" style="display:none;">
     <div id="header">
 	<div id="footer-left">Ana Gainaru</div>
-	<div id="footer-middle">Acelasi titlu ca al prezentarii</div>
-	<div id="footer-right">December 16th, 2019</div>
+	<div id="footer-middle">HPC for All</div>
+	<div id="footer-right"> INRIA Dec 16th, 2019</div>
 	<div id="logo"><img src="figures/logo.png" width=120></div>
     </div>
 </div>
