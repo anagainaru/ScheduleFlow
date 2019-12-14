@@ -13484,6 +13484,7 @@ Statistics”, Elsevier Computer Science, Volume 29, 2014, Pages 576-585 </sub><
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<p><img src="figures/sch.png" width="200" align="right" /></p>
 <h1 id="Preliminary-results">Preliminary results<a class="anchor-link" href="#Preliminary-results">&#182;</a></h1><h2 id="Scheduling">Scheduling<a class="anchor-link" href="#Scheduling">&#182;</a></h2>
 </div>
 </div>
@@ -13491,7 +13492,6 @@ Statistics”, Elsevier Computer Science, Volume 29, 2014, Pages 576-585 </sub><
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><img src="figures/ft.png" width="150" align="right" /></p>
 <p><strong>Direction 1</strong>: Optimize the way emerging applications use current scheduling systems</p>
 <ul>
 <li>Automating the resorce estimation provided by users </li>
@@ -13557,16 +13557,14 @@ Statistics”, Elsevier Computer Science, Volume 29, 2014, Pages 576-585 </sub><
 <li>Based on how frequent an application is ran</li>
 <li>Based on how frequent the application changes behavior</li>
 </ul>
-<ol>
-<li>Use the generated sequences to submit an application on Slurm<ul>
+<p>(1) Use the generated sequences to submit an application on Slurm</p>
+<ul>
 <li>Slurm doesn't automatically re-submit application in case of a failure</li>
 </ul>
-</li>
-<li>Reserve a "Job Lane" for multiple jobs<ul>
+<p>(2) Reserve a "Job Lane" for multiple jobs</p>
+<ul>
 <li>Use the generated sequences to schedule jobs inside the Lane</li>
 </ul>
-</li>
-</ol>
 
 </div>
 </div>
@@ -13574,13 +13572,13 @@ Statistics”, Elsevier Computer Science, Volume 29, 2014, Pages 576-585 </sub><
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Preliminary-resutls">Preliminary resutls<a class="anchor-link" href="#Preliminary-resutls">&#182;</a></h1><h2 id="Scheduling">Scheduling<a class="anchor-link" href="#Scheduling">&#182;</a></h2><p><strong>Direction 1</strong>: Optimize the way emerging applications use current scheduling systems</p>
+<h1 id="Preliminary-resutls">Preliminary resutls<a class="anchor-link" href="#Preliminary-resutls">&#182;</a></h1><h2 id="Scheduling">Scheduling<a class="anchor-link" href="#Scheduling">&#182;</a></h2><p>Direction 1: Optimize the way emerging applications use current scheduling systems</p>
 <ul>
 <li>Automating the resorce estimation provided by users </li>
-<li>Using checkpointing strategies to deal with applications being killed by the runtime <code>INRIA</code></li>
-<li>Developing tools to understand task based scheduling limitations <code>UTK</code></li>
+<li>Using checkpointing strategies to deal with applications being killed by the runtime</li>
+<li>Developing tools to understand task based scheduling limitations </li>
 </ul>
-<p><strong>Direction 2</strong>: Modernize existing schedulers to become more flexible</p>
+<p><strong>Direction 2: Modernize existing schedulers to become more flexible </strong></p>
 <ul>
 <li><strong>Provide flexible resource management</strong></li>
 </ul>
@@ -13605,7 +13603,8 @@ Statistics”, Elsevier Computer Science, Volume 29, 2014, Pages 576-585 </sub><
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="Very-preliminary-results">Very preliminary results<a class="anchor-link" href="#Very-preliminary-results">&#182;</a></h1><p>Simulating hybrid schedulers (stochastic batch scheduler)</p>
 <p><img src="figures/scheduling_result.png" width="500" /></p>
-<pre> Variability factor = ratio between maximum variability over execution time </pre>
+<p><cite> Variability factor = ratio between maximum variability over execution time </cite></p>
+
 </div>
 </div>
 </div></section><section>
@@ -13631,6 +13630,7 @@ Simulator for batch schedulers:  <br />
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<p><img src="figures/ft.png" width="200" align="right" /></p>
 <h1 id="Preliminary-results">Preliminary results<a class="anchor-link" href="#Preliminary-results">&#182;</a></h1><h2 id="Fault-tolerance">Fault tolerance<a class="anchor-link" href="#Fault-tolerance">&#182;</a></h2>
 </div>
 </div>
@@ -13674,9 +13674,9 @@ Simulator for batch schedulers:  <br />
 <img src="figures/metric.png" alt="Metric"></p>
 <p>Similarly, we can define the <strong>Second resiliency gradient</strong></p>
 <ul>
-<li>characterize the change in acceleration
-<img src="figures/metric2.png" alt="Metric"></li>
+<li>characterize the change in acceleration</li>
 </ul>
+<p><img src="figures/metric2.png" alt="Metric"></p>
 <p><cite> We define slow and fast changing elements </cite></p>
 
 </div>
@@ -13699,7 +13699,10 @@ error-free execution </small></p>
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="Resiliency-metrics-in-space">Resiliency metrics in space<a class="anchor-link" href="#Resiliency-metrics-in-space">&#182;</a></h1><p>Similar to time but based on neighbor values</p>
 <p><img alt="Space metric" src="figures/patch_space.png" width="400"/></p>
-<p>Classifying the spatial domain into patches based on the space chainging metric (first or second)</p>
+<p>Classifying the spatial domain into patches based on the space chainging metric</p>
+<ul>
+<li>First or second gradient</li>
+</ul>
 
 </div>
 </div>
@@ -13723,14 +13726,15 @@ error-free execution </small></p>
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="Time-space-change-rate">Time-space change rate<a class="anchor-link" href="#Time-space-change-rate">&#182;</a></h1><p>The evolution of "patches" in the spatial domain over time for the heat-flow problem
 <img src="figures/patch_time.png" alt="time space"></p>
-
+<p>Protect only border elements (or with stronger methods)</p>
+<h3 id="How-often-to-trigger-a-new-characterization-phase?">How often to trigger a new characterization phase?<a class="anchor-link" href="#How-often-to-trigger-a-new-characterization-phase?">&#182;</a></h3>
 </div>
 </div>
 </div></section><section>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Preliminary-results">Preliminary results<a class="anchor-link" href="#Preliminary-results">&#182;</a></h1><p><img src="figures/interpolation.png" width="450" align="left" /></p>
+<h1 id="Preliminary-results">Preliminary results<a class="anchor-link" href="#Preliminary-results">&#182;</a></h1><p><img src="figures/interpolation.png" width="450" /></p>
 <p><br/><br/><br/>
 <small> Relative performance degradation compared to failure-free execution when injecting failures in the high gradient elements or in low-gradient elements (with or without interpolation) </small></p>
 
@@ -13740,9 +13744,9 @@ error-free execution </small></p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Code">Code<a class="anchor-link" href="#Code">&#182;</a></h1><p><img src="figures/matrix.gif" align="right" width="200" /></p>
-<p>University of Florida Sparse Matrix Collection: <br/>
+<h1 id="Code">Code<a class="anchor-link" href="#Code">&#182;</a></h1><p>University of Florida Sparse Matrix Collection: <br/>
 <a href="https://www.cise.ufl.edu/research/sparse/matrices/list_by_id.html">https://www.cise.ufl.edu/research/sparse/matrices/list_by_id.html</a></p>
+<p><img src="figures/matrix.gif" align="right" width="200" /></p>
 <p>Code for SpMV <br/>
 <a href="https://github.com/vanderbiltscl/spMV_customFI">https://github.com/vanderbiltscl/spMV_customFI</a></p>
 <p><cite> Preliminary work, not all the code is available </cite></p>
@@ -13773,14 +13777,16 @@ error-free execution </small></p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Thank-you">Thank you<a class="anchor-link" href="#Thank-you">&#182;</a></h1><p><br /></p>
-<h3 id="Questions?">Questions?<a class="anchor-link" href="#Questions?">&#182;</a></h3><p><img src="https://avatars2.githubusercontent.com/u/49881432?s=200&v=4" alt="Vanerbilt" align="right" width="150" />
+<p><img src="https://avatars2.githubusercontent.com/u/49881432?s=200&v=4" alt="Vanerbilt" align="right" width="150" />
 <img src="https://anagainaru.github.io/assets/images/favicon.png" alt="Ana Gainaru" align="right" width="150" /></p>
-<p><br /><br /></p>
+<h1 id="Thank-you">Thank you<a class="anchor-link" href="#Thank-you">&#182;</a></h1><p><br /></p>
+<h3 id="Questions?">Questions?<a class="anchor-link" href="#Questions?">&#182;</a></h3><p><br /><br /></p>
 <p><cite> ana.gainaru@vanderbilt.edu </cite></p>
 <p><a href="http://www.ana.gainaru.com">http://www.ana.gainaru.com</a> <br /></p>
-<p>Code avaialble at: <a href="https://github.com/anagainaru">https://github.com/anagainaru</a>
-and <a href="https://github.com/vanderbiltscl">https://github.com/vanderbiltscl</a></p>
+<p>Code avaialble at: <br />
+<a href="https://github.com/anagainaru">https://github.com/anagainaru</a> <br />
+and <br />
+<a href="https://github.com/vanderbiltscl">https://github.com/vanderbiltscl</a></p>
 
 </div>
 </div>
