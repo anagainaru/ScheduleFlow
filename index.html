@@ -13655,8 +13655,8 @@ Simulator for batch schedulers:  <br />
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="PDE-Based-Simulations">PDE-Based Simulations<a class="anchor-link" href="#PDE-Based-Simulations">&#182;</a></h1><p>E.g. Two-dimensional heat flow problem</p>
-<p><img src="figures/spmv_error.png" width="400" align="right" valign="middle" />
-<img src="figures/heat_equation.png" width="500" /></p>
+<p><img src="figures/spmv_error.png" width="300" align="right" valign="middle" />
+<img src="figures/heat_equation.png" width="400" /></p>
 <p>Translates to a series of SpMV that can propagate errors and degrade performance</p>
 
 </div>
@@ -13698,7 +13698,8 @@ error-free execution.&lt;/small&gt;</p>
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="Resiliency-metrics-in-space">Resiliency metrics in space<a class="anchor-link" href="#Resiliency-metrics-in-space">&#182;</a></h1><p>Similar to time but based on neighbor values</p>
 <p><img alt="Space metric" src="figures/patch_space.png" width="400" align="left" /></p>
-<p>Classifying the spatial domain into patches based on the space chainging metric (first or second)</p>
+<p><br/><br/><br/><br/><br/>
+Classifying the spatial domain into patches based on the space chainging metric (first or second)</p>
 
 </div>
 </div>
@@ -13713,6 +13714,38 @@ error-free execution.&lt;/small&gt;</p>
 </ul>
 <p><img src="figures/constant.png" alt="Interpolation"></p>
 <p><small> Percentage of elements in the solution vector that either remain constants through iterations or have small resiliency gradients that allow for an error to be smoothed out by interpolation </small></p>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Time-space-change-rate">Time-space change rate<a class="anchor-link" href="#Time-space-change-rate">&#182;</a></h1><p>The evolution of "patches" in the spatial domain over time for the heat-flow problem
+<img src="figures/patch_time.png" alt="time space"></p>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Preliminary-results">Preliminary results<a class="anchor-link" href="#Preliminary-results">&#182;</a></h1><p><img src="figures/interpolation.png" width="450" align="left" /></p>
+<p><br/><br/><br/>
+<small> Relative performance degradation compared to failure-free execution when injecting failures in the high gradient elements or in low-gradient elements (with or without interpolation) </small></p>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Code">Code<a class="anchor-link" href="#Code">&#182;</a></h1><p>&lt;img src="figures/matrix.gif
+University of Florida Sparse Matrix Collection: <br/>
+<a href="https://www.cise.ufl.edu/research/sparse/matrices/list_by_id.html">https://www.cise.ufl.edu/research/sparse/matrices/list_by_id.html</a></p>
+<p>Code for SpMV <br/>
+<a href="https://github.com/vanderbiltscl/spMV_customFI">https://github.com/vanderbiltscl/spMV_customFI</a></p>
+<p><cite> Preliminary work, not all the code is available </cite></p>
 
 </div>
 </div>
