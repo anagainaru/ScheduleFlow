@@ -13484,13 +13484,6 @@ Statistics”, Elsevier Computer Science, Volume 29, 2014, Pages 576-585 </sub><
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Preliminary-results">Preliminary results<a class="anchor-link" href="#Preliminary-results">&#182;</a></h1><h2 id="Fault-tolerance">Fault tolerance<a class="anchor-link" href="#Fault-tolerance">&#182;</a></h2>
-</div>
-</div>
-</div></section></section><section><section>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="Preliminary-results">Preliminary results<a class="anchor-link" href="#Preliminary-results">&#182;</a></h1><h2 id="Scheduling">Scheduling<a class="anchor-link" href="#Scheduling">&#182;</a></h2>
 </div>
 </div>
@@ -13637,6 +13630,96 @@ Simulator for batch schedulers:  <br />
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Preliminary-results">Preliminary results<a class="anchor-link" href="#Preliminary-results">&#182;</a></h1><h2 id="Fault-tolerance">Fault tolerance<a class="anchor-link" href="#Fault-tolerance">&#182;</a></h2>
+</div>
+</div>
+</div><div class="fragment">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><strong>Direction 1:</strong> Characterizing the Intrinsic Application Resiliency to Failures</p>
+<ul>
+<li>Machine Learning Systems</li>
+<li>PDE-based simulations</li>
+<li>Second generation applications</li>
+</ul>
+<p><strong>Direction 2:</strong> Adapt current checkpointing/replication methods</p>
+<ul>
+<li>Application-Level Fault Tolerance </li>
+</ul>
+
+</div>
+</div>
+</div></div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="PDE-Based-Simulations">PDE-Based Simulations<a class="anchor-link" href="#PDE-Based-Simulations">&#182;</a></h1><p>E.g. Two-dimensional heat flow problem</p>
+<p><img src="figures/spmv_error.png" width="400" align="right" valign="middle" />
+<img src="figures/heat_equation.png" width="500" /></p>
+<p>Translates to a series of SpMV that can propagate errors and degrade performance</p>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Characterize-intrinsic-resilient-behavior">Characterize intrinsic resilient behavior<a class="anchor-link" href="#Characterize-intrinsic-resilient-behavior">&#182;</a></h1><p>We define a metric to characterize the rate of change within each component u_i of the solution vector</p>
+<ul>
+<li>that corresponds to the point (x_i , y_i) in the spatial domain</li>
+</ul>
+<p><strong>First resiliency gradient</strong>
+<img src="figures/metric.png" alt="Metric"></p>
+<p>Similarly, we can define the <strong>Second resiliency gradient</strong></p>
+<ul>
+<li>characterize the change in acceleration
+<img src="figures/metric2.png" alt="Metric"></li>
+</ul>
+<p><cite> We define slow and fast changing elements </cite></p>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Failure-injection">Failure injection<a class="anchor-link" href="#Failure-injection">&#182;</a></h1><p>Resiliency properties when injecting failures in the slow and fast changing components of the solution vector</p>
+<p><img src="figures/spMV_injection.png" alt="Injection"></p>
+<p><small> (a) Relative increase in the number of iterations to convergence compared to error-free execution</p>
+<p>(b) Histogram of the scale of relative error in the solution vector compared to the convergent vector in
+error-free execution.&lt;/small&gt;</p>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Resiliency-metrics-in-space">Resiliency metrics in space<a class="anchor-link" href="#Resiliency-metrics-in-space">&#182;</a></h1><p>Similar to time but based on neighbor values</p>
+<p><img alt="Space metric" src="figures/patch_space.png" width="400" align="left" /></p>
+<p>Classifying the spatial domain into patches based on the space chainging metric (first or second)</p>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Small-and-constant-values">Small and constant values<a class="anchor-link" href="#Small-and-constant-values">&#182;</a></h1><p>Can be interpolated</p>
+<ul>
+<li>based on previous value (in time)</li>
+<li>based on the average neighbor values</li>
+</ul>
+<p><img src="figures/constant.png" alt="Interpolation"></p>
+<p><small> Percentage of elements in the solution vector that either remain constants through iterations or have small resiliency gradients that allow for an error to be smoothed out by interpolation </small></p>
+
+</div>
+</div>
+</div></section></section><section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="Future">Future<a class="anchor-link" href="#Future">&#182;</a></h1>
 </div>
 </div>
@@ -13646,11 +13729,13 @@ Simulator for batch schedulers:  <br />
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="Thank-you">Thank you<a class="anchor-link" href="#Thank-you">&#182;</a></h1><p><br /></p>
 <p>Questions?</p>
-<p><img src="https://anagainaru.github.io/assets/images/favicon.png" alt="Ana Gainaru" align="right" width="150"/></p>
+<p><img src="https://avatars2.githubusercontent.com/u/49881432?s=200&v=4" alt="Vanerbilt" align="right" width="150" />
+<img src="https://anagainaru.github.io/assets/images/favicon.png" alt="Ana Gainaru" align="right" width="150" /></p>
 <p><br /><br /></p>
 <p><cite> ana.gainaru@vanderbilt.edu </cite></p>
-<p><a href="http://www.ana.gainaru.com">http://www.ana.gainaru.com</a> <br />
-Code avaialble at: <a href="https://github.com/anagainaru">https://github.com/anagainaru</a></p>
+<p><a href="http://www.ana.gainaru.com">http://www.ana.gainaru.com</a> <br /></p>
+<p>Code avaialble at: <a href="https://github.com/anagainaru">https://github.com/anagainaru</a>
+and <a href="https://github.com/vanderbiltscl">https://github.com/vanderbiltscl</a></p>
 
 </div>
 </div>
