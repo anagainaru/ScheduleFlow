@@ -13686,9 +13686,9 @@ Simulator for batch schedulers:  <br />
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="Failure-injection">Failure injection<a class="anchor-link" href="#Failure-injection">&#182;</a></h1><p>Resiliency properties when injecting failures in the slow and fast changing components of the solution vector</p>
 <p><img src="figures/spMV_injection.png" alt="Injection"></p>
-<p><small> (a) Relative increase in the number of iterations to convergence compared to error-free execution</p>
-<p>(b) Histogram of the scale of relative error in the solution vector compared to the convergent vector in
-error-free execution.&lt;/small&gt;</p>
+<p><small> (a) Relative increase in the number of iterations to convergence compared to error-free execution</small></p>
+<p><small> (b) Histogram of the scale of relative error in the solution vector compared to the convergent vector in
+error-free execution </small></p>
 
 </div>
 </div>
@@ -13697,9 +13697,8 @@ error-free execution.&lt;/small&gt;</p>
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="Resiliency-metrics-in-space">Resiliency metrics in space<a class="anchor-link" href="#Resiliency-metrics-in-space">&#182;</a></h1><p>Similar to time but based on neighbor values</p>
-<p><img alt="Space metric" src="figures/patch_space.png" width="400" align="left" /></p>
-<p><br/><br/><br/><br/><br/>
-Classifying the spatial domain into patches based on the space chainging metric (first or second)</p>
+<p><img alt="Space metric" src="figures/patch_space.png" width="400"/></p>
+<p>Classifying the spatial domain into patches based on the space chainging metric (first or second)</p>
 
 </div>
 </div>
@@ -13740,8 +13739,8 @@ Classifying the spatial domain into patches based on the space chainging metric 
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Code">Code<a class="anchor-link" href="#Code">&#182;</a></h1><p>&lt;img src="figures/matrix.gif
-University of Florida Sparse Matrix Collection: <br/>
+<h1 id="Code">Code<a class="anchor-link" href="#Code">&#182;</a></h1><p><img src="figures/matrix.gif" align="right" width="200" /></p>
+<p>University of Florida Sparse Matrix Collection: <br/>
 <a href="https://www.cise.ufl.edu/research/sparse/matrices/list_by_id.html">https://www.cise.ufl.edu/research/sparse/matrices/list_by_id.html</a></p>
 <p>Code for SpMV <br/>
 <a href="https://github.com/vanderbiltscl/spMV_customFI">https://github.com/vanderbiltscl/spMV_customFI</a></p>
@@ -13753,7 +13752,20 @@ University of Florida Sparse Matrix Collection: <br/>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Future">Future<a class="anchor-link" href="#Future">&#182;</a></h1>
+<h1 id="Future">Future<a class="anchor-link" href="#Future">&#182;</a></h1><p><cite> Update the HPC software stack for the new generation of applications </cite></p>
+<p><strong>(1) Understand performance variability</strong></p>
+<ul>
+<li>Scheduling decisions (bach and task schedulers)</li>
+<li>Caused by fault tolerance mechanisms</li>
+<li>I/O congestion (conected with fault tolerance and scheduling)</li>
+</ul>
+<p><strong>(2) Design new middleware to adapt to the needs of unpredictable applications</strong></p>
+<ul>
+<li>Promote communication between the application and the middleware</li>
+<li>Application aware fault tolerance</li>
+<li>Hybrid / speculative schedulers that informs the application </li>
+</ul>
+
 </div>
 </div>
 </div></section></section><section><section>
@@ -13761,8 +13773,7 @@ University of Florida Sparse Matrix Collection: <br/>
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="Thank-you">Thank you<a class="anchor-link" href="#Thank-you">&#182;</a></h1><p><br /></p>
-<p>Questions?</p>
-<p><img src="https://avatars2.githubusercontent.com/u/49881432?s=200&v=4" alt="Vanerbilt" align="right" width="150" />
+<h3 id="Questions?">Questions?<a class="anchor-link" href="#Questions?">&#182;</a></h3><p><img src="https://avatars2.githubusercontent.com/u/49881432?s=200&v=4" alt="Vanerbilt" align="right" width="150" />
 <img src="https://anagainaru.github.io/assets/images/favicon.png" alt="Ana Gainaru" align="right" width="150" /></p>
 <p><br /><br /></p>
 <p><cite> ana.gainaru@vanderbilt.edu </cite></p>
