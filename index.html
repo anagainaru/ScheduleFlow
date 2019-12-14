@@ -13500,7 +13500,7 @@ Statistics”, Elsevier Computer Science, Volume 29, 2014, Pages 576-585 </sub><
 <div class="text_cell_render border-box-sizing rendered_html">
 <p><strong>Direction 1</strong>: Optimize the way emerging applications use current scheduling systems</p>
 <ul>
-<li>Automating the resorce estimation provided by users <code>Vanderbilt Neuroscience</code> </li>
+<li>Automating the resorce estimation provided by users </li>
 <li>Using checkpointing strategies to deal with applications being killed by the runtime <code>INRIA</code></li>
 <li>Developing tools to understand task based scheduling limitations <code>UTK</code></li>
 </ul>
@@ -13516,7 +13516,7 @@ Statistics”, Elsevier Computer Science, Volume 29, 2014, Pages 576-585 </sub><
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="Resource-estimation">Resource estimation<a class="anchor-link" href="#Resource-estimation">&#182;</a></h1><p><img src="figures/estimates1.png" width="400" align="left" />
-<img src="figures/estimates2.png" width="400" /></p>
+<img src="figures/estimates2.png" width="380" /></p>
 <p>Use logs of execution to predict future runs</p>
 <ul>
 <li>Fit the CDF with polynomial/distribution interpolation</li>
@@ -13529,7 +13529,7 @@ Statistics”, Elsevier Computer Science, Volume 29, 2014, Pages 576-585 </sub><
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Resource-estimation">Resource estimation<a class="anchor-link" href="#Resource-estimation">&#182;</a></h1><p><img src="figures/sequence.png" width="400" align="left" />
+<h1 id="Resource-estimation">Resource estimation<a class="anchor-link" href="#Resource-estimation">&#182;</a></h1><p><img src="figures/sequence.png" width="400" align="left" valign="top" />
 <img src="figures/intrepid_utilization.png" width="250" /></p>
 <p><br/></p>
 <p>Use logs of execution to predict future runs</p>
@@ -13549,8 +13549,68 @@ Statistics”, Elsevier Computer Science, Volume 29, 2014, Pages 576-585 </sub><
 <li>Codes change depending on each study</li>
 <li>Modules are combined in different ways</li>
 </ul>
-<p><img src="figures/history.png" width="500" /></p>
+<p><img src="figures/history.png" width="450" /></p>
 <p><cite> Discard distant future and only keep the last week/month for the prediction </cite></p>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Implementation">Implementation<a class="anchor-link" href="#Implementation">&#182;</a></h1><p>Machine learning to identify amount of history</p>
+<ul>
+<li>Based on how frequent an application is ran</li>
+<li>Based on how frequent the application changes behavior</li>
+</ul>
+<ol>
+<li>Use the generated sequences to submit an application on Slurm<ul>
+<li>Slurm doesn't automatically re-submit application in case of a failure</li>
+</ul>
+</li>
+<li>Reserve a "Job Lane" for multiple jobs<ul>
+<li>Use the generated sequences to schedule jobs inside the Lane</li>
+</ul>
+</li>
+</ol>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Preliminary-resutls">Preliminary resutls<a class="anchor-link" href="#Preliminary-resutls">&#182;</a></h1><h2 id="Scheduling">Scheduling<a class="anchor-link" href="#Scheduling">&#182;</a></h2><p><strong>Direction 1</strong>: Optimize the way emerging applications use current scheduling systems</p>
+<ul>
+<li>Automating the resorce estimation provided by users </li>
+<li>Using checkpointing strategies to deal with applications being killed by the runtime <code>INRIA</code></li>
+<li>Developing tools to understand task based scheduling limitations <code>UTK</code></li>
+</ul>
+<p><strong>Direction 2</strong>: Modernize existing schedulers to become more flexible</p>
+<ul>
+<li><strong>Provide flexible resource management</strong></li>
+</ul>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Flexible-resource-management">Flexible resource management<a class="anchor-link" href="#Flexible-resource-management">&#182;</a></h1><h2 id="Move-towards-online-schedulers">Move towards online schedulers<a class="anchor-link" href="#Move-towards-online-schedulers">&#182;</a></h2><p>Oneline schedulers work perfect with neuroscience workloads</p>
+<ul>
+<li>Not necessary with classic HPC</li>
+</ul>
+<p><img src="figures/scheduling.png" alt="Hybrid schedulers"></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Very-preliminary-results">Very preliminary results<a class="anchor-link" href="#Very-preliminary-results">&#182;</a></h1><p>Hybrid schedulers (stochastic batch)</p>
+<p><img src="figures/scheduling_result.png" alt="Results scheduler"></p>
 
 </div>
 </div>
