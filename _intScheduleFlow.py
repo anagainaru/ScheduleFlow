@@ -25,8 +25,7 @@ class JobChangeType(IntEnum):
     that can be applied to an Application properties '''
 
     SubmissionChange = 0
-    RequestChange = 1
-    RequestSequenceOverwrite = 2
+    WalltimeChange = 1
 
 
 class EventType(IntEnum):
@@ -113,8 +112,9 @@ class WaitingQueue(object):
         ''' Method for adding a job into the waiting queues based on
         their total volume '''
 
+        request_walltime = job.get_current_total_request_time()
         self.__last_update[job] = job.submission_time
-        job_volume = job.request_walltime * job.nodes
+        job_volume = request_walltime * job.nodes
         if job_volume > self.volume_threshold[0]:
             self.main_queue.add(job)
             return
@@ -174,7 +174,7 @@ class WaitingQueue(object):
                        len(self.secondary_queues[i]) > 0])
             # move the longest job from the backfill queue
             longest_job = max(self.secondary_queues[idx], key=lambda job:
-                              job.nodes*job.request_walltime)
+                              job.nodes*job.get_current_total_request_time())
             self.secondary_queues[idx].remove(longest_job)
             self.main_queue.add(longest_job)
 
@@ -219,7 +219,8 @@ class ScheduleGaps(object):
     def trim(self, current_time):
         ''' Delete all gaps that end before the current timestamp '''
         job_list = [job for job in self.__reserved_jobs if
-                    (self.__reserved_jobs[job] + job.request_walltime) <
+                    (self.__reserved_jobs[job] +
+                     job.get_current_total_request_time()) <
                     current_time]
         for job in job_list:
             del self.__reserved_jobs[job]
@@ -339,7 +340,7 @@ class ScheduleGaps(object):
                     gaps_list[i][1] = end
 
         remove_list = sorted(list(remove_list), reverse=True)
-        if len(remove_list)==0:
+        if len(remove_list) == 0:
             return 0
         for idx in remove_list:
             del gaps_list[idx]
@@ -350,13 +351,15 @@ class ScheduleGaps(object):
 
         new_gaps = []
         start = self.__reserved_jobs[new_job]
-        left_gaps = [self.__reserved_jobs[job] + job.request_walltime
+        left_gaps = [self.__reserved_jobs[job] +
+                     job.get_current_total_request_time()
                      for job in self.__reserved_jobs if
-                     self.__reserved_jobs[job] + job.request_walltime <=
-                     start]
+                     self.__reserved_jobs[job] +
+                     job.get_current_total_request_time() <= start]
         if len(left_gaps) > 0 and max(left_gaps) < start:
             new_gaps.append([max(left_gaps), start, self.__total_nodes])
-        end = self.__reserved_jobs[new_job] + new_job.request_walltime
+        end = self.__reserved_jobs[new_job] \
+            + new_job.get_current_total_request_time()
         right_gaps = [self.__reserved_jobs[job] for job in self.__reserved_jobs
                       if self.__reserved_jobs[job] >= end]
         if len(right_gaps) and min(right_gaps) > end:
@@ -389,6 +392,29 @@ class ScheduleGaps(object):
             procs = 0
         return (new_gaps, start, end, procs)
 
+    def __free_hidden_gaps(self, affected_gaps_idx, start, end, procs):
+        hidden_gaps = []
+        # for each gap end
+        for idx in affected_gaps_idx:
+            gap_start = self.gaps_list[idx][1]
+            # find all the gaps that start before this end
+            gaps = [self.gaps_list[i][1] for i in affected_gaps_idx
+                    if i != idx and
+                    self.gaps_list[i][0] < gap_start]
+            # if the max of these gaps does not exceed the gap end,
+            # there might be a hidden gap with no available space
+            if len(gaps) == 0 or max(gaps) <= gap_start:
+                # find the end of the hidden gap as the min of the
+                gaps = [self.gaps_list[i][0] for i in
+                        affected_gaps_idx if
+                        self.gaps_list[i][0] > gap_start]
+                if len(gaps) == 0:
+                    if gap_start != end:
+                        hidden_gaps.append([gap_start, end, procs])
+                else:
+                    hidden_gaps.append([gap_start, min(gaps), procs])
+        return hidden_gaps
+
     def update(self, reserved_jobs, ops):
         ''' Method for updating the gaps in a schedule when new jobs are
         included in the schedule or are ending and are creating backfillprocs
@@ -398,7 +424,8 @@ class ScheduleGaps(object):
         for job in reserved_jobs:
             self.__update_reserved_list(job, reserved_jobs[job], ops)
             start = reserved_jobs[job]
-            end = reserved_jobs[job] + job.request_walltime
+            request_walltime = job.get_current_total_request_time()
+            end = reserved_jobs[job] + request_walltime
             # for removing job backfills, the available space is between
             # when the job ends and how much time was reserved for the job
             if ops == 1:
@@ -427,10 +454,12 @@ class ScheduleGaps(object):
             # that are completely included inside the new job
             new_gaps += self.__update_included(
                 affected_gaps_idx, start, end, procs, ops)
-
             # update gaps that intersect the new job
             new_gaps += self.__update_intersections(
                 affected_gaps_idx, start, end, procs, ops)
+            if ops==1:
+                new_gaps += self.__free_hidden_gaps(
+                    affected_gaps_idx, start, end, procs)
 
             # consolidate the new gaps
             ret = -1
@@ -462,7 +491,7 @@ class ScheduleGaps(object):
             return self.gaps_list
         job_list[job] = self.__reserved_jobs[job]
         return self.update(job_list, 2)
-    
+
     def get_gaps(self, start_time, length, nodes):
         ''' Return all the gaps that can fit a job using a given number of
         nodes, requiring a length walltime and that has to start the earliest
@@ -566,7 +595,7 @@ class Runtime(object):
 
         tm = -1
         if can_start:
-            tm = self.scheduler.fit_job_in_schedule(job, self.__reserved_jobs)
+            tm = self.scheduler.fit_job_in_schedule(job)
         # check if the job can fit in the current reservations
         # if yes and if it is allowed, send it for execution
         if tm != -1:
@@ -632,7 +661,11 @@ class Runtime(object):
         self.__log_start(job)
         # create a job end event for the started job
         # for timestamp current_time + execution_time
-        execution = min(job.walltime, job.request_walltime)
+        execution = job.walltime + job.get_checkpoint_read_time()
+        # execution time is the walltime + time to read the last checkpoint
+        # in case of successful run or the total request time
+        if job.walltime > job.request_walltime:
+            execution = job.get_current_total_request_time()
         self.__events.push(
             (self.__current_time + execution, EventType.JobEnd, job))
 
@@ -648,8 +681,7 @@ class Runtime(object):
 
         assert (job in self.__finished_jobs),\
             "Logging the end of a job that did not start"
-        last_execution = len(self.__finished_jobs[job]) - 1
-        self.__finished_jobs[job][last_execution][1] = self.__current_time
+        self.__finished_jobs[job][-1][1] = self.__current_time
 
     def get_stats(self):
         ''' Method for returning the log containing every jon start and
@@ -891,7 +923,7 @@ class VizualizationEngine():
             run_list.append((start, end, job.nodes,
                              requested_time, job.job_id,
                              i + 1))
-            requested_time = job.get_request_time(i + 1)
+            requested_time = job.get_total_request_time(i + 1)
 
         # check succesful execution (last run)
         start = execution_list[len(execution_list) - 1][0]
