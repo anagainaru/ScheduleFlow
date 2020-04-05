@@ -12,6 +12,16 @@ import os
 import numpy as np
 import _intScheduleFlow
 from _intScheduleFlow import JobChangeType
+from enum import IntEnum
+
+
+class SchedulingPolicy(IntEnum):
+    ''' Enumeration class to hold the policy types 
+    for scheduling '''
+
+    LJF = 0
+    SJF = 1
+    FCFS = 2
 
 
 class Simulator():
