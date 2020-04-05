@@ -482,6 +482,9 @@ class Application(object):
 
     def restore_default_values(self):
         ''' Method for restoring the initial submission values '''
+        # submission count goes back to 0
+        self.submission_count = 0
+
         # restore submission and walltime
         restore = next((i for i in self.__execution_log if
                         i[0] == JobChangeType.SubmissionChange), None)
