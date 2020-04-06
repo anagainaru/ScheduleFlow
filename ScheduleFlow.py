@@ -676,7 +676,8 @@ class Scheduler(object):
 class BatchScheduler(Scheduler):
     ''' Reservation based scheduler (default LJF batch scheduler) '''
 
-    def __init__(self, system, batch_size=100, total_queues=1, logger=None):
+    def __init__(self, system, batch_size=100, total_queues=1, logger=None,
+                 policy=SchedulingPolicy.LJF):
         ''' Constructor method extends the base to specify the batch size,
         i.e. number of jobs in the wait queue to examime to create the
         reservation. Jobs in the waiting queue are ordered based on their
@@ -685,6 +686,11 @@ class BatchScheduler(Scheduler):
         super(BatchScheduler, self).__init__(system, logger,
                                              total_queues=total_queues)
         self.batch_size = batch_size
+        self.__set_sorted_jobs = self.__get_LJF
+        if policy == SchedulingPolicy.SJF:
+            self.__set_sorted_jobs = self.__get_SJF
+        elif policy == SchedulingPolicy.FCFS:
+            self.__set_sorted_jobs = self.__get_FCFS
 
     def __str__(self):
         return "Batch "+super(BatchScheduler, self).__str__()
@@ -692,25 +698,51 @@ class BatchScheduler(Scheduler):
     def __repr__(self):
         return "Batch "+super(BatchScheduler, self).__repr__()
 
+    def __get_LJF(self, batch_size, queue):
+        # get jobs in the queue ordered by their submission times
+        batch_list = sorted(queue, key=lambda job: job.submission_time)
+
+        # get all jobs that share submission times that could be included
+        # in the current batch
+        max_submission = max([job.submission_time for job in
+                              batch_list[:batch_size]])
+        batch_list = [job for job in batch_list if
+                      job.submission_time <= max_submission]
+        # sort the list by the size of the job (nodes*request_walltime)
+        batch_sorted = sorted(batch_list, key=lambda job:
+                              job.nodes * job.get_current_total_request_time(),
+                              reverse=True)
+        return batch_sorted
+
+    def __get_SJF(self, batch_size, queue):
+        # get jobs in the queue ordered by their submission times
+        batch_list = sorted(queue, key=lambda job: job.submission_time)
+
+        # get all jobs that share submission times that could be included
+        # in the current batch
+        min_submission = min([job.submission_time for job in
+                              batch_list[:batch_size]])
+        batch_list = [job for job in batch_list if
+                      job.submission_time <= min_submission]
+        # sort the list by the size of the job (nodes*request_walltime)
+        batch_sorted = sorted(batch_list, key=lambda job:
+                              job.nodes * job.get_current_total_request_time())
+        return batch_sorted
+
+    def __get_FCFS(self, batch_size, queue):
+	# get jobs in the queue ordered by their submission times
+        return list(queue)[:batch_size]
+
     def __get_jobs(self, queue, batch_size):
         ''' Method that returns the first batch_size jobs (by submission)
         in the queue ordered by their volume '''
 
         if len(queue) == 0:
             return []
-        # get jobs in the queue ordered by their submission times
-        batch_list = sorted(queue, key=lambda job: job.submission_time)
-        # ger all jobs that share submission times that could be included
-        # in the current batch
-        max_submission = max([job.submission_time for job in
-                              batch_list[:batch_size]])
-        batch_list = [job for job in batch_list if
-                      job.submission_time <= max_submission]
 
         # sort the list by the size of the job (nodes*request_walltime)
-        batch_sorted = sorted(batch_list, key=lambda job:
-                              job.nodes * job.get_current_total_request_time(),
-                              reverse=True)
+        batch_sorted = self.__set_sorted_jobs(batch_size, queue)
+
         # return the first batch_size entries
         return batch_sorted[:batch_size]
 
