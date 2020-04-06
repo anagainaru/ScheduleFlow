@@ -879,11 +879,17 @@ class BatchScheduler(Scheduler):
 class OnlineScheduler(Scheduler):
     ''' Online scheduler (default LJF completly online) '''
 
-    def __init__(self, system, total_queues=1, logger=None):
+    def __init__(self, system, total_queues=1, logger=None,
+                 policy=SchedulingPolicy.LJF):
         ''' Constructor method forces the baso to use only one
         waiting queue '''
         super(OnlineScheduler, self).__init__(system, logger,
                                               total_queues)
+        self.__get_next_queued_job = self.__get_LJF
+        if policy == SchedulingPolicy.SJF:
+            self.__get_next_queued_job = self.__get_SJF
+        elif policy == SchedulingPolicy.FCFS:
+            self.__get_next_queued_job = self.__get_FCFS
 
     def __str__(self):
         return "Online "+super(OnlineScheduler, self).__str__()
@@ -899,8 +905,8 @@ class OnlineScheduler(Scheduler):
         self.gaps_in_schedule.completely_remove(job)
         return 0  # trigger a new schedule starting now (timestamp 0)
 
-    def __get_next_queued_job(self, nodes, queue):
-        ''' Method to extract the largest volume job from the queue
+    def __get_LJF(self, nodes, queue):
+        ''' Method to extract the largest volume job from a given queue
         in the waiting queue that fits the space given by the `nodes` '''
 
         try:
@@ -917,6 +923,35 @@ class OnlineScheduler(Scheduler):
         min_time = min([job.submission_time for job in largest_jobs])
         return [job for job in largest_jobs
                 if job.submission_time == min_time][0]
+
+    def __get_SJF(self, nodes, queue):
+        ''' Method to extract the smallest volume job from a given queue
+        in the waiting queue that fits the space given by the `nodes` '''
+
+        try:
+            min_volume = min([job.nodes * job.get_current_total_request_time()
+                              for job in queue if job.nodes <= nodes])
+            smallest_jobs = [
+                job for job in queue if job.nodes *
+                job.get_current_total_request_time() == min_volume
+                and job.nodes <= nodes]
+        except BaseException:
+            # there are no jobs that fit the given space
+            return -1
+        # out of the largest jobs get the one submitted first
+        min_time = min([job.submission_time for job in smallest_jobs])
+        return [job for job in smallest_jobs
+                if job.submission_time == min_time][0]
+
+    def __get_FCFS(self, nodes, queue):
+        try:
+            min_time = min([job.submission_time for job in queue
+                            if job.nodes <= nodes])
+        except BaseException:
+            # there are no jobs that fit the given space
+            return -1
+        return [job for job in queue if job.nodes <= nodes and
+                job.submission_time == min_time][0] 
 
     def get_next_job(self, nodes):
         ''' Method to extract the largest volume job (nodes * requested time)
