@@ -13467,7 +13467,7 @@ Research Assistant Professor <br />
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Understanding-the-code">Understanding the code<a class="anchor-link" href="#Understanding-the-code">&#182;</a></h1><p><img src="figures/multiatlas_workflow.jpg" width="250" align="right" /></p>
+<h1 id="Understanding-the-code">Understanding the code<a class="anchor-link" href="#Understanding-the-code">&#182;</a></h1><p><img src="figures/multiatlas_workflow.jpg" width="300" align="right" /></p>
 <p><cite> Test case: Multi Atlas (whole brain segmentation) </cite> <br/>
 Execution times between one day and one week.<br/>
 Machine learning to predict the execution time<br/><br/></p>
@@ -13493,13 +13493,9 @@ Machine learning to predict the execution time<br/><br/></p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Resource-estimation">Resource estimation<a class="anchor-link" href="#Resource-estimation">&#182;</a></h1><p><img src="figures/estimates1.png" width="400" align="left" />
-<img src="figures/estimates2.png" width="380" /></p>
-<p>Use logs of execution to predict future runs</p>
-<ul>
-<li>Fit the CDF with polynomial/distribution interpolation</li>
-<li>Machine learning methods</li>
-</ul>
+<h1 id="Resource-estimation">Resource estimation<a class="anchor-link" href="#Resource-estimation">&#182;</a></h1><p>Often the execution time of an application is unknown before it runs</p>
+<p><img src="figures/cdf_traces.png" width="800" /></p>
+<p>In our previous work we provide the optimal <strong>sequence of requests</strong> based on: (i) a model of the applications; (ii) a model of the platforms; (iii) resiliency schemes available</p>
 
 </div>
 </div>
@@ -13507,13 +13503,55 @@ Machine learning to predict the execution time<br/><br/></p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Resource-estimation">Resource estimation<a class="anchor-link" href="#Resource-estimation">&#182;</a></h1><p><img src="figures/sequence.png" width="400" align="left" valign="top" />
-<img src="figures/intrepid_utilization.png" width="250" /></p>
+<h1 id="Example-sequence-of-requests">Example sequence of requests<a class="anchor-link" href="#Example-sequence-of-requests">&#182;</a></h1><p>For the job with walltime <strong>between 2h and 98h</strong>:<br/>
+<small>(assuming it cannot use checkpointing)</small></p>
+<p><strong>Strategy:</strong> t1 = 5h, t2 = 40h, t3 = 60h, t4 = 98h.</p>
+<p><strong>If the job is 33h:</strong></p>
+<ol>
+<li>We run the 5h reservation; it fails</li>
+<li>Then we run the 40h; it succeeds.</li>
+</ol>
+<p><cite>Total cost is the cost for both reservations</cite><br/>
+<small>More information in our paper:<br/>
+Ana Gainaru, Guillaume Pallez, Hongyang Sun, Padma Raghavan: *Speculative Scheduling for Stochastic HPC Applications*. ICPP 2019: 32:1-32:10</small></p>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Robustness?">Robustness?<a class="anchor-link" href="#Robustness?">&#182;</a></h1><p><img src="figures/estimates2.png" width="300" align="right" /></p>
+<p><cite> It seems to work, but how do you know the job distribution? </cite><br/>
+Dealing with incomplete/low volume of information?<br/>
+<strong>Next step</strong> let's consider we know N previous runs for an app</p>
+<h3 id="Reservation-strategies">Reservation strategies<a class="anchor-link" href="#Reservation-strategies">&#182;</a></h3><blockquote><p><strong>Strat. 1 (Discrete):</strong> Use those N elements to compute a reservation strategy;</p>
+<p><strong>Strat. 2 (Continuous):</strong> Approximate discrete cumulative function with a continuous cumulative function; use this new distribution to compute a reservation
+strategy.</p>
+</blockquote>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Computing-the-discrete-CDF">Computing the discrete CDF<a class="anchor-link" href="#Computing-the-discrete-CDF">&#182;</a></h1><p><img src="figures/cdf_discrete.png" width="800" /></p>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Resource-estimation">Resource estimation<a class="anchor-link" href="#Resource-estimation">&#182;</a></h1><p><img src="figures/training10_interpolation.png" width="400" align="left" valign="top" />
+<img src="figures/training100_interpolation.png" width="400" /></p>
 <p><br/></p>
-<p>Use logs of execution to predict future runs</p>
+<p><strong>CDF fit with polynomial/distribution interpolation</strong> vs
+<strong>Discrete CDF</strong></p>
 <ul>
-<li><strong>Fit the CDF with polynomial/distribution interpolation</strong></li>
-<li>Machine learning methods</li>
+<li>using 10 random samples</li>
+<li>using 100 random samples</li>
 </ul>
 
 </div>
@@ -13522,17 +13560,28 @@ Machine learning to predict the execution time<br/><br/></p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Resource-estimation">Resource estimation<a class="anchor-link" href="#Resource-estimation">&#182;</a></h1><p>Productivity is more important then performance</p>
+<h1 id="Sequence-of-requests">Sequence of requests<a class="anchor-link" href="#Sequence-of-requests">&#182;</a></h1><p><img src="figures/discrete_sequence.png" width="400" align="left" /></p>
+<p>For a job of length t, we define the cost of a
+reservation t1 as:</p>
+<p><img src="figures/discrete_cost.png" width="200" /></p>
 <ul>
-<li>Codes change depending on each study</li>
-<li>Modules are combined in different ways</li>
+<li>Reservation cost: what is paid for the reservation</li>
+<li>Utilization cost: what is paid for the usage</li>
+<li>Setup cost (mix of Reservation/Utilization)</li>
 </ul>
-<p><img src="figures/history.png" width="450" /></p>
-<p><cite> Discard distant future and only keep the last week/month for the prediction </cite></p>
+<p><cite> Expected Makespan Loss (EML) The relative cost loss of a sequence compared to the optimal </cite></p>
 
 </div>
 </div>
 </div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Results-for-neuroscience-applications">Results for neuroscience applications<a class="anchor-link" href="#Results-for-neuroscience-applications">&#182;</a></h1><p><img src="figures/discrete_results.png" width="800" /></p>
+
+</div>
+</div>
+</div></section></section><section><section>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
