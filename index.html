@@ -13202,7 +13202,7 @@ a.anchor-link {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Enabling-the-Deployment--of-Exploratory-Applications--on-Large-Scale-Systems">Enabling the Deployment <br /> of Exploratory Applications <br /> on Large-Scale Systems<a class="anchor-link" href="#Enabling-the-Deployment--of-Exploratory-Applications--on-Large-Scale-Systems">&#182;</a></h1><p>Ana Gainaru <br/>
+<h1 id="Enabling-the-Deployment-of-Exploratory-Applications-on-HPC-Systems">Enabling the Deployment of <br />Exploratory Applications on HPC Systems<a class="anchor-link" href="#Enabling-the-Deployment-of-Exploratory-Applications-on-HPC-Systems">&#182;</a></h1><p>Ana Gainaru <br/>
 <small>Vanderbilt University</small></p>
 
 </div>
@@ -13232,7 +13232,8 @@ Research Assistant Professor <br />
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Past-projects">Past projects<a class="anchor-link" href="#Past-projects">&#182;</a></h1><ul>
+<h1 id="Past-projects">Past projects<a class="anchor-link" href="#Past-projects">&#182;</a></h1><p><img src="figures/bck.png" width="200" align="left" /></p>
+<ul>
 <li><p><strong>Failure prediction</strong> (Phd Thesis)</p>
 <ul>
 <li><small> Analyzing performance metrics and system logs to define patterns of behavior that lead to failures </small></li>
@@ -13241,13 +13242,13 @@ Research Assistant Professor <br />
 </li>
 <li><p><strong>Fault tolerance framework for the Blue Waters system</strong> (NCSA)</p>
 <ul>
-<li>Parse in real time the monitoring data and trigger alarms for system administrators (Software used: HELO)</li>
-<li>Software described in a Cray User Group paper</li>
+<li><small> Parse in real time the monitoring data and trigger alarms for system administrators (Software used: HELO) </small></li>
+<li><small> Software described in a Cray User Group paper </small></li>
 </ul>
 </li>
 <li><p><strong>I/O scheduling</strong> (Argonne and INRIA)</p>
 <ul>
-<li>Minimize resource contention and avoid I/O congestion by allowing I/O nodes to schedule the I/O of applications</li>
+<li><small> Minimize resource contention and avoid I/O congestion by allowing I/O nodes to schedule the I/O of applications </small></li>
 </ul>
 </li>
 <li><p><strong>MPI All-to-all using HW scatter/gather capabilities</strong> (Mellanox)</p>
@@ -13261,13 +13262,17 @@ Research Assistant Professor <br />
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="Projects-at-Vanderbilt">Projects at Vanderbilt<a class="anchor-link" href="#Projects-at-Vanderbilt">&#182;</a></h1><ul>
-<li><p><strong>Exploit the intrinsic resiliency to failures for irregular applications</strong></p>
-<ul>
+<li><strong>Exploit the intrinsic resiliency to failures for irregular applications</strong><ul>
 <li>Focused on PDE-based simulations</li>
 </ul>
 </li>
-<li><p><strong>Optimize the execution of neuroscience applications on HPC systems</strong></p>
+</ul>
+<p><img src="figures/spmv_error.png" width="300" align="right" valign="middle" />
+<img src="figures/heat_equation.png" width="400" />
+<small>E.g. fot the two-dimensional heat flow problem</small></p>
+<p><br/></p>
 <ul>
+<li><strong>Optimize the execution of neuroscience applications on HPC systems</strong><ul>
 <li>Understand their resource needs </li>
 <li>Define new ways of deploying their codes on HPC systems</li>
 </ul>
@@ -13310,17 +13315,13 @@ Research Assistant Professor <br />
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="HPC-Evolution">HPC Evolution<a class="anchor-link" href="#HPC-Evolution">&#182;</a></h1><p><img src="figures/hpc.png" alt="HPC systems"></p>
-<div style="-webkit-column-count: 2; -moz-column-count: 2; column-count: 2; -webkit-column-rule: 1px dotted #e0e0e0; -moz-column-rule: 1px dotted #e0e0e0; column-rule: 1px dotted #e0e0e0;">
-    <div style="display: inline-block;">
-        <pre>NUMA <br/>Hardware threading <br/>Accelerators, Memory hierarchy <br/>High-bandwidth memory <br/>Burst buffers, Vectorization</pre>
-    </div>
-    <div style="display: inline-block;">
+<table><tr><td>
+        <div>NUMA <br/>Hardware threading <br/>Accelerators, Memory hierarchy <br/>High-bandwidth memory <br/>Burst buffers, Vectorization</div>
+    </td><td>
         <pre>&nbsp;&nbsp;&nbsp;</pre>
-    </div>
-    <div style="display: inline-block;">
-        <pre>NVLink, NVMe, NVSwitch <br/>GPU Direct <br/>Unified Virtual Memory</pre>
-    </div>
-</div><p><cite> Still to come: Chiplet architectures, Configurable Spatial Accelerator architecture, Computing on switch et </cite></p>
+    </td><td>
+        <div>NVLink, NVMe, NVSwitch <br/>GPU Direct <br/>Unified Virtual Memory</div>
+    </td></tr></table><p><cite> Still to come: Chiplets, Configurable Spatial Accelerators, Computing on switch etc </cite></p>
 
 </div>
 </div>
@@ -13330,10 +13331,19 @@ Research Assistant Professor <br />
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="HPC-evolution">HPC evolution<a class="anchor-link" href="#HPC-evolution">&#182;</a></h1><ul>
 <li>Peak performance for system and applications has continued to increase<ul>
-<li>There is a high degree of performance variation</li>
+<li><strong>This comes with the price of higher degree of performance variation</strong></li>
 </ul>
 </li>
 </ul>
+<p><img src="figures/history_hpl.png" height="30" align="right" valign="middle" />
+<img src="figures/history_prob_size.png" height="30" /></p>
+
+</div>
+</div>
+</div><div class="fragment">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
 <p><cite> Performance variability influences the effectivness of the middleware </cite></p>
 <ul>
 <li>Fault tolerance</li>
@@ -13343,7 +13353,7 @@ Research Assistant Professor <br />
 
 </div>
 </div>
-</div></section><section>
+</div></div></section><section>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -13384,7 +13394,7 @@ Research Assistant Professor <br />
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Second-generation-applications">Second generation applications<a class="anchor-link" href="#Second-generation-applications">&#182;</a></h1><p><img src="figures/app_variability.png" alt="Variability"></p>
+<h1 id="Exploratory-applications">Exploratory applications<a class="anchor-link" href="#Exploratory-applications">&#182;</a></h1><p><img src="figures/app_variability.png" alt="Variability"></p>
 <p>Variability in execution time and memory usage <br/><br/>
 <small>
 (a) Variability factor (ratio between maximum variability over execution time) for MultiAtlas, a second generation application (blue) and a traditional application that ran on the Mira supercomputer (orange) <br/><br />
@@ -13415,34 +13425,6 @@ Research Assistant Professor <br />
 <ul>
 <li>Multi Atlas has over 10x variation when running on one node (around 7% intrinsic to the code)</li>
 </ul>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div></section><section>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Research-Statement">Research Statement<a class="anchor-link" href="#Research-Statement">&#182;</a></h1><p><cite> Update the HPC software stack for the new generation of applications </cite></p>
-<p>Directions:</p>
-<p><strong>(1) Understand performance variability</strong></p>
-<ul>
-<li>At system, middleware, application levels</li>
-</ul>
-<p><img src="figures/multiatlas_corr.png" width="300" align="left" />
-<img src="figures/multiatlas_prediction.png" width="390" /></p>
 
 </div>
 </div>
@@ -13499,6 +13481,21 @@ Research Assistant Professor <br />
 <li>Fit the CDF with polynomial/distribution interpolation</li>
 <li>Machine learning methods</li>
 </ul>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Research-Statement">Research Statement<a class="anchor-link" href="#Research-Statement">&#182;</a></h1><p><cite> Update the HPC software stack for the new generation of applications </cite></p>
+<p>Directions:</p>
+<p><strong>(1) Understand performance variability</strong></p>
+<ul>
+<li>At system, middleware, application levels</li>
+</ul>
+<p><img src="figures/multiatlas_corr.png" width="300" align="left" />
+<img src="figures/multiatlas_prediction.png" width="390" /></p>
 
 </div>
 </div>
