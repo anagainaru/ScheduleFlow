@@ -13236,19 +13236,19 @@ Research Assistant Professor <br />
 <ul>
 <li><p><strong>Failure prediction</strong> (Phd Thesis)</p>
 <ul>
-<li><small> Analyzing performance metrics and system logs to define patterns of behavior that lead to failures </small></li>
+<li><small> Analyzing performance metrics and system logs to define <br/>patterns of behavior that lead to failures </small></li>
 <li><small> Update checkpointing strategies based on regimes of failures </small></li>
 </ul>
 </li>
 <li><p><strong>Fault tolerance framework for the Blue Waters system</strong> (NCSA)</p>
 <ul>
-<li><small> Parse in real time the monitoring data and trigger alarms for system administrators (Software used: HELO) </small></li>
+<li><small> Parse in real time the monitoring data and trigger<br/> alarms for system administrators </small></li>
 <li><small> Software described in a Cray User Group paper </small></li>
 </ul>
 </li>
 <li><p><strong>I/O scheduling</strong> (Argonne and INRIA)</p>
 <ul>
-<li><small> Minimize resource contention and avoid I/O congestion by allowing I/O nodes to schedule the I/O of applications </small></li>
+<li><small> Minimize resource contention and avoid I/O congestion by <br/>allowing I/O nodes to schedule the I/O of applications </small></li>
 </ul>
 </li>
 <li><p><strong>MPI All-to-all using HW scatter/gather capabilities</strong> (Mellanox)</p>
@@ -13268,9 +13268,8 @@ Research Assistant Professor <br />
 </li>
 </ul>
 <p><img src="figures/spmv_error.png" width="300" align="right" valign="middle" />
-<img src="figures/heat_equation.png" width="400" />
+<img src="figures/heat_equation.png" width="350" />
 <small>E.g. fot the two-dimensional heat flow problem</small></p>
-<p><br/></p>
 <ul>
 <li><strong>Optimize the execution of neuroscience applications on HPC systems</strong><ul>
 <li>Understand their resource needs </li>
@@ -13316,11 +13315,11 @@ Research Assistant Professor <br />
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="HPC-Evolution">HPC Evolution<a class="anchor-link" href="#HPC-Evolution">&#182;</a></h1><p><img src="figures/hpc.png" alt="HPC systems"></p>
 <table><tr><td>
-        <div>NUMA <br/>Hardware threading <br/>Accelerators, Memory hierarchy <br/>High-bandwidth memory <br/>Burst buffers, Vectorization</div>
+        <h4>NUMA <br/>Hardware threading <br/>Accelerators, Memory hierarchy <br/>High-bandwidth memory <br/>Burst buffers, Vectorization</h4>
     </td><td>
-        <pre>&nbsp;&nbsp;&nbsp;</pre>
+        <h4>&nbsp;&nbsp;&nbsp;</h4>
     </td><td>
-        <div>NVLink, NVMe, NVSwitch <br/>GPU Direct <br/>Unified Virtual Memory</div>
+        <h4>NVLink, NVMe, NVSwitch <br/>GPU Direct <br/>Unified Virtual Memory</h4>
     </td></tr></table><p><cite> Still to come: Chiplets, Configurable Spatial Accelerators, Computing on switch etc </cite></p>
 
 </div>
@@ -13335,8 +13334,8 @@ Research Assistant Professor <br />
 </ul>
 </li>
 </ul>
-<p><img src="figures/history_hpl.png" height="30" align="right" valign="middle" />
-<img src="figures/history_prob_size.png" height="30" /></p>
+<p><img src="figures/history_hpl.png" width="350" align="right" valign="middle" />
+<img src="figures/history_prob_size.png" width="350" /></p>
 
 </div>
 </div>
@@ -13358,13 +13357,17 @@ Research Assistant Professor <br />
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="Example-variability">Example variability<a class="anchor-link" href="#Example-variability">&#182;</a></h1><ul>
-<li><p>GEMM with PaRSEC (UTK) <small> 20%/50% variation for the CPU/GPU version </small></p>
+<li><p>GEMM with PaRSEC (UTK)
+<br/><small> 20%/50% variation for the CPU/GPU version </small></p>
 </li>
-<li><p>BLCR <small> 15-25% variation depending on when checkpoints are triggered </small></p>
+<li><p>BLCR
+<br/><small> 15-25% variation depending on when checkpoints are triggered </small></p>
 </li>
-<li><p>Failure in Lustre <small> OST failure can slow down the application by 5-10% </small></p>
+<li><p>Failure in Lustre
+<br/><small> OST failure can slow down the application by 5-10% </small></p>
 </li>
-<li><p>I/O congestion <small> I/O throughput decrease of up to 80% on Mira </small></p>
+<li><p>I/O congestion
+<br/><small> I/O throughput decrease of up to 80% on Mira </small></p>
 </li>
 </ul>
 
@@ -13376,15 +13379,11 @@ Research Assistant Professor <br />
 <div class="text_cell_render border-box-sizing rendered_html">
 <p><cite> Variability intrinsic to the input data </cite></p>
 <ul>
-<li><p>Kalman-Filters for data assimilation in forecasting</p>
-<ul>
-<li><small> could run for two hours or for four hours, depending on the model’s initial conditions </small></li>
-</ul>
+<li><p>Kalman-Filters for data assimilation in forecasting
+<br/> <small> could run for two hours or for four hours, depending on the model’s initial conditions </small></p>
 </li>
-<li><p>Simulations that use adaptive mesh refinement to refine the accuracy of their solutions</p>
-<ul>
-<li><small> could require an additional 128 CPU cores during its computation to increase the resolution in an area of interest </small></li>
-</ul>
+<li><p>Simulations that use adaptive mesh refinement to refine the accuracy of their solutions
+<br/> <small> could require an additional 128 CPU cores during its computation to increase the resolution in an area of interest </small></p>
 </li>
 </ul>
 
@@ -13450,7 +13449,7 @@ Research Assistant Professor <br />
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p><img src="figures/sch.png" width="250" align="right" /></p>
-<h1 id="Preliminary-results">Preliminary results<a class="anchor-link" href="#Preliminary-results">&#182;</a></h1><h2 id="Scheduling">Scheduling<a class="anchor-link" href="#Scheduling">&#182;</a></h2>
+<h1 id="Exploratory-applications">Exploratory applications<a class="anchor-link" href="#Exploratory-applications">&#182;</a></h1><h2 id="Behavior-of-neuroscience/medical-applications">Behavior of neuroscience/medical applications<a class="anchor-link" href="#Behavior-of-neuroscience/medical-applications">&#182;</a></h2>
 </div>
 </div>
 </div><div class="fragment">
@@ -13459,9 +13458,8 @@ Research Assistant Professor <br />
 <div class="text_cell_render border-box-sizing rendered_html">
 <p><strong>Direction 1</strong>: Optimize the way emerging applications use current scheduling systems</p>
 <ul>
-<li>Automating the resorce estimation provided by users </li>
+<li>Automating the resorce estimation provided by users <code>MASI VU</code></li>
 <li>Using checkpointing strategies to deal with applications being killed by the runtime <code>INRIA</code></li>
-<li>Developing tools to understand task based scheduling limitations <code>UTK</code></li>
 </ul>
 <p><strong>Direction 2</strong>: Modernize existing schedulers to become more flexible</p>
 <ul>
