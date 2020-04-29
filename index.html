@@ -13202,7 +13202,7 @@ a.anchor-link {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Framework-for-Enabling-the-Deployment--of-Exploratory-Applications--on-Large-Scale-Systems">Framework for Enabling the Deployment <br /> of Exploratory Applications <br /> on Large-Scale Systems<a class="anchor-link" href="#Framework-for-Enabling-the-Deployment--of-Exploratory-Applications--on-Large-Scale-Systems">&#182;</a></h1><p>Ana Gainaru <br/>
+<h1 id="Enabling-the-Deployment--of-Exploratory-Applications--on-Large-Scale-Systems">Enabling the Deployment <br /> of Exploratory Applications <br /> on Large-Scale Systems<a class="anchor-link" href="#Enabling-the-Deployment--of-Exploratory-Applications--on-Large-Scale-Systems">&#182;</a></h1><p>Ana Gainaru <br/>
 <small>Vanderbilt University</small></p>
 
 </div>
@@ -13235,8 +13235,8 @@ Research Assistant Professor <br />
 <h1 id="Past-projects">Past projects<a class="anchor-link" href="#Past-projects">&#182;</a></h1><ul>
 <li><p><strong>Failure prediction</strong> (Phd Thesis)</p>
 <ul>
-<li>Analyzing performance metrics and system logs to define patterns of behavior that lead to failures</li>
-<li>Update checkpointing strategies based on regimes of failures</li>
+<li><small> Analyzing performance metrics and system logs to define patterns of behavior that lead to failures </small></li>
+<li><small> Update checkpointing strategies based on regimes of failures </small></li>
 </ul>
 </li>
 <li><p><strong>Fault tolerance framework for the Blue Waters system</strong> (NCSA)</p>
@@ -13261,12 +13261,12 @@ Research Assistant Professor <br />
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="Projects-at-Vanderbilt">Projects at Vanderbilt<a class="anchor-link" href="#Projects-at-Vanderbilt">&#182;</a></h1><ul>
-<li><p>Exploit the intrinsic resiliency to failures for irregular applications</p>
+<li><p><strong>Exploit the intrinsic resiliency to failures for irregular applications</strong></p>
 <ul>
 <li>Focused on PDE-based simulations</li>
 </ul>
 </li>
-<li><p>Optimize the execution of neuroscience applications on HPC systems</p>
+<li><p><strong>Optimize the execution of neuroscience applications on HPC systems</strong></p>
 <ul>
 <li>Understand their resource needs </li>
 <li>Define new ways of deploying their codes on HPC systems</li>
@@ -13295,7 +13295,7 @@ Research Assistant Professor <br />
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="About-HPC">About HPC<a class="anchor-link" href="#About-HPC">&#182;</a></h1><p><img src="figures/hpc.png" alt="HPC systems"></p>
+<h1 id="HPC">HPC<a class="anchor-link" href="#HPC">&#182;</a></h1><p><img src="figures/hpc.png" alt="HPC systems"></p>
 <p>HPC system evolve together with large monolithic codes</p>
 <ul>
 <li>Focus on performance</li>
@@ -13310,9 +13310,52 @@ Research Assistant Professor <br />
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="HPC-Evolution">HPC Evolution<a class="anchor-link" href="#HPC-Evolution">&#182;</a></h1><p><img src="figures/hpc.png" alt="HPC systems"></p>
+<div style="-webkit-column-count: 2; -moz-column-count: 2; column-count: 2; -webkit-column-rule: 1px dotted #e0e0e0; -moz-column-rule: 1px dotted #e0e0e0; column-rule: 1px dotted #e0e0e0;">
+    <div style="display: inline-block;">
+        <pre>NUMA <br/>Hardware threading <br/>Accelerators, Memory hierarchy <br/>High-bandwidth memory <br/>Burst buffers, Vectorization</pre>
+    </div>
+    <div style="display: inline-block;">
+        <pre>&nbsp;&nbsp;&nbsp;</pre>
+    </div>
+    <div style="display: inline-block;">
+        <pre>NVLink, NVMe, NVSwitch <br/>GPU Direct <br/>Unified Virtual Memory</pre>
+    </div>
+</div><p><cite> Still to come: Chiplet architectures, Configurable Spatial Accelerator architecture, Computing on switch et </cite></p>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="HPC-evolution">HPC evolution<a class="anchor-link" href="#HPC-evolution">&#182;</a></h1><ul>
+<li>Peak performance for system and applications has continued to increase<ul>
+<li>There is a high degree of performance variation</li>
+</ul>
+</li>
+</ul>
+<p><cite> Performance variability influences the effectivness of the middleware </cite></p>
 <ul>
-<li>NUMA</li>
-<li>Hardware threading</li>
+<li>Fault tolerance</li>
+<li>Data movement</li>
+<li>Scheduling</li>
+</ul>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Example-variability">Example variability<a class="anchor-link" href="#Example-variability">&#182;</a></h1><ul>
+<li><p>GEMM with PaRSEC (UTK) <small> 20%/50% variation for the CPU/GPU version </small></p>
+</li>
+<li><p>BLCR <small> 15-25% variation depending on when checkpoints are triggered </small></p>
+</li>
+<li><p>Failure in Lustre <small> OST failure can slow down the application by 5-10% </small></p>
+</li>
+<li><p>I/O congestion <small> I/O throughput decrease of up to 80% on Mira </small></p>
+</li>
 </ul>
 
 </div>
@@ -13321,67 +13364,23 @@ Research Assistant Professor <br />
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<p><cite> Variability intrinsic to the input data </cite></p>
 <ul>
-<li>Accelerators, Memory hierarchy </li>
-<li>High-bandwidth memory</li>
-<li>Burst buffers, Vectorization</li>
+<li><p>Kalman-Filters for data assimilation in forecasting</p>
+<ul>
+<li><small> could run for two hours or for four hours, depending on the model’s initial conditions </small></li>
 </ul>
-
-</div>
-</div>
-</div></div><div class="fragment">
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><cite> Summit/Sierra: NVLink, NVMe, NVSwitch, GPUDirect, Unified Virtual Memory </cite></p>
+</li>
+<li><p>Simulations that use adaptive mesh refinement to refine the accuracy of their solutions</p>
+<ul>
+<li><small> could require an additional 128 CPU cores during its computation to increase the resolution in an area of interest </small></li>
+</ul>
+</li>
+</ul>
 
 </div>
 </div>
 </div></div></section><section>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="HPC-Evolution">HPC Evolution<a class="anchor-link" href="#HPC-Evolution">&#182;</a></h1><p><img src="figures/hpc.png" alt="HPC systems"></p>
-<p><strong>Unknowns to come</strong></p>
-<ul>
-<li>Chiplet architectures</li>
-<li>Configurable Spatial Accelerator architecture</li>
-<li>Computing on switch</li>
-</ul>
-
-</div>
-</div>
-</div></section><section>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="HPC-Evolution">HPC Evolution<a class="anchor-link" href="#HPC-Evolution">&#182;</a></h1><p>Top500 June 2018 <br/>
-<small> Only 55 systems that have both HPL and HPCG information </small></p>
-<p><img src="figures/hpcg_hpl.png" width="600" /></p>
-<p><cite> Two orders of magnitude performance gap </cite></p>
-
-</div>
-</div>
-</div></section><section>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="XSEDE">XSEDE<a class="anchor-link" href="#XSEDE">&#182;</a></h1><p><img src="figures/cumulative_walltime.png"  width="350" align="right" valigh="top" /></p>
-<p>Workloads running on Stempede (representative of all XSEDE systems)</p>
-
-<pre><code>Applications running on one node: 33%
-Applications running on &lt; 10 nodes: 79%
-Applications running on &lt; 100 nodes: 98%
-Average number of nodes: 15 (max 10,417)</code></pre>
-<p><br/><br/>
-Applications run between a few minutes and over 100 hours 
-<br/></p>
-<p><cite> Small jobs are distributed almost uniformly throughout the year </cite></p>
-<p><small> Over 80% of the days run multiple small jobs (average volume of 100 node hours) </small></p>
-
-</div>
-</div>
-</div></section><section>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -13414,63 +13413,24 @@ Applications run between a few minutes and over 100 hours
 </ol>
 <p><strong>Same input data and execution parameters</strong></p>
 <ul>
-<li>Task based GEMM has 20% variation on CPU (over 50% on GPUs)</li>
 <li>Multi Atlas has over 10x variation when running on one node (around 7% intrinsic to the code)</li>
 </ul>
 
 </div>
 </div>
-</div></section><section>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Research-Statement">Research Statement<a class="anchor-link" href="#Research-Statement">&#182;</a></h1><p><cite> Update the HPC software stack for the new generation of applications </cite></p>
-<p>Directions:</p>
-<p><strong>(1) Understand performance variability</strong>
-At system, middleware, application levels</p>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span> 
+</pre></div>
 
+    </div>
 </div>
 </div>
-</div><div class="fragment">
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><img src="figures/intrepid_congestion.png" alt="Congestion"></p>
-<p><code>Congestion caused by sharing resource</code></p>
 
-</div>
-</div>
-</div></div></section><section>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Research-Statement">Research Statement<a class="anchor-link" href="#Research-Statement">&#182;</a></h1><p><cite> Update the HPC software stack for the new generation of applications </cite></p>
-<p>Directions:</p>
-<p><strong>(1) Understand performance variability</strong></p>
-<ul>
-<li>At system, middleware, application levels</li>
-</ul>
-<p><img src="figures/resiliency.png" alt="Resiliency"></p>
-
-</div>
-</div>
-</div></section><section>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Research-Statement">Research Statement<a class="anchor-link" href="#Research-Statement">&#182;</a></h1><p><cite> Update the HPC software stack for the new generation of applications </cite></p>
-<p>Directions:</p>
-<p><strong>(1) Understand performance variability</strong></p>
-<ul>
-<li>At system, middleware, application levels</li>
-</ul>
-<p><img src="figures/wait_time.png" alt="Scheduling">
-<small> Queue wait time is a function of the requested walltime, requested cores, platform occupancy, and platform policy </small></p>
-<p><sub> K. Yamamoto et al., “The K computer Operations: Experiences and
-Statistics”, Elsevier Computer Science, Volume 29, 2014, Pages 576-585 </sub></p>
-
-</div>
-</div>
 </div></section><section>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
@@ -13490,13 +13450,13 @@ Statistics”, Elsevier Computer Science, Volume 29, 2014, Pages 576-585 </sub><
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Research-Statement">Research Statement<a class="anchor-link" href="#Research-Statement">&#182;</a></h1><p><cite> Update the HPC software stack for the new generation of applications </cite></p>
+<h1 id="Talk-today">Talk today<a class="anchor-link" href="#Talk-today">&#182;</a></h1><p><cite> Look at HPC from the perspective of neuroscience/medical applications </cite></p>
 <p>Directions:</p>
 <p><strong>(1) Understand performance variability</strong></p>
 <ul>
-<li>At system, middleware, application levels</li>
+<li>Limitations on using distributed clusters </li>
 </ul>
-<p><strong>(2) Design new middleware to adapt to the needs of unpredictable applications</strong></p>
+<p><strong>(2) Design solutions to adapt the needs of exploratory applications to HPC</strong></p>
 <ul>
 <li>On-going work in I/O, scheduling and fault tolerance</li>
 </ul>
