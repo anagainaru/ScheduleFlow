@@ -13444,7 +13444,7 @@ Research Assistant Professor <br />
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p><img src="figures/sch.png" width="250" align="right" /></p>
-<h1 id="Exploratory-applications">Exploratory applications<a class="anchor-link" href="#Exploratory-applications">&#182;</a></h1><h2 id="Behavior-for-neuroscience/medical">Behavior for neuroscience/medical<a class="anchor-link" href="#Behavior-for-neuroscience/medical">&#182;</a></h2>
+<h1 id="Exploratory-applications">Exploratory applications<a class="anchor-link" href="#Exploratory-applications">&#182;</a></h1><h2 id="Walltime-behavior-patterns">Walltime behavior patterns<a class="anchor-link" href="#Walltime-behavior-patterns">&#182;</a></h2>
 </div>
 </div>
 </div><div class="fragment">
@@ -13577,7 +13577,7 @@ reservation t1 as:</p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Results-for-neuroscience-applications">Results for neuroscience applications<a class="anchor-link" href="#Results-for-neuroscience-applications">&#182;</a></h1><p><img src="figures/discrete_results.png" width="800" /></p>
+<h1 id="Results-for-neuroscience-applications">Results for neuroscience applications<a class="anchor-link" href="#Results-for-neuroscience-applications">&#182;</a></h1><p><img src="figures/discrete_results.png" width="700" /></p>
 
 </div>
 </div>
@@ -13585,19 +13585,96 @@ reservation t1 as:</p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Implementation">Implementation<a class="anchor-link" href="#Implementation">&#182;</a></h1><p>Machine learning to identify amount of history</p>
+<p><img src="figures/ft.png" width="250" align="right" /></p>
+<h1 id="Exploratory-applications">Exploratory applications<a class="anchor-link" href="#Exploratory-applications">&#182;</a></h1><h2 id="Memory-behavior-patterns">Memory behavior patterns<a class="anchor-link" href="#Memory-behavior-patterns">&#182;</a></h2><p><strong>Direction 1</strong>: Optimize the way emerging applications use current scheduling systems</p>
 <ul>
-<li>Based on how frequent an application is ran</li>
-<li>Based on how frequent the application changes behavior</li>
+<li>Understand variability in the memory usage</li>
+<li>Optimize the sequence to take into account checkpointing strategies</li>
 </ul>
-<p><strong>(1) Use the generated sequences to submit an application on Slurm</strong></p>
+<p><strong>Direction 2</strong>: Modernize existing schedulers to become more flexible</p>
 <ul>
-<li>Slurm doesn't automatically re-submit application in case of a failure</li>
+<li>Provide flexible resource management</li>
 </ul>
-<p><strong>(2) Reserve a "Job Lane" for multiple jobs</strong></p>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Memory-usage">Memory usage<a class="anchor-link" href="#Memory-usage">&#182;</a></h1><p><img src="figures/slant_memory_usage.png" width="500" /></p>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="SLANT-application">SLANT application<a class="anchor-link" href="#SLANT-application">&#182;</a></h1><p>Spatially Localized Atlas Network Tiles (SLANT)<br/> 
+<small> multiple independent 3D fully convolutional network (FCN)
+for high-resolution whole brain segmentation </small></p>
+<p><img src="figures/slant_app_profile.png" width="700" /></p>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="SLANT-memory-footprint">SLANT memory footprint<a class="anchor-link" href="#SLANT-memory-footprint">&#182;</a></h1><p>Job decomposition in tasks based on raw data of a
+memory footprint</p>
+<p><img src="figures/slant_memory.png" width="600" /></p>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Application-model">Application model<a class="anchor-link" href="#Application-model">&#182;</a></h1><p>We model an application A as a chain of n tasks:
+A = j1 → j2 → · · · → jn ,
+such that j_i cannot be executed until j_i−1 is finished.</p>
+<p>Each task j_i is defined by two parameters: an <strong>execution time</strong> and a <strong>peak memory footprint</strong>.</p>
 <ul>
-<li>Use the generated sequences to schedule jobs inside the Lane</li>
+<li>Memory footprint is not correlated to the input data</li>
+<li>Walltime depends on properties of the input data, so it's characterized by a probability distribution of density</li>
 </ul>
+<p><cite> A = {(fi, Mi)} i=0 to #taks </cite></p>
+<p><img src="figures/slant_model.png" width="800" /></p>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Using-the-model-to-adapt-the-sequences-of-requests">Using the model to adapt the sequences of requests<a class="anchor-link" href="#Using-the-model-to-adapt-the-sequences-of-requests">&#182;</a></h1><p><img src="figures/slant_run.png" width="500" /></p>
+
+</div>
+</div>
+</div><div class="fragment">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><img src="figures/slant_results.png" width="800" /></p>
+
+</div>
+</div>
+</div></div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Code">Code<a class="anchor-link" href="#Code">&#182;</a></h1><p><img src="https://raw.githubusercontent.com/anagainaru/iSBatch/master/docs/logo.png" alt="iSBatch" width="200" align="left" /></p>
+<p>Code that is returning the sequence of request used by Vanderbilt: <br />
+<a href="https://github.com/anagainaru/iSBatch">https://github.com/anagainaru/iSBatch</a>
+<br/>
+<em>The memory footprint model is not yet tested (dynamic_cr branch)</em>  <br /><br/></p>
+<p><small> Speculative Scheduling Techniques for Stochastic HPC Applications <br /> [ICPP 2019] </small></p>
+<p><small> Making Speculative Scheduling Robust to Incomplete Data <br />
+[SCALA@SC 2019] </small></p>
+<p><small> Profiles of upcoming HPC Applications
+and their Impact on Reservation Strategies<br />
+[Submitted at SC 2020] </small></p>
 
 </div>
 </div>
@@ -13638,33 +13715,6 @@ reservation t1 as:</p>
 <p><img src="figures/scheduling_result.png" width="500" /></p>
 <p><cite> Variability factor = ratio between maximum variability over execution time </cite></p>
 
-</div>
-</div>
-</div></section><section>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Code">Code<a class="anchor-link" href="#Code">&#182;</a></h1><p>Code that is returning the sequence of request used by Vanderbilt: <br />
-<a href="https://github.com/anagainaru/HPCWalltime">https://github.com/anagainaru/HPCWalltime</a></p>
-<p><small> Speculative Scheduling Techniques for Stochastic HPC Applications <br />
-[ICPP 2019] </small></p>
-<p><small> Making Speculative Scheduling Robust to Incomplete Data <br />
-[SCALA@SC 2019] </small></p>
-<p><img src="https://raw.githubusercontent.com/anagainaru/ScheduleFlow/master/docs/logo.png" alt="ScheduleFlow" width="200" align="left" /></p>
-<p><br/><br/>
-Simulator for batch schedulers:  <br />
-<a href="https://github.com/anagainaru/ScheduleFlow">https://github.com/anagainaru/ScheduleFlow</a></p>
-<p><small> On-the-fly scheduling vs. reservation-based scheduling for unpredictable workflows  <br />
-[IJHPCA 2019] </small></p>
-
-</div>
-</div>
-</div></section></section><section><section>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><img src="figures/ft.png" width="250" align="right" /></p>
-<h1 id="Preliminary-results">Preliminary results<a class="anchor-link" href="#Preliminary-results">&#182;</a></h1><h2 id="Fault-tolerance">Fault tolerance<a class="anchor-link" href="#Fault-tolerance">&#182;</a></h2>
 </div>
 </div>
 </div><div class="fragment">
@@ -13782,6 +13832,26 @@ error-free execution </small></p>
 <p>Code for SpMV <br/>
 <a href="https://github.com/vanderbiltscl/spMV_customFI">https://github.com/vanderbiltscl/spMV_customFI</a></p>
 <p><cite> Preliminary work, not all the code is available </cite></p>
+
+</div>
+</div>
+</div></section></section><section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Implementation">Implementation<a class="anchor-link" href="#Implementation">&#182;</a></h1><p>Machine learning to identify amount of history</p>
+<ul>
+<li>Based on how frequent an application is ran</li>
+<li>Based on how frequent the application changes behavior</li>
+</ul>
+<p><strong>(1) Use the generated sequences to submit an application on Slurm</strong></p>
+<ul>
+<li>Slurm doesn't automatically re-submit application in case of a failure</li>
+</ul>
+<p><strong>(2) Reserve a "Job Lane" for multiple jobs</strong></p>
+<ul>
+<li>Use the generated sequences to schedule jobs inside the Lane</li>
+</ul>
 
 </div>
 </div>
