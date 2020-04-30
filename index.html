@@ -13293,6 +13293,10 @@ Research Assistant Professor <br />
 <li><p>Bridging the gap between application needs and HPC systems</p>
 </li>
 </ul>
+<p>&lt;/cite&gt; Focus on neuroscience/medical fields &lt;/cite&gt;</p>
+<p>Bioinformatics, genome reseach, computational biology are other fields with similar application <br/>
+<small>
+E.g. from computational phylogenetics ASTRAL-III, a species tree reconstruction code can use between a few MB and more than 64GB of memory and can run between tens of hours and days </small></p>
 
 </div>
 </div>
@@ -13343,10 +13347,10 @@ Burst buffers, Vectorization
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><cite> Performance variability influences the effectivness of the middleware </cite><br />
--Fault tolerance<br />
--Data movement<br />
--Scheduling</p>
+<p><cite> Performance variability influences the effectivness of the middleware </cite><br /><br />
+Fault tolerance<br />
+Data movement<br />
+Scheduling</p>
 
 </div>
 </div>
@@ -13400,8 +13404,9 @@ Burst buffers, Vectorization
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Performance-variability">Performance variability<a class="anchor-link" href="#Performance-variability">&#182;</a></h1><p><img src="figures/correlation.png"  width="700" align="right" valigh="top" /></p>
-<p>Same input data and execution parameters will result in similar executions
+<h1 id="Performance-variability">Performance variability<a class="anchor-link" href="#Performance-variability">&#182;</a></h1><p><img src="figures/correlation.png"  width="800" /></p>
+<p><br/>
+Same input data and execution parameters will result in similar executions
 <br /> <small> Variability intrinsic to the code is low </small></p>
 
 </div>
@@ -13462,8 +13467,8 @@ Machine learning to predict the execution time<br/><br/><br/></p>
 <li>Multi Atlas went through 4 major versions in the past 2 years</li>
 <li>Multiple versions are running at the same time</li>
 </ul>
-<p><img src="figures/Temporal_Lobe_v3.png" width="420" align="left" />
-<img src="figures/fMRI_v3.png" width="420"  align="right" /></p>
+<p><img src="figures/Temporal_Lobe_v3.png" width="400" align="left" />
+<img src="figures/fMRI_v3.png" width="400"  align="right" /></p>
 
 </div>
 </div>
@@ -13471,7 +13476,8 @@ Machine learning to predict the execution time<br/><br/><br/></p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Resource-estimation">Resource estimation<a class="anchor-link" href="#Resource-estimation">&#182;</a></h1><p>Often the execution time of an application is unknown before it runs</p>
+<h1 id="Resource-estimation">Resource estimation<a class="anchor-link" href="#Resource-estimation">&#182;</a></h1><p><br/>
+Often the execution time of an application is unknown before it runs</p>
 <p><img src="figures/cdf_traces.png" width="850" /></p>
 <p>In our previous work we provide the optimal <strong>sequence of requests</strong> based on: (i) a model of the applications; (ii) a model of the platforms; (iii) resiliency schemes available</p>
 
@@ -13492,7 +13498,7 @@ For the job with walltime <strong>between 2h and 98h</strong>:<br/>
 </ol>
 <p><cite>Total cost is the cost for both reservations</cite><br/><br/>
 <small>More information in our paper:<br/>
-Ana Gainaru, Guillaume Pallez, Hongyang Sun, Padma Raghavan: <i>Speculative Scheduling for Stochastic HPC Applications</i>. ICPP 2019: 32:1-32:10
+Ana Gainaru, Guillaume Pallez, Hongyang Sun, Padma Raghavan: Speculative Scheduling for Stochastic HPC Applications. ICPP 2019: 32:1-32:10
 </small></p>
 
 </div>
@@ -13502,13 +13508,11 @@ Ana Gainaru, Guillaume Pallez, Hongyang Sun, Padma Raghavan: <i>Speculative Sche
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="Robustness?">Robustness?<a class="anchor-link" href="#Robustness?">&#182;</a></h1><p><cite> It seems to work, but how do you know the job distribution? </cite><br/><br/>
-Dealing with incomplete/low volume of information?<br/>
+What happens for incomplete/low volume of information?<br/>
 <strong>Next step:</strong> let's consider we know N previous runs for an app</p>
 <p><img src="figures/estimates2.png" width="300" align="right" /></p>
-<h3 id="Reservation-strategies">Reservation strategies<a class="anchor-link" href="#Reservation-strategies">&#182;</a></h3><blockquote><p><strong>Strat. 1 (Discrete):</strong> Use the logged walltimes to compute a reservation strategy;</p>
-<p><strong>Strat. 2 (Continuous):</strong> Approximate discrete cumulative function with a continuous cumulative function; use this new distribution to compute a reservation
-strategy.</p>
-</blockquote>
+<h3 id="Reservation-strategies">Reservation strategies<a class="anchor-link" href="#Reservation-strategies">&#182;</a></h3><p><strong>Strat. 1 (Discrete):</strong> Use the logged walltimes to compute a reservation strategy;</p>
+<p><strong>Strat. 2 (Continuous):</strong> Approximate discrete cumulative function with a continuous cumulative function; use this new distribution to compute a reservation strategy.</p>
 
 </div>
 </div>
@@ -13550,7 +13554,8 @@ reservation t1 as:</p>
 <li>Utilization cost: beta</li>
 <li>Setup cost: gamma</li>
 </ul>
-<p><cite> Expected Loss (ML) The relative cost loss of a sequence compared to the optimal </cite></p>
+<p><br/><br/>
+<cite> Expected Loss (ML) The relative cost loss of a sequence compared to the optimal </cite></p>
 
 </div>
 </div>
@@ -13567,7 +13572,8 @@ reservation t1 as:</p>
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p><img src="figures/ft.png" width="250" align="right" /></p>
-<h1 id="Exploratory-applications">Exploratory applications<a class="anchor-link" href="#Exploratory-applications">&#182;</a></h1><h2 id="Memory-behavior-patterns">Memory behavior patterns<a class="anchor-link" href="#Memory-behavior-patterns">&#182;</a></h2><p><strong>Direction 1</strong>: Optimize the way emerging applications use current scheduling systems</p>
+<h1 id="Exploratory-applications">Exploratory applications<a class="anchor-link" href="#Exploratory-applications">&#182;</a></h1><h2 id="Memory-behavior-patterns">Memory behavior patterns<a class="anchor-link" href="#Memory-behavior-patterns">&#182;</a></h2><p><br/></p>
+<p><strong>Direction 1</strong>: Optimize the way emerging applications use current scheduling systems</p>
 <ul>
 <li>Understand variability in the memory usage</li>
 <li>Optimize the sequence to take into account checkpointing strategies</li>
@@ -13633,27 +13639,30 @@ Task ji cannot be executed until the previous task is finished.</p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Using-the-model-to-adapt-the-sequences-of-requests">Using the model to adapt the sequences of requests<a class="anchor-link" href="#Using-the-model-to-adapt-the-sequences-of-requests">&#182;</a></h1><p><img src="figures/slant_run.png" width="500" align="center" /></p>
+<h1 id="Using-the-model-to-adapt-the-requests">Using the model to adapt the requests<a class="anchor-link" href="#Using-the-model-to-adapt-the-requests">&#182;</a></h1><p><img src="figures/slant_run.png" width="650" align="center" /></p>
 
 </div>
 </div>
-</div><div class="fragment">
+</div></section><section>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Using-the-model-to-adapt-the-requests">Using the model to adapt the requests<a class="anchor-link" href="#Using-the-model-to-adapt-the-requests">&#182;</a></h1><p>Experiments using CRIU checkpointing tool through docker (experimental)<br/>
+<small> On a 256-thread Knights Landing Intel Processor (Xeon Phi 7230, 1.30GHz, Quadrant/Cache mode) with 96GB of main memory </small></p>
+<p><cite>Tests include strategy transfer from one platform to another</cite></p>
 <p><img src="figures/slant_results.png" width="700" /></p>
 
 </div>
 </div>
-</div></div></section><section>
+</div></section><section>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="Code">Code<a class="anchor-link" href="#Code">&#182;</a></h1><p><img src="https://raw.githubusercontent.com/anagainaru/iSBatch/master/docs/logo.png" alt="iSBatch" width="200" align="left" /></p>
 <p>Code that is returning the sequence of request: <br />
 <a href="https://github.com/anagainaru/iSBatch">https://github.com/anagainaru/iSBatch</a>
-<br/><small>
-    <i>The memory footprint model is not yet tested (dynamic_cr branch)</i></small>  <br /><br/><br /></p>
+<br/><br>
+<em>The memory footprint model is not yet tested (dynamic_cr branch)</em>  <br /><br/><br /></p>
 <p><small> Speculative Scheduling Techniques for Stochastic HPC Applications <br /> [ICPP 2019] </small></p>
 <p><small> Making Speculative Scheduling Robust to Incomplete Data <br />
 [SCALA@SC 2019] </small></p>
@@ -13667,15 +13676,17 @@ and their Impact on Reservation Strategies<br />
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Preliminary-resutls">Preliminary resutls<a class="anchor-link" href="#Preliminary-resutls">&#182;</a></h1><h2 id="Scheduling">Scheduling<a class="anchor-link" href="#Scheduling">&#182;</a></h2><p>Direction 1: Optimize the way emerging applications use current scheduling systems</p>
+<h1 id="Future">Future<a class="anchor-link" href="#Future">&#182;</a></h1><p><strong>(1) Understand performance variability</strong></p>
 <ul>
-<li>Automating the resorce estimation provided by users </li>
-<li>Using checkpointing strategies to deal with applications being killed by the runtime</li>
-<li>Developing tools to understand task based scheduling limitations </li>
+<li>Scheduling decisions (bach and task schedulers)</li>
+<li>Caused by fault tolerance mechanisms</li>
+<li>I/O congestion (conected with fault tolerance and scheduling)</li>
 </ul>
-<p><strong>Direction 2: Modernize existing schedulers to become more flexible </strong></p>
+<p><strong>(2) Design new middleware to adapt to the needs of HPC applications</strong></p>
 <ul>
-<li><strong>Provide flexible resource management</strong></li>
+<li>Promote communication between the application and the middleware</li>
+<li>Application aware fault tolerance</li>
+<li>Adaptive / speculative allocations during application execution </li>
 </ul>
 
 </div>
@@ -13684,9 +13695,9 @@ and their Impact on Reservation Strategies<br />
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Flexible-resource-management">Flexible resource management<a class="anchor-link" href="#Flexible-resource-management">&#182;</a></h1><h2 id="Move-towards-online-schedulers">Move towards online schedulers<a class="anchor-link" href="#Move-towards-online-schedulers">&#182;</a></h2><p>Oneline schedulers work perfect with neuroscience workloads</p>
-<ul>
-<li>Not necessary with classic HPC</li>
+<h1 id="Speculative-resource-management">Speculative resource management<a class="anchor-link" href="#Speculative-resource-management">&#182;</a></h1><h3 id="&quot;Job-Lane&quot;-for-multiple-jobs-in-Slurm">"Job Lane" for multiple jobs in Slurm<a class="anchor-link" href="#&quot;Job-Lane&quot;-for-multiple-jobs-in-Slurm">&#182;</a></h3><ul>
+<li>Use the generated sequences to schedule jobs inside the Lane</li>
+<li>Speculative backfilling</li>
 </ul>
 <p><img src="figures/scheduling.png" alt="Hybrid schedulers" width="500" /></p>
 
@@ -13696,30 +13707,71 @@ and their Impact on Reservation Strategies<br />
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Very-preliminary-results">Very preliminary results<a class="anchor-link" href="#Very-preliminary-results">&#182;</a></h1><p>Simulating hybrid schedulers (stochastic batch scheduler)</p>
-<p><img src="figures/scheduling_result.png" width="500" /></p>
-<p><cite> Variability factor = ratio between maximum variability over execution time </cite></p>
+<h1 id="Multi-pahse-MPI">Multi-pahse MPI<a class="anchor-link" href="#Multi-pahse-MPI">&#182;</a></h1><p>User can specify different MPI/threading configurations for multiple phases of an application</p>
+<ul>
+<li>HwLoc to map these configurations on different architectures</li>
+</ul>
+<p><br/></p>
+<p>Two research directions:</p>
+<ol>
+<li>Using the application model to define each phase requirements</li>
+<li>Graph of I/O dependencies between applications</li>
+</ol>
+<p><cite> Flexible MPI was discussed at the MPI Forum </cite></p>
 
 </div>
 </div>
-</div><div class="fragment">
+</div></section><section>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><strong>Direction 1:</strong> Characterizing the Intrinsic Application Resiliency to Failures</p>
+<h1 id="I/O-prefetching">I/O prefetching<a class="anchor-link" href="#I/O-prefetching">&#182;</a></h1><p><img src="figures/io_prefetch.png" width="700" /></p>
+<p>Directions:</p>
+<ol>
+<li>Prefetch data between chained applications (within the Job Lanes)</li>
+<li>Prefetch data for applications predicted to be scheduled next</li>
+</ol>
+
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Characterizing-the-Intrinsic-Application-Resiliency-to-Failures">Characterizing the Intrinsic Application Resiliency to Failures<a class="anchor-link" href="#Characterizing-the-Intrinsic-Application-Resiliency-to-Failures">&#182;</a></h1><p>PDE-based applications</p>
 <ul>
-<li>Machine Learning Systems</li>
-<li>PDE-based simulations</li>
-<li>Second generation applications</li>
+<li>Geometry aware fault tolerance</li>
 </ul>
-<p><strong>Direction 2:</strong> Adapt current checkpointing/replication methods</p>
+<p><img src="figures/a-ABFT.png" width="700" /></p>
+<p>Different phases within an application could have different resiliency properties</p>
 <ul>
-<li>Application-Level Fault Tolerance </li>
+<li>Segmentation using Neural networks </li>
+<li>Label fusion</li>
 </ul>
 
 </div>
 </div>
-</div></div></section><section>
+</div></section></section><section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><img src="https://avatars2.githubusercontent.com/u/49881432?s=200&v=4" alt="Vanerbilt" align="right" width="150" />
+<img src="https://anagainaru.github.io/assets/images/favicon.png" alt="Ana Gainaru" align="right" width="150" /></p>
+<h1 id="Thank-you">Thank you<a class="anchor-link" href="#Thank-you">&#182;</a></h1><p><br /></p>
+<h3 id="Questions?">Questions?<a class="anchor-link" href="#Questions?">&#182;</a></h3><p><br /><br /></p>
+<p><cite> ana.gainaru@vanderbilt.edu </cite></p>
+<p><a href="http://www.ana-gainaru.com">http://www.ana-gainaru.com</a></p>
+
+</div>
+</div>
+</div></section></section><section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Backup-Slides">Backup Slides<a class="anchor-link" href="#Backup-Slides">&#182;</a></h1>
+</div>
+</div>
+</div></section><section>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -13817,59 +13869,6 @@ error-free execution </small></p>
 <p>Code for SpMV <br/>
 <a href="https://github.com/vanderbiltscl/spMV_customFI">https://github.com/vanderbiltscl/spMV_customFI</a></p>
 <p><cite> Preliminary work, not all the code is available </cite></p>
-
-</div>
-</div>
-</div></section></section><section><section>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Implementation">Implementation<a class="anchor-link" href="#Implementation">&#182;</a></h1><p>Machine learning to identify amount of history</p>
-<ul>
-<li>Based on how frequent an application is ran</li>
-<li>Based on how frequent the application changes behavior</li>
-</ul>
-<p><strong>(1) Use the generated sequences to submit an application on Slurm</strong></p>
-<ul>
-<li>Slurm doesn't automatically re-submit application in case of a failure</li>
-</ul>
-<p><strong>(2) Reserve a "Job Lane" for multiple jobs</strong></p>
-<ul>
-<li>Use the generated sequences to schedule jobs inside the Lane</li>
-</ul>
-
-</div>
-</div>
-</div></section></section><section><section>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Future">Future<a class="anchor-link" href="#Future">&#182;</a></h1><p><cite> Update the HPC software stack for the new generation of applications </cite></p>
-<p><strong>(1) Understand performance variability</strong></p>
-<ul>
-<li>Scheduling decisions (bach and task schedulers)</li>
-<li>Caused by fault tolerance mechanisms</li>
-<li>I/O congestion (conected with fault tolerance and scheduling)</li>
-</ul>
-<p><strong>(2) Design new middleware to adapt to the needs of unpredictable applications</strong></p>
-<ul>
-<li>Promote communication between the application and the middleware</li>
-<li>Application aware fault tolerance</li>
-<li>Hybrid / speculative schedulers that informs the application </li>
-</ul>
-
-</div>
-</div>
-</div></section></section><section><section>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><img src="https://avatars2.githubusercontent.com/u/49881432?s=200&v=4" alt="Vanerbilt" align="right" width="150" />
-<img src="https://anagainaru.github.io/assets/images/favicon.png" alt="Ana Gainaru" align="right" width="150" /></p>
-<h1 id="Thank-you">Thank you<a class="anchor-link" href="#Thank-you">&#182;</a></h1><p><br /></p>
-<h3 id="Questions?">Questions?<a class="anchor-link" href="#Questions?">&#182;</a></h3><p><br /><br /></p>
-<p><cite> ana.gainaru@vanderbilt.edu </cite></p>
-<p><a href="http://www.ana-gainaru.com">http://www.ana-gainaru.com</a></p>
 
 </div>
 </div>
