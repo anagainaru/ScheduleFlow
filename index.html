@@ -13267,9 +13267,10 @@ Research Assistant Professor <br />
 </ul>
 </li>
 </ul>
-<p><img src="figures/spmv_error.png" width="300" align="right" valign="middle" />
-<img src="figures/heat_equation.png" width="350" />
-<small>E.g. fot the two-dimensional heat flow problem</small></p>
+<p><br/>
+<img src="figures/spmv_error.png" width="280" align="right" valign="middle" />
+<img src="figures/heat_equation.png" width="320" />
+<small>E.g. for the two-dimensional heat flow problem</small></p>
 <ul>
 <li><strong>Optimize the execution of neuroscience applications on HPC systems</strong><ul>
 <li>Understand their resource needs </li>
@@ -13314,13 +13315,13 @@ Research Assistant Professor <br />
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="HPC-Evolution">HPC Evolution<a class="anchor-link" href="#HPC-Evolution">&#182;</a></h1><p><img src="figures/hpc.png" alt="HPC systems"></p>
-<table><tr class="inner_cell"><td  class="text_cell_render border-box-sizing rendered_html">
-        <div class="text_cell_render border-box-sizing rendered_html">NUMA <br/>Hardware threading <br/>Accelerators, Memory hierarchy <br/>High-bandwidth memory <br/>Burst buffers, Vectorization</div>
-    </td><td  class="text_cell_render border-box-sizing rendered_html">
-        <h4>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</h4>
-    </td><td class="text_cell_render border-box-sizing rendered_html">
-        <div class="text_cell_render border-box-sizing rendered_html">NVLink, NVMe, NVSwitch <br/>GPU Direct <br/>Unified Virtual Memory</div>
-    </td></tr></table><p><cite> Still to come: Chiplets, Configurable Spatial Accelerators, Computing on switch etc </cite></p>
+<pre>
+NUMA             
+Hardware threading                    NVLink, NVMe, NVSwitch
+Accelerators, Memory hierarchy        GPU Direct
+High-bandwidth memory                 Unified Virtual Memory
+Burst buffers, Vectorization
+</pre><p><cite> Still to come: Chiplets, Configurable Spatial Accelerators, Computing on switch etc </cite></p>
 
 </div>
 </div>
@@ -13342,12 +13343,10 @@ Research Assistant Professor <br />
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><cite> Performance variability influences the effectivness of the middleware </cite></p>
-<ul>
-<li>Fault tolerance</li>
-<li>Data movement</li>
-<li>Scheduling</li>
-</ul>
+<p><cite> Performance variability influences the effectivness of the middleware </cite><br />
+-Fault tolerance<br />
+-Data movement<br />
+-Scheduling</p>
 
 </div>
 </div>
@@ -13376,7 +13375,7 @@ Research Assistant Professor <br />
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><cite> Variability intrinsic to the input data</cite></p>
+<p><cite> Variability intrinsic to the code or due to the input data</cite></p>
 <p>Kalman-Filters for data assimilation in forecasting
 <br/> <small> - could run for two hours or for four hours, depending on the model’s initial conditions </small></p>
 <p>Simulations that use adaptive mesh refinement to refine the accuracy of their solutions
@@ -13401,24 +13400,9 @@ Research Assistant Professor <br />
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Performance-variability">Performance variability<a class="anchor-link" href="#Performance-variability">&#182;</a></h1><p><img src="figures/correlation.png"  width="300" align="right" valigh="top" /></p>
-<ol>
-<li>Intrinsic to the code</li>
-<li>Dependent on the input data <ul>
-<li>size or characteristics</li>
-</ul>
-</li>
-<li>Due to system failures</li>
-<li>Due to resource contention</li>
-<li>Due to other runtime decisions<ul>
-<li>scheduling policies</li>
-</ul>
-</li>
-</ol>
-<p><strong>Same input data and execution parameters</strong></p>
-<ul>
-<li>Multi Atlas has over 10x variation when running on one node (around 7% intrinsic to the code)</li>
-</ul>
+<h1 id="Performance-variability">Performance variability<a class="anchor-link" href="#Performance-variability">&#182;</a></h1><p><img src="figures/correlation.png"  width="700" align="right" valigh="top" /></p>
+<p>Same input data and execution parameters will result in similar executions
+<br /> <small> Variability intrinsic to the code is low </small></p>
 
 </div>
 </div>
@@ -13426,7 +13410,7 @@ Research Assistant Professor <br />
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Talk-today">Talk today<a class="anchor-link" href="#Talk-today">&#182;</a></h1><p><cite> Look at HPC from the perspective of neuroscience/medical applications </cite></p>
+<h1 id="Rest-of-the-talk">Rest of the talk<a class="anchor-link" href="#Rest-of-the-talk">&#182;</a></h1><p><cite> Look at HPC from the perspective of neuroscience/medical applications </cite></p>
 <p>Directions:</p>
 <p><strong>(1) Understand performance variability</strong></p>
 <ul>
@@ -13444,13 +13428,7 @@ Research Assistant Professor <br />
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p><img src="figures/sch.png" width="250" align="right" /></p>
-<h1 id="Exploratory-applications">Exploratory applications<a class="anchor-link" href="#Exploratory-applications">&#182;</a></h1><h2 id="Walltime-behavior-patterns">Walltime behavior patterns<a class="anchor-link" href="#Walltime-behavior-patterns">&#182;</a></h2>
-</div>
-</div>
-</div><div class="fragment">
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Exploratory-applications">Exploratory applications<a class="anchor-link" href="#Exploratory-applications">&#182;</a></h1><h2 id="Walltime-behavior-patterns">Walltime behavior patterns<a class="anchor-link" href="#Walltime-behavior-patterns">&#182;</a></h2><p><br/></p>
 <p><strong>Direction 1</strong>: Optimize the way emerging applications use current scheduling systems</p>
 <ul>
 <li>Automating the resorce estimation provided by users <code>MASI VU</code></li>
@@ -13463,14 +13441,14 @@ Research Assistant Professor <br />
 
 </div>
 </div>
-</div></div></section><section>
+</div></section><section>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="Understanding-the-code">Understanding the code<a class="anchor-link" href="#Understanding-the-code">&#182;</a></h1><p><img src="figures/multiatlas_workflow.jpg" width="300" align="right" /></p>
-<p><cite> Test case: Multi Atlas (whole brain segmentation) </cite> <br/>
+<p><cite> Test case: Multi Atlas (whole brain segmentation) </cite> <br/><br/>
 Execution times between one day and one week.<br/>
-Machine learning to predict the execution time<br/><br/></p>
+Machine learning to predict the execution time<br/><br/><br/></p>
 <p><img src="figures/multiatlas_corr.png" width="300" align="left" />
 <img src="figures/multiatlas_prediction.png" width="350" /></p>
 
@@ -13484,8 +13462,8 @@ Machine learning to predict the execution time<br/><br/></p>
 <li>Multi Atlas went through 4 major versions in the past 2 years</li>
 <li>Multiple versions are running at the same time</li>
 </ul>
-<p><img src="figures/Temporal_Lobe_v3.png" width="400" align="left" />
-<img src="figures/fMRI_v3.png" width="400" /></p>
+<p><img src="figures/Temporal_Lobe_v3.png" width="420" align="left" />
+<img src="figures/fMRI_v3.png" width="420"  align="right" /></p>
 
 </div>
 </div>
@@ -13494,7 +13472,7 @@ Machine learning to predict the execution time<br/><br/></p>
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="Resource-estimation">Resource estimation<a class="anchor-link" href="#Resource-estimation">&#182;</a></h1><p>Often the execution time of an application is unknown before it runs</p>
-<p><img src="figures/cdf_traces.png" width="800" /></p>
+<p><img src="figures/cdf_traces.png" width="850" /></p>
 <p>In our previous work we provide the optimal <strong>sequence of requests</strong> based on: (i) a model of the applications; (ii) a model of the platforms; (iii) resiliency schemes available</p>
 
 </div>
@@ -13503,7 +13481,8 @@ Machine learning to predict the execution time<br/><br/></p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Example-sequence-of-requests">Example sequence of requests<a class="anchor-link" href="#Example-sequence-of-requests">&#182;</a></h1><p>For the job with walltime <strong>between 2h and 98h</strong>:<br/>
+<h1 id="Example-sequence-of-requests">Example sequence of requests<a class="anchor-link" href="#Example-sequence-of-requests">&#182;</a></h1><p><br/>
+For the job with walltime <strong>between 2h and 98h</strong>:<br/>
 <small>(assuming it cannot use checkpointing)</small></p>
 <p><strong>Strategy:</strong> t1 = 5h, t2 = 40h, t3 = 60h, t4 = 98h.</p>
 <p><strong>If the job is 33h:</strong></p>
@@ -13511,9 +13490,10 @@ Machine learning to predict the execution time<br/><br/></p>
 <li>We run the 5h reservation; it fails</li>
 <li>Then we run the 40h; it succeeds.</li>
 </ol>
-<p><cite>Total cost is the cost for both reservations</cite><br/>
+<p><cite>Total cost is the cost for both reservations</cite><br/><br/>
 <small>More information in our paper:<br/>
-Ana Gainaru, Guillaume Pallez, Hongyang Sun, Padma Raghavan: *Speculative Scheduling for Stochastic HPC Applications*. ICPP 2019: 32:1-32:10</small></p>
+Ana Gainaru, Guillaume Pallez, Hongyang Sun, Padma Raghavan: <i>Speculative Scheduling for Stochastic HPC Applications</i>. ICPP 2019: 32:1-32:10
+</small></p>
 
 </div>
 </div>
@@ -13521,11 +13501,11 @@ Ana Gainaru, Guillaume Pallez, Hongyang Sun, Padma Raghavan: *Speculative Schedu
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Robustness?">Robustness?<a class="anchor-link" href="#Robustness?">&#182;</a></h1><p><img src="figures/estimates2.png" width="300" align="right" /></p>
-<p><cite> It seems to work, but how do you know the job distribution? </cite><br/>
+<h1 id="Robustness?">Robustness?<a class="anchor-link" href="#Robustness?">&#182;</a></h1><p><cite> It seems to work, but how do you know the job distribution? </cite><br/><br/>
 Dealing with incomplete/low volume of information?<br/>
-<strong>Next step</strong> let's consider we know N previous runs for an app</p>
-<h3 id="Reservation-strategies">Reservation strategies<a class="anchor-link" href="#Reservation-strategies">&#182;</a></h3><blockquote><p><strong>Strat. 1 (Discrete):</strong> Use those N elements to compute a reservation strategy;</p>
+<strong>Next step:</strong> let's consider we know N previous runs for an app</p>
+<p><img src="figures/estimates2.png" width="300" align="right" /></p>
+<h3 id="Reservation-strategies">Reservation strategies<a class="anchor-link" href="#Reservation-strategies">&#182;</a></h3><blockquote><p><strong>Strat. 1 (Discrete):</strong> Use the logged walltimes to compute a reservation strategy;</p>
 <p><strong>Strat. 2 (Continuous):</strong> Approximate discrete cumulative function with a continuous cumulative function; use this new distribution to compute a reservation
 strategy.</p>
 </blockquote>
@@ -13536,7 +13516,8 @@ strategy.</p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Computing-the-discrete-CDF">Computing the discrete CDF<a class="anchor-link" href="#Computing-the-discrete-CDF">&#182;</a></h1><p><img src="figures/cdf_discrete.png" width="800" /></p>
+<h1 id="Computing-the-discrete-CDF">Computing the discrete CDF<a class="anchor-link" href="#Computing-the-discrete-CDF">&#182;</a></h1><p><br/>
+<img src="figures/cdf_discrete.png" width="800" /></p>
 
 </div>
 </div>
@@ -13563,13 +13544,13 @@ strategy.</p>
 <h1 id="Sequence-of-requests">Sequence of requests<a class="anchor-link" href="#Sequence-of-requests">&#182;</a></h1><p><img src="figures/discrete_sequence.png" width="400" align="left" /></p>
 <p>For a job of length t, we define the cost of a
 reservation t1 as:</p>
-<p><img src="figures/discrete_cost.png" width="200" /></p>
+<p><img src="figures/discrete_cost.png" width="300" /></p>
 <ul>
-<li>Reservation cost: what is paid for the reservation</li>
-<li>Utilization cost: what is paid for the usage</li>
-<li>Setup cost (mix of Reservation/Utilization)</li>
+<li>Reservation cost: alpha</li>
+<li>Utilization cost: beta</li>
+<li>Setup cost: gamma</li>
 </ul>
-<p><cite> Expected Makespan Loss (EML) The relative cost loss of a sequence compared to the optimal </cite></p>
+<p><cite> Expected Loss (ML) The relative cost loss of a sequence compared to the optimal </cite></p>
 
 </div>
 </div>
@@ -13610,10 +13591,12 @@ reservation t1 as:</p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="SLANT-application">SLANT application<a class="anchor-link" href="#SLANT-application">&#182;</a></h1><p>Spatially Localized Atlas Network Tiles (SLANT)<br/> 
+<h1 id="SLANT-application">SLANT application<a class="anchor-link" href="#SLANT-application">&#182;</a></h1><p><br/> 
+Spatially Localized Atlas Network Tiles<br/> 
 <small> multiple independent 3D fully convolutional network (FCN)
 for high-resolution whole brain segmentation </small></p>
-<p><img src="figures/slant_app_profile.png" width="700" /></p>
+<p><br/> 
+<img src="figures/slant_app_profile.png" width="700" /></p>
 
 </div>
 </div>
@@ -13621,9 +13604,11 @@ for high-resolution whole brain segmentation </small></p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="SLANT-memory-footprint">SLANT memory footprint<a class="anchor-link" href="#SLANT-memory-footprint">&#182;</a></h1><p>Job decomposition in tasks based on raw data of a
+<h1 id="SLANT-memory-footprint">SLANT memory footprint<a class="anchor-link" href="#SLANT-memory-footprint">&#182;</a></h1><p><br/>
+Job decomposition in tasks based on raw data of a
 memory footprint</p>
-<p><img src="figures/slant_memory.png" width="600" /></p>
+<p><br/>
+<img src="figures/slant_memory.png" width="600" /></p>
 
 </div>
 </div>
@@ -13632,9 +13617,9 @@ memory footprint</p>
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="Application-model">Application model<a class="anchor-link" href="#Application-model">&#182;</a></h1><p>We model an application A as a chain of n tasks:
-A = j1 → j2 → · · · → jn ,
-such that j_i cannot be executed until j_i−1 is finished.</p>
-<p>Each task j_i is defined by two parameters: an <strong>execution time</strong> and a <strong>peak memory footprint</strong>.</p>
+A = j1 → j2 → · · · → jn <br/>
+Task ji cannot be executed until the previous task is finished.</p>
+<p>Each task is defined by two parameters: an <strong>execution time</strong> and a <strong>peak memory footprint</strong>.</p>
 <ul>
 <li>Memory footprint is not correlated to the input data</li>
 <li>Walltime depends on properties of the input data, so it's characterized by a probability distribution of density</li>
@@ -13648,7 +13633,7 @@ such that j_i cannot be executed until j_i−1 is finished.</p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Using-the-model-to-adapt-the-sequences-of-requests">Using the model to adapt the sequences of requests<a class="anchor-link" href="#Using-the-model-to-adapt-the-sequences-of-requests">&#182;</a></h1><p><img src="figures/slant_run.png" width="500" /></p>
+<h1 id="Using-the-model-to-adapt-the-sequences-of-requests">Using the model to adapt the sequences of requests<a class="anchor-link" href="#Using-the-model-to-adapt-the-sequences-of-requests">&#182;</a></h1><p><img src="figures/slant_run.png" width="500" align="center" /></p>
 
 </div>
 </div>
@@ -13656,7 +13641,7 @@ such that j_i cannot be executed until j_i−1 is finished.</p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><img src="figures/slant_results.png" width="800" /></p>
+<p><img src="figures/slant_results.png" width="700" /></p>
 
 </div>
 </div>
@@ -13665,10 +13650,10 @@ such that j_i cannot be executed until j_i−1 is finished.</p>
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="Code">Code<a class="anchor-link" href="#Code">&#182;</a></h1><p><img src="https://raw.githubusercontent.com/anagainaru/iSBatch/master/docs/logo.png" alt="iSBatch" width="200" align="left" /></p>
-<p>Code that is returning the sequence of request used by Vanderbilt: <br />
+<p>Code that is returning the sequence of request: <br />
 <a href="https://github.com/anagainaru/iSBatch">https://github.com/anagainaru/iSBatch</a>
-<br/>
-<em>The memory footprint model is not yet tested (dynamic_cr branch)</em>  <br /><br/></p>
+<br/><small>
+    <i>The memory footprint model is not yet tested (dynamic_cr branch)</i></small>  <br /><br/><br /></p>
 <p><small> Speculative Scheduling Techniques for Stochastic HPC Applications <br /> [ICPP 2019] </small></p>
 <p><small> Making Speculative Scheduling Robust to Incomplete Data <br />
 [SCALA@SC 2019] </small></p>
@@ -13678,7 +13663,7 @@ and their Impact on Reservation Strategies<br />
 
 </div>
 </div>
-</div></section><section>
+</div></section></section><section><section>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
