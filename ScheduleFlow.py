@@ -12,6 +12,16 @@ import os
 import numpy as np
 import _intScheduleFlow
 from _intScheduleFlow import JobChangeType
+from enum import IntEnum
+
+
+class SchedulingPolicy(IntEnum):
+    ''' Enumeration class to hold the policy types 
+    for scheduling '''
+
+    LJF = 0
+    SJF = 1
+    FCFS = 2
 
 
 class Simulator():
@@ -666,7 +676,8 @@ class Scheduler(object):
 class BatchScheduler(Scheduler):
     ''' Reservation based scheduler (default LJF batch scheduler) '''
 
-    def __init__(self, system, batch_size=100, total_queues=1, logger=None):
+    def __init__(self, system, batch_size=100, total_queues=1, logger=None,
+                 policy=SchedulingPolicy.LJF):
         ''' Constructor method extends the base to specify the batch size,
         i.e. number of jobs in the wait queue to examime to create the
         reservation. Jobs in the waiting queue are ordered based on their
@@ -675,6 +686,11 @@ class BatchScheduler(Scheduler):
         super(BatchScheduler, self).__init__(system, logger,
                                              total_queues=total_queues)
         self.batch_size = batch_size
+        self.__set_sorted_jobs = self.__get_LJF
+        if policy == SchedulingPolicy.SJF:
+            self.__set_sorted_jobs = self.__get_SJF
+        elif policy == SchedulingPolicy.FCFS:
+            self.__set_sorted_jobs = self.__get_FCFS
 
     def __str__(self):
         return "Batch "+super(BatchScheduler, self).__str__()
@@ -682,25 +698,51 @@ class BatchScheduler(Scheduler):
     def __repr__(self):
         return "Batch "+super(BatchScheduler, self).__repr__()
 
+    def __get_LJF(self, batch_size, queue):
+        # get jobs in the queue ordered by their submission times
+        batch_list = sorted(queue, key=lambda job: job.submission_time)
+
+        # get all jobs that share submission times that could be included
+        # in the current batch
+        max_submission = max([job.submission_time for job in
+                              batch_list[:batch_size]])
+        batch_list = [job for job in batch_list if
+                      job.submission_time <= max_submission]
+        # sort the list by the size of the job (nodes*request_walltime)
+        batch_sorted = sorted(batch_list, key=lambda job:
+                              job.nodes * job.get_current_total_request_time(),
+                              reverse=True)
+        return batch_sorted
+
+    def __get_SJF(self, batch_size, queue):
+        # get jobs in the queue ordered by their submission times
+        batch_list = sorted(queue, key=lambda job: job.submission_time)
+
+        # get all jobs that share submission times that could be included
+        # in the current batch
+        min_submission = min([job.submission_time for job in
+                              batch_list[:batch_size]])
+        batch_list = [job for job in batch_list if
+                      job.submission_time <= min_submission]
+        # sort the list by the size of the job (nodes*request_walltime)
+        batch_sorted = sorted(batch_list, key=lambda job:
+                              job.nodes * job.get_current_total_request_time())
+        return batch_sorted
+
+    def __get_FCFS(self, batch_size, queue):
+	# get jobs in the queue ordered by their submission times
+        return list(queue)[:batch_size]
+
     def __get_jobs(self, queue, batch_size):
         ''' Method that returns the first batch_size jobs (by submission)
         in the queue ordered by their volume '''
 
         if len(queue) == 0:
             return []
-        # get jobs in the queue ordered by their submission times
-        batch_list = sorted(queue, key=lambda job: job.submission_time)
-        # ger all jobs that share submission times that could be included
-        # in the current batch
-        max_submission = max([job.submission_time for job in
-                              batch_list[:batch_size]])
-        batch_list = [job for job in batch_list if
-                      job.submission_time <= max_submission]
 
         # sort the list by the size of the job (nodes*request_walltime)
-        batch_sorted = sorted(batch_list, key=lambda job:
-                              job.nodes * job.get_current_total_request_time(),
-                              reverse=True)
+        batch_sorted = self.__set_sorted_jobs(batch_size, queue)
+
         # return the first batch_size entries
         return batch_sorted[:batch_size]
 
@@ -837,11 +879,17 @@ class BatchScheduler(Scheduler):
 class OnlineScheduler(Scheduler):
     ''' Online scheduler (default LJF completly online) '''
 
-    def __init__(self, system, total_queues=1, logger=None):
+    def __init__(self, system, total_queues=1, logger=None,
+                 policy=SchedulingPolicy.LJF):
         ''' Constructor method forces the baso to use only one
         waiting queue '''
         super(OnlineScheduler, self).__init__(system, logger,
                                               total_queues)
+        self.__get_next_queued_job = self.__get_LJF
+        if policy == SchedulingPolicy.SJF:
+            self.__get_next_queued_job = self.__get_SJF
+        elif policy == SchedulingPolicy.FCFS:
+            self.__get_next_queued_job = self.__get_FCFS
 
     def __str__(self):
         return "Online "+super(OnlineScheduler, self).__str__()
@@ -857,8 +905,8 @@ class OnlineScheduler(Scheduler):
         self.gaps_in_schedule.completely_remove(job)
         return 0  # trigger a new schedule starting now (timestamp 0)
 
-    def __get_next_queued_job(self, nodes, queue):
-        ''' Method to extract the largest volume job from the queue
+    def __get_LJF(self, nodes, queue):
+        ''' Method to extract the largest volume job from a given queue
         in the waiting queue that fits the space given by the `nodes` '''
 
         try:
@@ -875,6 +923,35 @@ class OnlineScheduler(Scheduler):
         min_time = min([job.submission_time for job in largest_jobs])
         return [job for job in largest_jobs
                 if job.submission_time == min_time][0]
+
+    def __get_SJF(self, nodes, queue):
+        ''' Method to extract the smallest volume job from a given queue
+        in the waiting queue that fits the space given by the `nodes` '''
+
+        try:
+            min_volume = min([job.nodes * job.get_current_total_request_time()
+                              for job in queue if job.nodes <= nodes])
+            smallest_jobs = [
+                job for job in queue if job.nodes *
+                job.get_current_total_request_time() == min_volume
+                and job.nodes <= nodes]
+        except BaseException:
+            # there are no jobs that fit the given space
+            return -1
+        # out of the largest jobs get the one submitted first
+        min_time = min([job.submission_time for job in smallest_jobs])
+        return [job for job in smallest_jobs
+                if job.submission_time == min_time][0]
+
+    def __get_FCFS(self, nodes, queue):
+        try:
+            min_time = min([job.submission_time for job in queue
+                            if job.nodes <= nodes])
+        except BaseException:
+            # there are no jobs that fit the given space
+            return -1
+        return [job for job in queue if job.nodes <= nodes and
+                job.submission_time == min_time][0] 
 
     def get_next_job(self, nodes):
         ''' Method to extract the largest volume job (nodes * requested time)
