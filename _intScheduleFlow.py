@@ -863,6 +863,11 @@ class VizualizationEngine():
             "delete"])
         return self.__limitx
 
+    def __order_jobs_for_gif(self, run_list):
+        sort_list = sorted(
+            run_list, key=lambda i: (-i[0], i[1]-i[0]), reverse=True)
+        return sort_list
+
     def __generate_animation_files(self, filename):
         ''' Generate a temp list of (start, end, procs,
         requested walltime, job_id, color) used to create
@@ -871,7 +876,10 @@ class VizualizationEngine():
         run_list = []
         for job in self.__execution_log:
             run_list += self.__get_job_runs(self.__execution_log[job], job)
-        run_list.sort()
+
+        # order list of jobs by start time (ascending) and length (descending)
+        run_list = self.__order_jobs_for_gif(run_list)
+
         sliced_list = self.__get_sliced_list(run_list)
 
         tex_generator = TexGenerator(sliced_list, run_list,
