@@ -894,6 +894,26 @@ class VizualizationEngine():
                 run_list[i][0] <= start and
                 run_list[i][1] >= end]
 
+    def __merge_slices(self, sliced_list):
+        ''' Merge slices for the same job if they are on the same
+            horizontal line '''
+
+        for job_slices in sliced_list:
+            del_list = []
+            for i in range(1, len(job_slices)):
+                # if this slice continues the previous
+                if job_slices[i][0] == job_slices[i - 1][1]:
+                    # if they are on the same horizontal line
+                    if job_slices[i][6] == job_slices[i - 1][6]:
+                        del_list.append(i)
+                        job_slices[i - 1][1] = job_slices[i][1]
+
+            del_list.sort(reverse=True)
+            for i in del_list:
+                del job_slices[i]
+
+        return sliced_list
+
     def __get_sliced_list(self, run_list):
         ''' Generate a list of (start, end, procs, request_end,
         job_id, failure_count, starty) for each job instance for
@@ -911,12 +931,13 @@ class VizualizationEngine():
             starty = 0
             for idx in idx_list:
                 sliced_list[idx].append(
-                    (event_list[i], event_list[i + 1],
+                    [event_list[i], event_list[i + 1],
                      run_list[idx][2], run_list[idx][3] +
                      run_list[idx][0], run_list[idx][4],
-                     run_list[idx][5], starty))
+                     run_list[idx][5], starty])
                 starty += run_list[idx][2]
-        return sliced_list
+
+        return self.__merge_slices(sliced_list)
 
     def __get_job_runs(self, execution_list, job):
         ''' Generate a list of (start, end, procs, request_time,
