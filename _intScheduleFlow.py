@@ -863,6 +863,11 @@ class VizualizationEngine():
             "delete"])
         return self.__limitx
 
+    def __order_jobs_for_gif(self, run_list):
+        sort_list = sorted(
+            run_list, key=lambda i: (-i[0], i[1]-i[0]), reverse=True)
+        return sort_list
+
     def __generate_animation_files(self, filename):
         ''' Generate a temp list of (start, end, procs,
         requested walltime, job_id, color) used to create
@@ -871,7 +876,10 @@ class VizualizationEngine():
         run_list = []
         for job in self.__execution_log:
             run_list += self.__get_job_runs(self.__execution_log[job], job)
-        run_list.sort()
+
+        # order list of jobs by start time (ascending) and length (descending)
+        run_list = self.__order_jobs_for_gif(run_list)
+
         sliced_list = self.__get_sliced_list(run_list)
 
         tex_generator = TexGenerator(sliced_list, run_list,
@@ -885,6 +893,26 @@ class VizualizationEngine():
         return [i for i in range(len(run_list)) if
                 run_list[i][0] <= start and
                 run_list[i][1] >= end]
+
+    def __merge_slices(self, sliced_list):
+        ''' Merge slices for the same job if they are on the same
+            horizontal line '''
+
+        for job_slices in sliced_list:
+            del_list = []
+            for i in range(1, len(job_slices)):
+                # if this slice continues the previous
+                if job_slices[i][0] == job_slices[i - 1][1]:
+                    # if they are on the same horizontal line
+                    if job_slices[i][6] == job_slices[i - 1][6]:
+                        del_list.append(i)
+                        job_slices[i - 1][1] = job_slices[i][1]
+
+            del_list.sort(reverse=True)
+            for i in del_list:
+                del job_slices[i]
+
+        return sliced_list
 
     def __get_sliced_list(self, run_list):
         ''' Generate a list of (start, end, procs, request_end,
@@ -903,12 +931,13 @@ class VizualizationEngine():
             starty = 0
             for idx in idx_list:
                 sliced_list[idx].append(
-                    (event_list[i], event_list[i + 1],
+                    [event_list[i], event_list[i + 1],
                      run_list[idx][2], run_list[idx][3] +
                      run_list[idx][0], run_list[idx][4],
-                     run_list[idx][5], starty))
+                     run_list[idx][5], starty])
                 starty += run_list[idx][2]
-        return sliced_list
+
+        return self.__merge_slices(sliced_list)
 
     def __get_job_runs(self, execution_list, job):
         ''' Generate a list of (start, end, procs, request_time,
