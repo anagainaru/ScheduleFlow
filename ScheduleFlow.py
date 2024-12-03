@@ -270,6 +270,9 @@ class Simulator():
                 self.__scenario_name)
             self.logger.info(r"GIF generated draw/%s" % (
                 self.__scenario_name))
+
+        if metrics == "execution_log":
+            return self.__execution_log
         return {i: average_stats[i]/self.__loops for i in average_stats}
 
 
@@ -733,8 +736,9 @@ class BatchScheduler(Scheduler):
         return batch_sorted
 
     def __get_FCFS(self, batch_size, queue):
-	# get jobs in the queue ordered by their submission times
-        return list(queue)[:batch_size]
+        # get jobs in the queue ordered by their submission times
+        batch_list = sorted(queue, key=lambda job: job.submission_time)
+        return list(batch_list)[:batch_size]
 
     def __get_jobs(self, queue, batch_size):
         ''' Method that returns the first batch_size jobs (by submission)
