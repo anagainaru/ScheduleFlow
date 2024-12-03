@@ -278,7 +278,7 @@ class Application(object):
     all its running instances '''
 
     def __init__(self, nodes, submission_time, walltime,
-                 requested_walltimes, resubmit_factor=-1):
+                 requested_walltimes, resubmit_factor=-1, name="Unname"):
         ''' Constructor method takes the number of nodes required by the job,
         the submission time, the actual walltime, the requested walltime, a
         job id and a sequence of request times in case the job fails '''
@@ -298,6 +298,7 @@ class Application(object):
             'Number of nodes for a job must be > 0 : received %d' % (
             nodes)
 
+        self.name = name
         self.nodes = nodes
         self.submission_time = submission_time
         self.walltime = walltime
@@ -329,14 +330,16 @@ class Application(object):
         self.system = None
 
     def __str__(self):
-        return 'Job %d: %d nodes; %3.1f submission time; %3.1f total ' \
-               'execution time (%3.1f requested)' % (
-                       self.job_id, self.nodes, self.submission_time,
-                       self.walltime, self.request_walltime)
+        return 'Job (%s %d): %d nodes; %3.1f submission time; %3.1f ' \
+               'total execution time (%3.1f requested)' % (
+                       self.name, self.job_id, self.nodes,
+                       self.submission_time, self.walltime,
+                       self.request_walltime)
 
     def __repr__(self):
-        return 'Job(Nodes: %d, Submission: %3.1f, Walltime: %3.1f, ' \
-               'Request: %3.1f)' % (self.nodes,
+        return 'Job(%s, Nodes: %d, Submission: %3.1f, Walltime: %3.1f' \
+               ', Request: %3.1f)' % (self.name,
+                                    self.nodes,
                                     self.submission_time,
                                     self.walltime,
                                     self.request_walltime)

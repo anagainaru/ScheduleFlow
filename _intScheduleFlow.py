@@ -949,16 +949,22 @@ class VizualizationEngine():
             # check failed executions
             start = execution_list[i][0]
             end = execution_list[i][1]
+            fig_text = job.name
+            if fig_text == "Unname":
+                fig_text = job.job_id
             run_list.append((start, end, job.nodes,
-                             requested_time, job.job_id,
+                             requested_time, fig_text,
                              i + 1))
             requested_time = job.get_total_request_time(i + 1)
 
         # check succesful execution (last run)
+        fig_text = job.name
+        if fig_text == "Unname":
+            fig_text = job.job_id
         start = execution_list[len(execution_list) - 1][0]
         end = execution_list[len(execution_list) - 1][1]
         run_list.append((start, end, job.nodes,
-                         requested_time, job.job_id, 0))
+                         requested_time, fig_text, 0))
         return run_list
 
 
