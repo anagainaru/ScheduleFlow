@@ -15,13 +15,20 @@ from _intScheduleFlow import JobChangeType
 from enum import IntEnum
 
 
-class SchedulingPolicy(IntEnum):
+class SchedulingPriorityPolicy(IntEnum):
     ''' Enumeration class to hold the policy types 
     for scheduling '''
 
     LJF = 0
     SJF = 1
     FCFS = 2
+
+class SchedulingBackfillPolicy(IntEnum):
+    ''' Enumeration class to hold the policy types
+    for scheduling '''
+
+    Easy = 0
+    Conservative = 1
 
 
 class Simulator():
@@ -582,17 +589,31 @@ class System(object):
 
 
 class Scheduler(object):
-    ''' Base class that needs to be extended by all Scheduler classes '''
+    ''' Class that implements the scheduler functionality (i.e. choosing
+        what are the jobs scheduled to run and backfillinf jobs) '''
 
-    def __init__(self, system, logger=None, total_queues=1):
-        ''' Base construnction method that takes a System object '''
+    def __init__(self, system, batch_size=100, total_priority_queues=1,
+                 logger=None,
+                 priority_policy=SchedulingPriorityPolicy.FCFS,
+                 backfill_policy=SchedulingBackfillPolicy.Easy):
+        ''' Construnction method that takes a System object '''
         self.system = system
         self.waiting_queue = _intScheduleFlow.WaitingQueue(
-                total_queues=total_queues)
+                total_queues=total_priority_queues)
         self.running_jobs = set()
+        self.scheduled_jobs = set()
+        self.backfill_jobs = set()
         self.logger = logger or logging.getLogger(__name__)
         self.gaps_in_schedule = _intScheduleFlow.ScheduleGaps(
             system.get_total_nodes())
+
+        self.batch_size = batch_size
+        self.__set_sorted_jobs = self.__get_LJF
+        if policy == SchedulingPolicy.SJF:
+            self.__set_sorted_jobs = self.__get_SJF
+        elif policy == SchedulingPolicy.FCFS:
+            self.__set_sorted_jobs = self.__get_FCFS
+
 
     def __str__(self):
         return 'Scheduler: %s; %s; %d jobs running' % (
@@ -604,10 +625,11 @@ class Scheduler(object):
             len(self.running_jobs))
 
     def submit_job(self, job):
-        ''' Base method to add a job in the waiting queue '''
+        ''' Add a job in the waiting queue '''
 
         assert (job.nodes <= self.system.get_total_nodes()),\
-            "Submitted jobs cannot ask for more nodes that the system"
+            "Submitted jobs cannot ask for more nodes that the system \
+             capacity"
         job.assign_system(self.system)
         self.waiting_queue.add(job)
 
@@ -617,7 +639,7 @@ class Scheduler(object):
         self.running_jobs.add(job)
 
     def clear_job(self, job):
-        ''' Base method for clearing a job that was running in the system.
+        ''' Clearing a job that was running in the system.
         The method returns whether the scheduler requires a new scheduling
         cycle for chosing new jobs after this job end: -1 means no trigger
         is necessary; otherwise the relative timestamp is returned (e.g. a
