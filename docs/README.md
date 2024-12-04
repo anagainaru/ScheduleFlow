@@ -46,9 +46,11 @@ job failures : job response time : job stretch : job utilization : job wait time
 
 # Internals
 
-**Simulation object**
+**Simulator object**
   - Creating the scenario: links a scheduler and a workload to a simulation, as well as creates and initializes the Stats and the Viz engines.
   - Running a scenario: goes over as many loops as given in the simulation. In each loop it creates a Runtime object with the workload and executes it over the scheduler.
+
+![Internal](https://github.com/anagainaru/ScheduleFlow/blob/documentation/docs/wiki/workflow.png)
 
 **Runtime object**
 
@@ -64,6 +66,17 @@ During the execution over a scheduler, it loops over the EventQueue (4 types of 
     - For `JobStart` events: allocate the job on the system and create a `JobEnd` event with the timestamp given by the walltime/requested time
     - For `TriggerSchedule` events: ask the scheduler to trigger a new scheduling and add a `JobStart` events for all the jobs chosen by the scheduler for execution
     - For `JobEnd` events: if the walltime was over the requested time (and resubmit is on) add a new `JobSubmission` event with the current timestamp. If the walltime is lower than the request time, look for backfilling jobs and create `JobStart` events for all returned by the scheduler
-   
+
+*Note* Depending on the scheduler a JobEnd event could trigger a new schedule at the end.
+
 **Scheduler object**
 
+Maintaines one or multiple waiting queues and has 4 main functions implemented:
+- The function deciding if a job fits into a schedule
+- The function to trigger a new schedule
+- The function that finds backfilling jobs for a given gap
+- The function that decides if a new schedule is needed for the end of a job
+
+Each type of scheduler has different strategies (Batch/Online) and each policy influences the strategies: 
+ - policy for priorities influences the order in which jobs are scheduled
+ - policy for backfilling influences the order in which backfilling jobs are chosen
