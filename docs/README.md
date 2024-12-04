@@ -46,10 +46,24 @@ job failures : job response time : job stretch : job utilization : job wait time
 
 # Internals
 
-Runtime class responsible for coordinating the submission and execution process for all the jobs in a workload
+**Simulation object**
+  - Creating the scenario: links a scheduler and a workload to a simulation, as well as creates and initializes the Stats and the Viz engines.
+  - Running a scenario: goes over as many loops as given in the simulation. In each loop it creates a Runtime object with the workload and executes it over the scheduler.
 
-Runtime object is created at the beginning of the execution.
+**Runtime object**
 
-Constructor method creates the job submission events for all the jobs in the workload. 
+The Runtime class uses an event based approach and is responsible for coordinating the submission and execution process for all the jobs in a workload
+  - Keeps track of scheluded and finished jobs
+  - Uses an EventQueue object to track events in the simulation {(time, event)}
+  - Creates in the constructor an event of type `JobSubmission` for all applications in a workload with the submission time
 
+During the execution over a scheduler, it loops over the EventQueue (4 types of events: JobSubmission, JobStart, JobEnd, TriggerSchedule):
+  - It extracts all items in the queue that share the lowest timestamp
+  - Moves the current timestamp to the one given by the new events and inspects all the events in the list
+    - For `JobSubmission` events: check if the job can fit in the current schedule (decided by the Scheduler) and if yes, create a `JobStart` event for the job
+    - For `JobStart` events: allocate the job on the system and create a `JobEnd` event with the timestamp given by the walltime/requested time
+    - For `TriggerSchedule` events: ask the scheduler to trigger a new scheduling and add a `JobStart` events for all the jobs chosen by the scheduler for execution
+    - For `JobEnd` events: if the walltime was over the requested time (and resubmit is on) add a new `JobSubmission` event with the current timestamp. If the walltime is lower than the request time, look for backfilling jobs and create `JobStart` events for all returned by the scheduler
+   
+**Scheduler object**
 
