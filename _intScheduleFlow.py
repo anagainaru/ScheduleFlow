@@ -900,13 +900,16 @@ class VizualizationEngine():
 
         for job_slices in sliced_list:
             del_list = []
+            last_keep_index = 0
             for i in range(1, len(job_slices)):
                 # if this slice continues the previous
                 if job_slices[i][0] == job_slices[i - 1][1]:
                     # if they are on the same horizontal line
                     if job_slices[i][6] == job_slices[i - 1][6]:
                         del_list.append(i)
-                        job_slices[i - 1][1] = job_slices[i][1]
+                        job_slices[last_keep_index][1] = job_slices[i][1]
+                else:
+                    last_keep_index += 1
 
             del_list.sort(reverse=True)
             for i in del_list:
