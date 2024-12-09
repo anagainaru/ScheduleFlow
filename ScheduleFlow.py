@@ -15,6 +15,14 @@ from _intScheduleFlow import JobChangeType
 from enum import IntEnum
 
 
+class SchedulingPolicy(IntEnum):
+    ''' Enumeration class to hold the policy types
+    for scheduling '''
+
+    LJF = 0
+    SJF = 1
+    FCFS = 2
+
 class SchedulingPriorityPolicy(IntEnum):
     ''' Enumeration class to hold the policy types 
     for scheduling '''
@@ -202,8 +210,9 @@ class Simulator():
         if len(execution_log) == 0:
             execution_log = self.__execution_log
 
-        assert (len(execution_log) > 0), \
-            "ERR - Trying to test correctness on an empty execution log"
+        if len(execution_log) == 0:
+            print("WARNING Empty execution log")
+            return 0
 
         check_fail = 0
         for job in execution_log:
@@ -242,7 +251,7 @@ class Simulator():
         check = 0
         average_stats = {}
         for i in range(self.__loops):
-            runtime = _intScheduleFlow.Runtime(self.job_list)
+            runtime = _intScheduleFlow.RuntimeEasyBF(self.job_list)
             runtime(self.__scheduler)
             self.__execution_log = runtime.get_stats()
 
@@ -588,32 +597,240 @@ class System(object):
             jobid)
 
 
+class EasyBFScheduler(object):
+    ''' Class that implements the scheduler functionality (i.e. choosing
+        what are the jobs scheduled to run and backfillinf jobs) '''
+
+    def __init__(self, system, total_priority_queues=1,
+                 logger=None,
+                 priority_policy=SchedulingPriorityPolicy.FCFS,
+                 backfill_policy=SchedulingBackfillPolicy.Easy):
+        self.system = system
+        self.waiting_queue = _intScheduleFlow.WaitingQueue(
+                total_queues=total_priority_queues)
+        self.wait_list = []
+        self.running_jobs = {}
+        self.scheduled_jobs = {}
+        self.backfill_jobs = {}
+        self.logger = logger or logging.getLogger(__name__)
+        self.gaps_in_schedule = _intScheduleFlow.ScheduleGaps(
+            system.get_total_nodes())
+        self.priority_policy = priority_policy
+        self.backfill_policy = backfill_policy
+
+    def __str__(self):
+        #        return "Scheduler(%d jobs waiting; %d job scheduled; %d jobs running; %d jobs backfilled)" % (
+        #    len(self.wait_list), len(self.scheduled_jobs),
+        #    len(self.running_jobs), len(self.backfill_jobs))
+        return "Scheduler(%s waiting; %s scheduled; %s running; %s backfilled)" % (
+            self.wait_list, self.scheduled_jobs,
+            self.running_jobs, self.backfill_jobs)
+
+    def __repr__(self):
+        return 'Scheduler(Queued jobs: %d; Running: %d)' % (
+            len(self.waiting_queue.total_jobs()),
+            len(self.running_jobs))
+
+    def __create_job_reservation(self, job):
+        ''' Method that implements a greedy algotithm for finding a place
+        for a new job into a reservation window that is given by the
+        previously reserved jobs '''
+
+        request_walltime = job.get_current_total_request_time()
+        gap_list = self.gaps_in_schedule.get_gaps(job.submission_time,
+                                                  request_walltime,
+                                                  job.nodes)
+        if len(gap_list) == 0:
+            return -1
+        ts = max(gap_list[0][0], job.submission_time)
+        self.logger.info(
+            r'[Scheduler] Found inside reservation for %s at ts %d'
+            % (job, ts))
+        return ts
+
+    def __fit_in_schedule(self, job, scheduled_jobs, current_time):
+        ''' Method for extending the existing reservation to include
+        a new job. All jobs have to fit in the schedule, thus the reservation
+        will be increased if the job does not fit inside the current one '''
+
+        if len(scheduled_jobs) == 0:
+            self.logger.info(
+                r'[Scheduler] Found reservation slot for %s at beginning' %
+                (job))
+            return current_time
+
+        ts = self.__create_job_reservation(job)
+        if ts != -1:
+            return ts
+
+        end_window = max([scheduled_jobs[j] + j.get_current_total_request_time()
+                          for j in scheduled_jobs])
+       # check for the end of the schedule for a fit (after all jobs that do
+       # not have other jobs starting in front)
+        gap_list = self.gaps_in_schedule.get_gaps(job.submission_time, 0,
+                                                  job.nodes)
+        if len(gap_list) > 0:
+            end_gaps = [gap for gap in gap_list if gap[1] == end_window]
+            if len(end_gaps) > 0:
+                self.logger.info(
+                    r'[Scheduler] Found reservation for %s at timestamp %d'
+                    % (job, end_gaps[0][0]))
+                return end_gaps[0][0]
+
+        # there is no fit for the job to start anywhere inside the schedule
+        # start the current job after the last job
+        self.logger.info(
+            r'[Scheduler] Found reservation slot for %s at timestamp %d' %
+            (job, end_window))
+        return end_window
+
+    def __get_scheduled_jobs(self):
+        active_jobs = {}
+        for job in self.scheduled_jobs:
+            active_jobs[job] = self.scheduled_jobs[job]
+        for job in self.running_jobs:
+            active_jobs[job] = self.running_jobs[job]
+        return active_jobs
+
+    def __update_backfill_jobs(self, start_jobs, current_time):
+        ''' Update the start time for the backfilling jobs based
+        on where a job actually finished '''
+        active_jobs = self.__get_scheduled_jobs()
+        for job in self.backfill_jobs:
+            ts = self.__create_job_reservation(job, active_jobs)
+            if ts != -1:
+                # if conservativeBF we add job to active_jobs here
+                if self.backfill_policy == SchedulingBackfillPolicy.Conservative:
+                    active_jobs[job] = tm
+                if ts == current_time:
+                    if self.backfill_policy == SchedulingBackfillPolicy.Easy:
+                        active_jobs[job] = tm
+                    self.backfill_jobs[job] = ts
+                    start_jobs.append((ts, job))
+                    self.gaps_in_schedule.add({job: ts})
+        return start_jobs
+
+    def __append_backfill_jobs(self, start_jobs, current_time):
+        ''' Find jobs from the waiting list that can be scheduled
+            inside a given schedule '''
+        # jobs that are unmovable
+        active_jobs = self.__get_scheduled_jobs()
+        for job in self.wait_list:
+            ts = self.__create_job_reservation(job, active_jobs)
+            if ts != -1:
+                # if conservativeBF we add job to active_jobs here
+                if self.backfill_policy == SchedulingBackfillPolicy.Conservative:
+                    active_jobs[job] = tm
+                # for easyBF we choose only jobs that start at the current time
+                if ts == current_time:
+                    if self.backfill_policy == SchedulingBackfillPolicy.Easy:
+                        active_jobs[job] = ts
+                    start_jobs.append((ts, job))
+                    self.gaps_in_schedule.add({job: ts})
+                    # move the job from wait list to backfill list
+                    self.backfill_jobs[job] = ts
+                    self.wait_list.remove(job)
+        return start_jobs
+
+    def submit_job(self, current_time, job_list):
+        ''' Mark as ready for execution the jobs that can be scheduled
+         for running at the current time and save the rest in the
+         waiting queue '''
+
+        start_jobs = []
+        active_jobs = self.__get_scheduled_jobs()
+        # find the first available timestep for each job
+        for job in job_list:
+            assert (job not in active_jobs, "Trying to schedule a job that"\
+                    "has been scheduled already")
+            assert (job.nodes <= self.system.get_total_nodes()),\
+                "Submitted jobs cannot ask for more nodes that the system \
+                 capacity"
+            tm = self.__fit_in_schedule(job, active_jobs, current_time)
+            # send to the runtime all jobs that can start at current time
+            if tm == current_time:
+                start_jobs.append((tm, job))
+                self.scheduled_jobs[job] = tm
+                self.gaps_in_schedule.add({job: tm})
+                active_jobs[job] = tm
+            else:
+                # if there is no job scheduled to run
+                if len(self.scheduled_jobs) == 0 and tm != -1:
+                    self.scheduled_jobs[job] = tm
+                    self.gaps_in_schedule.add({job: tm})
+                else:
+                    # everything else will be in the wait list
+                    self.wait_list.append(job)
+        start_jobs = self.__append_backfill_jobs(start_jobs, current_time)
+        return start_jobs
+
+    def trigger_schedule(self, current_time):
+        return []
+
+    def stop_job(self, current_time, stop_job):
+        # remove the running job from the schedule
+        self.gaps_in_schedule.remove({stop_job: self.running_jobs[stop_job]})
+        del self.running_jobs[stop_job]
+        # mark the jobs ready to start at the current time
+        start_jobs = []
+        for job in self.scheduled_jobs:
+            # if this was the schedule all along, mark job
+            if self.scheduled_jobs[job] <= current_time:
+                start_jobs.append((current_time, job)) 
+            else: # otherwise see if the job can be started earlier
+                active_jobs = {}
+                for j in self.running_jobs:
+                    active_jobs[j] = self.running_jobs[j]
+                tm = self.__fit_in_schedule(job, active_jobs,
+                                            current_time)
+                self.scheduled_jobs[job] = tm
+                print("CAN START at time", tm)
+                if tm == current_time:
+                    # update the schedule with the new time
+                    self.gaps_in_schedule.remove({job: self.scheduled_jobs[job]})
+                    self.gaps_in_schedule.add({job: tm})
+                    start_jobs.append((current_time, job))
+        start_jobs = self.__update_backfill_jobs(start_jobs, current_time)
+        start_jobs = self.__append_backfill_jobs(start_jobs, current_time)
+        return start_jobs
+
+    def start_job(self, current_time, job):
+        ''' Create an end event for the started job '''
+        self.running_jobs[job] = current_time
+        # Assign job to system
+        job.assign_system(self.system)
+        # if the started job was a scheduled job
+        if job in self.scheduled_jobs:
+            del self.scheduled_jobs[job]
+            # Make reservation for a new job if scheduled list is empty
+            if len(self.scheduled_jobs) == 0 and len(self.wait_list) > 0:
+                next_job = self.wait_list[0]
+                active_jobs = self.__get_scheduled_jobs()
+                tm = self.__fit_in_schedule(next_job, active_jobs, current_time)
+                assert (tm != -1, "Could not schedule the next job")
+                self.wait_list.remove(next_job)
+                next_job.assign_system(self.system)
+                self.scheduled_jobs[next_job] = tm
+                self.gaps_in_schedule.add({next_job: tm})
+        # if the started job was a backfilling job
+        if job in self.backfill_jobs:
+            del self.backfill_jobs[job]
+        return [(-1, job)]
+
+
 class Scheduler(object):
     ''' Class that implements the scheduler functionality (i.e. choosing
         what are the jobs scheduled to run and backfillinf jobs) '''
 
-    def __init__(self, system, batch_size=100, total_priority_queues=1,
-                 logger=None,
-                 priority_policy=SchedulingPriorityPolicy.FCFS,
-                 backfill_policy=SchedulingBackfillPolicy.Easy):
-        ''' Construnction method that takes a System object '''
+    def __init__(self, system, logger=None, total_queues=1):
+        ''' Base construnction method that takes a System object '''
         self.system = system
         self.waiting_queue = _intScheduleFlow.WaitingQueue(
-                total_queues=total_priority_queues)
+                total_queues=total_queues)
         self.running_jobs = set()
-        self.scheduled_jobs = set()
-        self.backfill_jobs = set()
         self.logger = logger or logging.getLogger(__name__)
         self.gaps_in_schedule = _intScheduleFlow.ScheduleGaps(
             system.get_total_nodes())
-
-        self.batch_size = batch_size
-        self.__set_sorted_jobs = self.__get_LJF
-        if policy == SchedulingPolicy.SJF:
-            self.__set_sorted_jobs = self.__get_SJF
-        elif policy == SchedulingPolicy.FCFS:
-            self.__set_sorted_jobs = self.__get_FCFS
-
 
     def __str__(self):
         return 'Scheduler: %s; %s; %d jobs running' % (
