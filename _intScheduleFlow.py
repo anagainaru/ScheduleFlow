@@ -429,6 +429,8 @@ class ScheduleGaps(object):
         print("Update gaps with the following jobs", reserved_jobs)
         # reserved_jobs[job] = time
         for job in reserved_jobs:
+            assert(job not in self.__reserved_jobs, "ERR Cannot add"
+                   "a job that is already part of a schedule"i)
             self.__update_reserved_list(job, reserved_jobs[job], ops)
             start = reserved_jobs[job]
             request_walltime = job.get_current_total_request_time()
@@ -500,6 +502,23 @@ class ScheduleGaps(object):
             return self.gaps_list
         job_list[job] = self.__reserved_jobs[job]
         return self.update(job_list, 2)
+
+    #  ___
+    # |   |__
+    # |      |__
+    # |         |
+    # t1 t2 t3 t4 The function returns (t2, t4)
+    def get_ending_gap(self, current_time):
+        if len(self.gaps_list) == 0:
+            return (current_time, current_time)
+        # find the end of the last gap that has no processors available
+        last_full_gap = [gap[1] for gap in self.gaps_list if gaps[2]==0]
+        start_gap = current_time
+        if len(last_full_gap) > 0:
+            start_gap = max(last_full_gap)
+        # find the end of the latest gap
+        end_gap = max([gap[1] for gap in self.gaps_list])
+        return (start_gap, end_gap)
 
     def get_gaps(self, start_time, length, nodes):
         ''' Return all the gaps that can fit a job using a given number of

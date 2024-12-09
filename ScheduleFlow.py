@@ -648,7 +648,25 @@ class EasyBFScheduler(object):
             % (job, ts))
         return ts
 
-    def __fit_in_schedule(self, job, scheduled_jobs, current_time):
+    def __fit_in_schedule(self, job, current_schedule, current_time):
+        # first, look inside the schedule for a spot
+        request_walltime = job.get_current_total_request_time()
+        gap_list = current_schedule.get_gaps(
+                job.submission_time, request_walltime, job.nodes)
+        if len(gap_list) >= 0: # if one is found return it
+            return max(gap_list[0][0], job.submission_time)
+
+       # check for the end of the schedule for a fit (the earliest
+       # job end between all jobs at the end of the schedule)
+        (start_last_gap, end_last_gap) = current_schedule.get_ending_gap()
+        gap_list = current_schedule.get_gaps(
+                max(job.submission_time, start_last_gap), 0, job.nodes)
+        if len(gap_list) > 0:
+            # return the earliest time found
+            return min([gap[0] for gap in gap_list])
+        return end_last_gap
+
+    def __fit_in_schedule1(self, job, scheduled_jobs, current_time):
         ''' Method for extending the existing reservation to include
         a new job. All jobs have to fit in the schedule, thus the reservation
         will be increased if the job does not fit inside the current one '''
@@ -710,112 +728,90 @@ class EasyBFScheduler(object):
                     self.gaps_in_schedule.add({job: ts})
         return start_jobs
 
-    def __append_backfill_jobs(self, start_jobs, current_time):
-        ''' Find jobs from the waiting list that can be scheduled
-            inside a given schedule '''
-        # jobs that are unmovable
+    def __create_curent_schedule(self):
+        # start with an empty schedule
+        current_schedule = _intScheduleFlow.ScheduleGaps(
+            self.system.get_total_nodes())
+        # get all the active jobs (scheduled and running)
         active_jobs = self.__get_scheduled_jobs()
+        # add active jobs to the schedule
+        current_schedule.add(active_jobs)
+        print("TRIGGER2 current schedule", current_schedule)
+        return current_schedule
+
+    def trigger_schedule(self, current_time):
+        # create current schedule (ScheduleGaps object)
+        current_schedule = self.__create_curent_schedule()
+        # sort wait list based on policy (TODO)
+
+        # keep track of all jobs ready to be executed
+        start_list = []
         for job in self.wait_list:
-            ts = self.__create_job_reservation(job, active_jobs)
-            if ts != -1:
-                # if conservativeBF we add job to active_jobs here
+            # find earliest start time in the schedule
+            ts = self.__fit_in_schedule(
+                    job, current_schedule, current_time)
+            print("TRIGGER", job, ts)
+            # if the earliest start is the current time
+            if ts == current_time:
+                # mark job ready for execution
+                start_list.append((ts, job))
+                # move from wait time to scheduled list
+                self.scheduled_list[job] = ts
+                def self.wait_list[job]
+                # add job to the schedule
+                current_schedule.add({job: ts})
+            else:
+                # if conservativeBF we add the job to the schedule
+                # regardless if we execute the job now or not
                 if self.backfill_policy == SchedulingBackfillPolicy.Conservative:
-                    active_jobs[job] = tm
-                # for easyBF we choose only jobs that start at the current time
-                if ts == current_time:
-                    if self.backfill_policy == SchedulingBackfillPolicy.Easy:
-                        active_jobs[job] = ts
-                    start_jobs.append((ts, job))
-                    self.gaps_in_schedule.add({job: ts})
-                    # move the job from wait list to backfill list
-                    self.backfill_jobs[job] = ts
-                    self.wait_list.remove(job)
-        return start_jobs
+                    current_schedule.add({job: ts})
+            # if there is no job scheduled for execution
+            if len(self.schedule) == 0:
+                # schedule the current job but do not mark it for start
+                self.scheduled_jobs[job] = ts
+                current_schedule.add({job: ts})
+        return start_list
 
     def submit_job(self, current_time, job_list):
         ''' Mark as ready for execution the jobs that can be scheduled
          for running at the current time and save the rest in the
          waiting queue '''
-
-        start_jobs = []
-        active_jobs = self.__get_scheduled_jobs()
-        # find the first available timestep for each job
         for job in job_list:
             assert (job not in active_jobs, "Trying to schedule a job that"\
                     "has been scheduled already")
             assert (job.nodes <= self.system.get_total_nodes()),\
                 "Submitted jobs cannot ask for more nodes that the system \
                  capacity"
-            tm = self.__fit_in_schedule(job, active_jobs, current_time)
-            # send to the runtime all jobs that can start at current time
-            if tm == current_time:
-                start_jobs.append((tm, job))
-                self.scheduled_jobs[job] = tm
-                self.gaps_in_schedule.add({job: tm})
-                active_jobs[job] = tm
-            else:
-                # if there is no job scheduled to run
-                if len(self.scheduled_jobs) == 0 and tm != -1:
-                    self.scheduled_jobs[job] = tm
-                    self.gaps_in_schedule.add({job: tm})
-                else:
-                    # everything else will be in the wait list
-                    self.wait_list.append(job)
-        start_jobs = self.__append_backfill_jobs(start_jobs, current_time)
-        return start_jobs
+            self.wait_list.append(job)
+        return self.trigger_schedule(current_time)
 
-    def trigger_schedule(self, current_time):
-        return []
+    def stop_job(self, current_time, job_list):
+        ''' Stop all jobs in the list, update the schedule based on
+        the end time of each job and trigger a new schedule '''
+        for job in job_list:
+            # remove the job from the running list
+            del self.running_jobs[stop_job]
+        # if the walltime for one job was less than the requested time
+        # update the current schedule TODO
+        self.__update_schedule(current_time)
+        return self.trigger_schedule(current_time)
 
-    def stop_job(self, current_time, stop_job):
-        # remove the running job from the schedule
-        self.gaps_in_schedule.remove({stop_job: self.running_jobs[stop_job]})
-        del self.running_jobs[stop_job]
-        # mark the jobs ready to start at the current time
-        start_jobs = []
-        for job in self.scheduled_jobs:
-            # if this was the schedule all along, mark job
-            if self.scheduled_jobs[job] <= current_time:
-                start_jobs.append((current_time, job)) 
-            else: # otherwise see if the job can be started earlier
-                active_jobs = {}
-                for j in self.running_jobs:
-                    active_jobs[j] = self.running_jobs[j]
-                tm = self.__fit_in_schedule(job, active_jobs,
-                                            current_time)
-                self.scheduled_jobs[job] = tm
-                print("CAN START at time", tm)
-                if tm == current_time:
-                    # update the schedule with the new time
-                    self.gaps_in_schedule.remove({job: self.scheduled_jobs[job]})
-                    self.gaps_in_schedule.add({job: tm})
-                    start_jobs.append((current_time, job))
-        start_jobs = self.__update_backfill_jobs(start_jobs, current_time)
-        start_jobs = self.__append_backfill_jobs(start_jobs, current_time)
-        return start_jobs
-
-    def start_job(self, current_time, job):
-        ''' Create an end event for the started job '''
-        self.running_jobs[job] = current_time
-        # Assign job to system
-        job.assign_system(self.system)
-        # if the started job was a scheduled job
-        if job in self.scheduled_jobs:
+    def start_job(self, current_time, job_list):
+        ''' Move jobs from the scheduled list to running, create an
+        end event for each started job and trigger a new schedule '''
+        end_jobs = []
+        for job in job_list:
+            # move job from scheduled list to running
+            self.running_jobs[job] = current_time
             del self.scheduled_jobs[job]
-            # Make reservation for a new job if scheduled list is empty
-            if len(self.scheduled_jobs) == 0 and len(self.wait_list) > 0:
-                next_job = self.wait_list[0]
-                active_jobs = self.__get_scheduled_jobs()
-                tm = self.__fit_in_schedule(next_job, active_jobs, current_time)
-                assert (tm != -1, "Could not schedule the next job")
-                self.wait_list.remove(next_job)
-                next_job.assign_system(self.system)
-                self.scheduled_jobs[next_job] = tm
-                self.gaps_in_schedule.add({next_job: tm})
-        # if the started job was a backfilling job
-        if job in self.backfill_jobs:
-            del self.backfill_jobs[job]
-        return [(-1, job)]
+            # mark its ending event
+            end_jobs.append((-1, job))
+            # assign job to system
+            job.assign_system(self.system)
+        # trigger new schedule
+        start_jobs = self.trigger_schedule(current_time)
+        end_jobs.extend(start_jobs)
+        return end_jobs
 
 
 class Scheduler(object):
