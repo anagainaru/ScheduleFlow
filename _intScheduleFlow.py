@@ -33,7 +33,7 @@ class EventType(IntEnum):
     The values give the order in which the simulator parses the events
     (e.g. JobEnd has the higher priority and will be evaluated first) '''
 
-    JobSubmission = 2
+    Submit = 2
     JobStart = 1
     JobEnd = 0
     TriggerSchedule = 3
@@ -207,9 +207,14 @@ class ScheduleGaps(object):
     reservation schedule '''
 
     def __init__(self, total_nodes):
-        self.gaps_list = []
+        self.gaps_list = [] # (start, end, available_procs)
         self.__total_nodes = total_nodes
         self.__reserved_jobs = {}
+
+    def __str__(self):
+        return 'ScheduleGaps(%d nodes, %d jobs : %s)' % (
+                self.__total_nodes, len(self.__reserved_jobs),
+                self.gaps_list)
 
     def clear(self):
         ''' Clear all entries in the gap list '''
@@ -285,8 +290,8 @@ class ScheduleGaps(object):
                                  self.gaps_list[idx][2]])
                 self.gaps_list[idx][1] = end
             self.gaps_list[idx][2] = self.gaps_list[idx][2] + procs * ops
-            if (self.gaps_list[idx][2] > 0 and
-                    self.gaps_list[idx][0] != self.gaps_list[idx][1]):
+            #if (self.gaps_list[idx][2] > 0 and
+            if self.gaps_list[idx][0] != self.gaps_list[idx][1]:#):
                 new_gaps.append([self.gaps_list[idx][0],
                                 self.gaps_list[idx][1],
                                 self.gaps_list[idx][2]])
@@ -417,11 +422,14 @@ class ScheduleGaps(object):
 
     def update(self, reserved_jobs, ops):
         ''' Method for updating the gaps in a schedule when new jobs are
-        included in the schedule or are ending and are creating backfillprocs
+        included in the schedule or are ending and are creating backfill
         space. Reserved_jobs represents the list of new jobs and ops
         indicates if the job is being added (-1) or removed (1) '''
 
+        # reserved_jobs[job] = time
         for job in reserved_jobs:
+            assert(job not in self.__reserved_jobs, "ERR Cannot add"
+                   "a job that is already part of a schedule")
             self.__update_reserved_list(job, reserved_jobs[job], ops)
             start = reserved_jobs[job]
             request_walltime = job.get_current_total_request_time()
@@ -435,10 +443,10 @@ class ScheduleGaps(object):
             procs = job.nodes
 
             # identify the gaps that are affected by the new job
+            # gap start < job end and gap end > job start
             affected_gaps_idx = [idx for idx in range(len(self.gaps_list))
-                                 if self.gaps_list[idx][0] <= end and
-                                 self.gaps_list[idx][1] >= start]
-
+                                 if self.gaps_list[idx][0] < end and
+                                 self.gaps_list[idx][1] > start]
             new_gaps = []
             if len(affected_gaps_idx) == 0:
                 # add empty gap between current job and the neighbors
@@ -447,8 +455,12 @@ class ScheduleGaps(object):
                 if procs == 0:
                     affected_gaps_idx = [
                         idx for idx in range(len(self.gaps_list))
-                        if self.gaps_list[idx][0] <= end and
-                        self.gaps_list[idx][1] >= start]
+                        if self.gaps_list[idx][0] < end and
+                        self.gaps_list[idx][1] > start]
+
+            if len(new_gaps) == 0 and len(affected_gaps_idx) == 0:
+                self.gaps_list.append([start, end, self.__total_nodes - procs])
+                continue
 
             # update the amount of free processing units for all the gaps
             # that are completely included inside the new job
@@ -492,6 +504,23 @@ class ScheduleGaps(object):
         job_list[job] = self.__reserved_jobs[job]
         return self.update(job_list, 2)
 
+    #  ___
+    # |   |__
+    # |      |__
+    # |         |
+    # t1 t2 t3 t4 The function returns (t2, t4)
+    def get_ending_gap(self, current_time):
+        if len(self.gaps_list) == 0:
+            return (current_time, current_time)
+        # find the end of the last gap that has no processors available
+        last_full_gap = [gap[1] for gap in self.gaps_list if gap[2]==0]
+        start_gap = current_time
+        if len(last_full_gap) > 0:
+            start_gap = max(last_full_gap)
+        # find the end of the latest gap
+        end_gap = max([gap[1] for gap in self.gaps_list])
+        return (start_gap, end_gap)
+
     def get_gaps(self, start_time, length, nodes):
         ''' Return all the gaps that can fit a job using a given number of
         nodes, requiring a length walltime and that has to start the earliest
@@ -499,6 +528,181 @@ class ScheduleGaps(object):
         return [gaps for gaps in self.gaps_list if (gaps[1] > start_time
                 and gaps[1] - max(start_time, gaps[0]) >= length and
                 gaps[2] >= nodes)]
+
+
+class RuntimeEasyBF(object):
+    ''' Runtime class responsible for coordinating the submission and
+    execution process for all the jobs in a workload '''
+
+    def __init__(self, workload, logger=None):
+        ''' Constructor method creates the job submission events for all
+        jobs in the workload. It also requires a default facor value for
+        increasing the request time of failed jobs (in case they do not
+        contain a sequence of request walltimes '''
+
+        self.__current_time = 0
+        self.__finished_jobs = {}  # finish_jobs[job] = [(start, end)]
+        self.__events = EventQueue()
+        self.__logger = logger or logging.getLogger(__name__)
+
+        # create submit_job events for all the applications in the list
+        for job in workload:
+            self.__events.push(
+                (job.submission_time, EventType.Submit, job))
+
+        # initialize the progress bar
+        self.__progressbar_width = min(50, len(workload))
+        self.total_jobs = len(workload)
+        sys.stdout.write("[%s]" % ("." * self.__progressbar_width))
+        sys.stdout.flush()
+        sys.stdout.write("\b" * (self.__progressbar_width + 1))
+        self.__progressbar_step = 1
+
+    def update_progressbar(self):
+        progress = int((self.total_jobs * self.__progressbar_step) /
+                       self.__progressbar_width)
+        if len(self.__finished_jobs) < progress:
+            return
+        sys.stdout.write("=")
+        sys.stdout.flush()
+        self.__progressbar_step += 1
+
+    def __call__(self, sch):
+        ''' Method for execution the simulation on a given scheduler '''
+
+        self.scheduler = sch
+
+        while not self.__events.empty():
+            # get next set of events
+            current_events = self.__events.pop_list()
+            self.__current_time = current_events[0][0]
+
+            self.__logger.debug(r'[Timestamp %d] Receive events %s' % (
+                self.__current_time, current_events))
+
+            submitted_jobs = []
+            start_jobs = []
+            end_jobs = []
+            for event in current_events:
+                if event[1] == EventType.Submit:
+                    submitted_jobs.append(event[2])
+                elif event[1] == EventType.JobStart:
+                    start_jobs.append(event[2])
+                elif event[1] == EventType.JobEnd:
+                    end_jobs.append(event[2])
+
+            if len(end_jobs) > 0:
+                self.__job_end_event(end_jobs)
+            if len(start_jobs) > 0:
+                self.__job_start_event(start_jobs)
+            if len(submitted_jobs) > 0:
+                self.__job_subimssion_event(submitted_jobs)
+            # no new events were created in this step and the queue is empty
+            if self.__events.empty():
+                # make sure the scheduler wait list is also empty
+                self.__trigger_schedule_event()
+
+        # at the end of the simulation return default values for all the jobs
+        for job in self.__finished_jobs:
+            job.restore_default_values()
+
+        # end the progress bar
+        sys.stdout.write("]\n")
+
+    def __handle_scheduler_actions(self, action_list):
+        ''' Method for handling a list of instructions returned by the
+        scheduler (in the form (time, job), where action could be a Start
+        event (if tm != -1)  or an End event. The function changes the
+        internal state of the event list '''
+
+        for job_event in action_list:
+            tm = job_event[0]
+            job = job_event[1]
+            if tm != -1:
+                self.__logger.debug(
+                    r'[Timestamp %d] Job submission %s fit at time %d' %
+                    (self.__current_time, job, tm))
+                self.__events.push((tm, EventType.JobStart, job))
+            else:
+                self.__logger.info(r'[Timestamp %d] Start job %s' % (
+                    self.__current_time, job))
+                self.__log_start(job)
+                # create a job end event for the started job
+                # for timestamp current_time + execution_time
+                execution = job.walltime + job.get_checkpoint_read_time()
+                # execution time is the walltime + time to read the last checkpoint
+                # in case of successful run or the total request time
+                if job.walltime > job.request_walltime:
+                    execution = job.get_current_total_request_time()
+                self.__events.push(
+                    (self.__current_time + execution, EventType.JobEnd, job))
+
+    def __job_subimssion_event(self, job_list):
+        ''' Method for handling a job submission event. The method takes the
+        job that is being submitted and if it is allowed to start it now
+        inside an existing schedule '''
+
+        # get the list of jobs that need a status change ret = (tm job)
+        ret = self.scheduler.submit_job(self.__current_time, job_list)
+        self.__handle_scheduler_actions(ret)
+
+    def __trigger_schedule_event(self):
+        ''' Method for handling an event for triggering a new schedule. '''
+
+        ret_schedule = self.scheduler.trigger_schedule(self.__current_time)
+        self.__logger.debug(r'[Timestamp %d] Trigger schedule %s' % (
+            self.__current_time, ret_schedule))
+        self.__handle_scheduler_actions(ret_schedule)
+
+    def __job_end_event(self, job_list):
+        ''' Method for handling a job end event '''
+
+        for job in job_list:
+            self.__logger.info(r'[Timestamp %d] Stop job %s' % (
+                self.__current_time, job))
+            # check if the job finished successfully or it was a failure
+            if job.walltime > job.request_walltime and job.resubmit:
+                # resubmit failed job
+                job.update_submission(self.__current_time)
+                self.__logger.debug(
+                    r'[Timestamp %d] Resubmit failed job %s' %
+                    (self.__current_time, job))
+                self.__events.push((self.__current_time,
+                                    EventType.Submit, job))
+            else:
+                # if successful update the progress bar
+                self.update_progressbar()
+                self.__log_end(job)
+
+        # handle backfilling jobs and new jobs ready to be executed
+        ret = self.scheduler.stop_job(self.__current_time, job_list)
+        self.__handle_scheduler_actions(ret)
+
+    def __job_start_event(self, job_list):
+        ''' Method for handling a job start event '''
+
+        ret = self.scheduler.start_job(self.__current_time, job_list)
+        self.__handle_scheduler_actions(ret)
+
+    def __log_start(self, job):
+        ''' Method for logging the information about a new job start '''
+
+        if job not in self.__finished_jobs:
+            self.__finished_jobs[job] = []
+        self.__finished_jobs[job].append([self.__current_time, -1])
+
+    def __log_end(self, job):
+        ''' Method for logging the information about job end '''
+
+        assert (job in self.__finished_jobs),\
+            "Logging the end of a job that did not start"
+        self.__finished_jobs[job][-1][1] = self.__current_time
+
+    def get_stats(self):
+        ''' Method for returning the log containing every jon start and
+        finish recorded during the simulation up to the current time '''
+
+        return self.__finished_jobs
 
 
 class Runtime(object):
@@ -520,7 +724,7 @@ class Runtime(object):
         # create submit_job events for all the applications in the list
         for job in workload:
             self.__events.push(
-                (job.submission_time, EventType.JobSubmission, job))
+                (job.submission_time, EventType.Submit, job))
 
         # initialize the progress bar
         self.__progressbar_width = min(50, len(workload))
@@ -556,7 +760,7 @@ class Runtime(object):
 
             trigger_schedule = -1
             for event in current_events:
-                if event[1] == EventType.JobSubmission:
+                if event[1] == EventType.Submit:
                     self.__job_subimssion_event(
                         event[2], EventType.TriggerSchedule not in [
                             i[1] for i in current_events])
@@ -633,7 +837,7 @@ class Runtime(object):
                 r'[Timestamp %d] Resubmit failed job %s' %
                 (self.__current_time, job))
             self.__events.push((self.__current_time,
-                                EventType.JobSubmission, job))
+                                EventType.Submit, job))
 
         # look for backfilling jobs if the reserved time > walltime
         elif job.walltime < job.request_walltime:

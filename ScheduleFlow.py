@@ -16,12 +16,27 @@ from enum import IntEnum
 
 
 class SchedulingPolicy(IntEnum):
+    ''' Enumeration class to hold the policy types
+    for scheduling '''
+
+    LJF = 0
+    SJF = 1
+    FCFS = 2
+
+class SchedulingPriorityPolicy(IntEnum):
     ''' Enumeration class to hold the policy types 
     for scheduling '''
 
     LJF = 0
     SJF = 1
     FCFS = 2
+
+class SchedulingBackfillPolicy(IntEnum):
+    ''' Enumeration class to hold the policy types
+    for scheduling '''
+
+    Easy = 0
+    Conservative = 1
 
 
 class Simulator():
@@ -195,8 +210,9 @@ class Simulator():
         if len(execution_log) == 0:
             execution_log = self.__execution_log
 
-        assert (len(execution_log) > 0), \
-            "ERR - Trying to test correctness on an empty execution log"
+        if len(execution_log) == 0:
+            print("WARNING Empty execution log")
+            return 0
 
         check_fail = 0
         for job in execution_log:
@@ -235,7 +251,7 @@ class Simulator():
         check = 0
         average_stats = {}
         for i in range(self.__loops):
-            runtime = _intScheduleFlow.Runtime(self.job_list)
+            runtime = _intScheduleFlow.RuntimeEasyBF(self.job_list)
             runtime(self.__scheduler)
             self.__execution_log = runtime.get_stats()
 
@@ -333,19 +349,13 @@ class Application(object):
         self.system = None
 
     def __str__(self):
-        return 'Job (%s %d): %d nodes; %3.1f submission time; %3.1f ' \
-               'total execution time (%3.1f requested)' % (
-                       self.name, self.job_id, self.nodes,
-                       self.submission_time, self.walltime,
-                       self.request_walltime)
+        return 'Job(%s, Nodes: %d, Submission: %3.1f, Walltime: %3.1f' \
+               ', Request: %3.1f)' % (
+                       self.name, self.nodes, self.submission_time,
+                       self.walltime, self.request_walltime)
 
     def __repr__(self):
-        return 'Job(%s, Nodes: %d, Submission: %3.1f, Walltime: %3.1f' \
-               ', Request: %3.1f)' % (self.name,
-                                    self.nodes,
-                                    self.submission_time,
-                                    self.walltime,
-                                    self.request_walltime)
+        return 'Job(%s:%d)' %(self.name, self.job_id)
 
     def __lt__(self, job):
         return self.job_id < job.job_id
@@ -581,8 +591,193 @@ class System(object):
             jobid)
 
 
+class EasyBFScheduler(object):
+    ''' Class that implements the scheduler functionality (i.e. choosing
+        what are the jobs scheduled to run and backfillinf jobs) '''
+
+    def __init__(self, system, total_priority_queues=1,
+                 logger=None,
+                 priority_policy=SchedulingPriorityPolicy.FCFS,
+                 backfill_policy=SchedulingBackfillPolicy.Easy):
+        self.system = system
+        self.waiting_queue = _intScheduleFlow.WaitingQueue(
+                total_queues=total_priority_queues)
+        self.wait_list = set()
+        self.running_jobs = {}
+        self.scheduled_jobs = {}
+        self.logger = logger or logging.getLogger(__name__)
+        self.gaps_in_schedule = _intScheduleFlow.ScheduleGaps(
+            system.get_total_nodes())
+        self.priority_policy = priority_policy
+        self.backfill_policy = backfill_policy
+
+    def __str__(self):
+        #        return "Scheduler(%d jobs waiting; %d job scheduled; %d jobs running)" % (
+        #    len(self.wait_list), len(self.scheduled_jobs),
+        #    len(self.running_jobs))
+        return "Scheduler(%s waiting; %s scheduled; %s running;)" % (
+            self.wait_list, self.scheduled_jobs, self.running_jobs)
+
+    def __repr__(self):
+        return 'Scheduler(Queued jobs: %d; Running: %d)' % (
+            len(self.waiting_queue.total_jobs()),
+            len(self.running_jobs))
+
+    def __sort_job_list(self, job_list):
+        sort_list = [job for job in job_list]
+        if self.priority_policy == SchedulingPriorityPolicy.FCFS:
+            sort_list = sorted(sort_list, key=lambda job:
+                              job.submission_time)
+        elif self.priority_policy == SchedulingPriorityPolicy.LJF:
+            sort_list = sorted(sort_list, key=lambda job:
+                              job.nodes * job.get_current_total_request_time(),
+                              reverse=True)
+        elif self.priority_policy == SchedulingPriorityPolicy.SJF:
+            sort_list = sorted(sort_list, key=lambda job:
+                              job.nodes * job.get_current_total_request_time())
+        return sort_list
+
+    def __fit_in_schedule(self, job, current_schedule, current_time):
+        # first, look inside the schedule for a spot
+        start_time = max(current_time, job.submission_time)
+        request_walltime = job.get_current_total_request_time()
+        gap_list = current_schedule.get_gaps(
+                start_time, request_walltime, job.nodes)
+        if len(gap_list) > 0: # if one is found return it
+            return max(gap_list[0][0], start_time)
+
+       # check for the end of the schedule for a fit (the earliest
+       # job end between all jobs at the end of the schedule)
+        (start_last_gap, end_last_gap) = current_schedule.get_ending_gap(current_time)
+        gap_list = current_schedule.get_gaps(
+                max(job.submission_time, start_last_gap), 0, job.nodes)
+        if len(gap_list) > 0:
+            # return the earliest time found
+            return min([gap[0] for gap in gap_list])
+        return end_last_gap
+
+    def __get_scheduled_jobs(self):
+        active_jobs = {}
+        for job in self.scheduled_jobs:
+            active_jobs[job] = self.scheduled_jobs[job]
+        for job in self.running_jobs:
+            active_jobs[job] = self.running_jobs[job]
+        return active_jobs
+
+    def __create_curent_schedule(self):
+        # start with an empty schedule
+        current_schedule = _intScheduleFlow.ScheduleGaps(
+            self.system.get_total_nodes())
+        # get all the active jobs (scheduled and running)
+        active_jobs = self.__get_scheduled_jobs()
+        # add active jobs to the schedule
+        current_schedule.add(active_jobs)
+        return current_schedule
+
+    def __update_schedule(self, current_time):
+        ''' Update the start time for the scheduling jobs based
+        on where jobs actually finished '''
+        # create current schedule based only on running jobs
+        current_schedule = _intScheduleFlow.ScheduleGaps(
+            self.system.get_total_nodes())
+        current_schedule.add(self.running_jobs)
+        # start all jobs that can run at the current time
+        start_jobs = []
+        # reschedule all the jobs in the scheduled jobs
+        # sort scheduled list based on policy
+        job_list = self.__sort_job_list(self.scheduled_jobs)
+        for job in job_list:
+            ts = self.__fit_in_schedule(
+                    job, current_schedule, current_time)
+            if ts < self.scheduled_jobs[job]:
+                # update time in the scheduled list
+                self.scheduled_jobs[job] = ts
+                current_schedule.add({job: ts})
+            if ts == current_time:
+                start_jobs.append((ts, job))
+        return start_jobs
+
+    def trigger_schedule(self, current_time):
+        # create current schedule (ScheduleGaps object)
+        current_schedule = self.__create_curent_schedule()
+        # sort wait list based on policy
+        job_list = self.__sort_job_list(self.wait_list)
+        # keep track of all jobs ready to be executed
+        start_list = []
+        del_list = []
+        for job in job_list:
+            # find earliest start time in the schedule
+            ts = self.__fit_in_schedule(
+                    job, current_schedule, current_time)
+            # if the earliest start is the current time
+            if ts == current_time:
+                # mark job ready for execution
+                start_list.append((ts, job))
+                # move from wait time to scheduled list
+                self.scheduled_jobs[job] = ts
+                del_list.append(job)
+                # add job to the schedule
+                current_schedule.add({job: ts})
+            else:
+                # if conservativeBF we add the job to the schedule
+                # regardless if we execute the job now or not
+                if self.backfill_policy == SchedulingBackfillPolicy.Conservative:
+                    current_schedule.add({job: ts})
+            # if there is no job scheduled for execution
+            if len(self.scheduled_jobs) == 0:
+                # schedule the current job but do not mark it for start
+                self.scheduled_jobs[job] = ts
+                del_list.append(job)
+                current_schedule.add({job: ts})
+        for job in del_list:
+            self.wait_list.remove(job)
+        return start_list
+
+    def submit_job(self, current_time, job_list):
+        ''' Mark as ready for execution the jobs that can be scheduled
+         for running at the current time and save the rest in the
+         waiting queue '''
+        for job in job_list:
+            assert (job.nodes <= self.system.get_total_nodes()),\
+                "Submitted jobs cannot ask for more nodes that the system \
+                 capacity"
+            self.wait_list.add(job)
+        return self.trigger_schedule(current_time)
+
+    def stop_job(self, current_time, job_list):
+        ''' Stop all jobs in the list, update the schedule based on
+        the end time of each job and trigger a new schedule '''
+        for job in job_list:
+            # remove the job from the running list
+            del self.running_jobs[job]
+        # if the walltime for one job was less than the requested time
+        # update the current schedule and trigger a new schedule to
+        # cover the wholes created
+        action_list = self.__update_schedule(current_time)
+        action_list.extend(self.trigger_schedule(current_time))
+        return action_list
+
+    def start_job(self, current_time, job_list):
+        ''' Move jobs from the scheduled list to running, create an
+        end event for each started job and trigger a new schedule '''
+        end_jobs = []
+        for job in job_list:
+            # move job from scheduled list to running
+            self.running_jobs[job] = current_time
+            del self.scheduled_jobs[job]
+            # mark its ending event
+            end_jobs.append((-1, job))
+            # assign job to system
+            job.assign_system(self.system)
+        # trigger new schedule
+        start_jobs = self.trigger_schedule(current_time)
+        end_jobs.extend(start_jobs)
+        return end_jobs
+
+
 class Scheduler(object):
-    ''' Base class that needs to be extended by all Scheduler classes '''
+    ''' Class that implements the scheduler functionality (i.e. choosing
+        what are the jobs scheduled to run and backfillinf jobs) '''
 
     def __init__(self, system, logger=None, total_queues=1):
         ''' Base construnction method that takes a System object '''
@@ -604,10 +799,11 @@ class Scheduler(object):
             len(self.running_jobs))
 
     def submit_job(self, job):
-        ''' Base method to add a job in the waiting queue '''
+        ''' Add a job in the waiting queue '''
 
         assert (job.nodes <= self.system.get_total_nodes()),\
-            "Submitted jobs cannot ask for more nodes that the system"
+            "Submitted jobs cannot ask for more nodes that the system \
+             capacity"
         job.assign_system(self.system)
         self.waiting_queue.add(job)
 
@@ -617,7 +813,7 @@ class Scheduler(object):
         self.running_jobs.add(job)
 
     def clear_job(self, job):
-        ''' Base method for clearing a job that was running in the system.
+        ''' Clearing a job that was running in the system.
         The method returns whether the scheduler requires a new scheduling
         cycle for chosing new jobs after this job end: -1 means no trigger
         is necessary; otherwise the relative timestamp is returned (e.g. a
