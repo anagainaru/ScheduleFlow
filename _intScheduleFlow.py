@@ -307,10 +307,9 @@ class ScheduleGaps(object):
                             self.gaps_list[idx][0] >= start and
                             self.gaps_list[idx][1] <= end]
         for idx in include_gaps_idx:
-            if self.gaps_list[idx][2] + procs * ops > 0:
-                new_gaps.append([self.gaps_list[idx][0],
-                                 self.gaps_list[idx][1],
-                                 self.gaps_list[idx][2] + procs * ops])
+            new_gaps.append([self.gaps_list[idx][0],
+                             self.gaps_list[idx][1],
+                             self.gaps_list[idx][2] + procs * ops])
         return new_gaps
 
     def __consolidate(self, gaps_list):
@@ -602,6 +601,9 @@ class Runtime(object):
                 # make sure the scheduler wait list is also empty
                 self.__trigger_schedule_event()
 
+            self.__logger.debug("[Timestamp %d] Sceduler state: %s" %(
+                self.__current_time, self.scheduler))
+
         # at the end of the simulation return default values for all the jobs
         for job in self.__finished_jobs:
             job.restore_default_values()
@@ -619,13 +621,11 @@ class Runtime(object):
             tm = job_event[0]
             job = job_event[1]
             if tm != -1:
-                self.__logger.debug(
-                    r'[Timestamp %d] Job submission %s fit at time %d' %
+                self.__logger.info(
+                    r'[Timestamp %d] Job %s set to start at time %d' %
                     (self.__current_time, job, tm))
                 self.__events.push((tm, EventType.JobStart, job))
             else:
-                self.__logger.info(r'[Timestamp %d] Start job %s' % (
-                    self.__current_time, job))
                 self.__log_start(job)
                 # create a job end event for the started job
                 # for timestamp current_time + execution_time
@@ -634,6 +634,9 @@ class Runtime(object):
                 # in case of successful run or the total request time
                 if job.walltime > job.request_walltime:
                     execution = job.get_current_total_request_time()
+                self.__logger.info("[Timestamp %d] Job %s set to"
+                                   "end at time %d" % (
+                    self.__current_time, job, self.__current_time + execution))
                 self.__events.push(
                     (self.__current_time + execution, EventType.JobEnd, job))
 
@@ -650,7 +653,7 @@ class Runtime(object):
         ''' Method for handling an event for triggering a new schedule. '''
 
         ret_schedule = self.scheduler.trigger_schedule(self.__current_time)
-        self.__logger.debug(r'[Timestamp %d] Trigger schedule %s' % (
+        self.__logger.info(r'[Timestamp %d] Trigger schedule %s' % (
             self.__current_time, ret_schedule))
         self.__handle_scheduler_actions(ret_schedule)
 
@@ -658,13 +661,11 @@ class Runtime(object):
         ''' Method for handling a job end event '''
 
         for job in job_list:
-            self.__logger.info(r'[Timestamp %d] Stop job %s' % (
-                self.__current_time, job))
             # check if the job finished successfully or it was a failure
             if job.walltime > job.request_walltime and job.resubmit:
                 # resubmit failed job
                 job.update_submission(self.__current_time)
-                self.__logger.debug(
+                self.__logger.info(
                     r'[Timestamp %d] Resubmit failed job %s' %
                     (self.__current_time, job))
                 self.__events.push((self.__current_time,
