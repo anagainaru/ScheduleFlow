@@ -62,15 +62,13 @@ class Simulator():
             os.environ["ScheduleFlow_PATH"] = "."
 
     def __str__(self):
-        return 'Simulator: Generate gif %s, Check correctness %s, Loops %s' \
-                ', Output file %s, Number of jobs %d' % (
+        return 'Simulator(GIF: %s, Check_correctness: %s, Loops: %s' \
+                ', Output: %s, Jobs: %d)' % (
                         self.__generate_gif, self.__check_correctness,
                         self.__loops, self.__fp, len(self.job_list))
 
     def __repr__(self):
-        return 'Simulator(GIF: %s, Check_correctness: %s, Loops: %s' \
-                ', Output: %s, Jobs: %d)' % (
-                        self.__generate_gif, self.__check_correctness,
+        return 'Simulator(Loops: %s, Output: %s, Jobs: %d)' % (
                         self.__loops, self.__fp, len(self.job_list))
 
     def run_scenario(self, scheduler, job_list, scenario_name="ScheduleFlow",
@@ -89,7 +87,8 @@ class Simulator():
 
         self.__scheduler = scheduler
         self.__system = scheduler.system
-        self.job_list = []
+        if len(job_list) > 0:
+            self.job_list = []
         self.__execution_log = {}
         self.__scenario_name = scenario_name
 
@@ -107,21 +106,26 @@ class Simulator():
         for each running instance '''
         return self.__execution_log
 
+    def add_application(self, job):
+        ''' Method for adding one additional application to the simulation '''
+
+        if job in self.job_list:
+            self.logger.warning("Job %s is already included "
+                                "in the simulation. Skipping." % (job))
+            return job.job_id
+        if job.job_id == -1 or job.job_id in self.job_list:
+            newid = 0
+            if len(self.job_list) > 0:
+                newid = max([j.job_id for j in self.job_list]) + 1
+            job.job_id = newid
+        self.job_list.append(job)
+        return job.job_id
+
     def add_applications(self, job_list):
         ''' Method for sending additional applications to the simulation '''
 
         for new_job in job_list:
-            if new_job in self.job_list:
-                self.logger.warning("Job %s is already included "
-                                    "in the sumlation." % (new_job))
-                continue
-            job_id_list = [job.job_id for job in self.job_list]
-            if new_job.job_id == -1 or new_job.job_id in job_id_list:
-                newid = len(self.job_list)
-                if len(job_id_list) > newid:
-                    newid = max(job_id_list) + 1
-                new_job.job_id = newid
-            self.job_list.append(new_job)
+            add_application(new_job)
         return len(self.job_list)
 
     def __sanity_check_job_execution(self, execution_list, job):
@@ -203,7 +207,7 @@ class Simulator():
             execution_log = self.__execution_log
 
         if len(execution_log) == 0:
-            print("WARNING Empty execution log")
+            self.logger.warning("Testing correctness on an empty execution log")
             return 0
 
         check_fail = 0
@@ -256,7 +260,7 @@ class Simulator():
 
             self.stats.set_execution_output(self.__execution_log)
             self.stats.set_metrics(metrics)
-            self.logger.info(self.stats)
+            self.logger.info("Stats in loop %d: %s" %(i, self.stats))
             if self.__fp is not None:
                 self.stats.print_to_file(self.__fp, self.__scenario_name, i)
             if len(average_stats) == 0:
@@ -542,7 +546,7 @@ class System(object):
         self.__IO_read_bw = io_read_bw
 
     def __str__(self):
-        return 'System: %d total nodes (%d currently free)' % (
+        return 'System(Nodes: %d, Free: %d)' % (
             self.__total_nodes, self.__free_nodes)
 
     def __repr__(self):
@@ -587,13 +591,10 @@ class Scheduler(object):
     ''' Class that implements the scheduler functionality (i.e. choosing
         what are the jobs scheduled to run and backfillinf jobs) '''
 
-    def __init__(self, system, total_priority_queues=1,
-                 logger=None,
+    def __init__(self, system, logger=None,
                  priority_policy=SchedulingPriorityPolicy.FCFS,
                  backfill_policy=SchedulingBackfillPolicy.Easy):
         self.system = system
-        self.waiting_queue = _intScheduleFlow.WaitingQueue(
-                total_queues=total_priority_queues)
         self.wait_list = set()
         self.running_jobs = {}
         self.scheduled_jobs = {}
@@ -604,16 +605,14 @@ class Scheduler(object):
         self.backfill_policy = backfill_policy
 
     def __str__(self):
-        #        return "Scheduler(%d jobs waiting; %d job scheduled; %d jobs running)" % (
-        #    len(self.wait_list), len(self.scheduled_jobs),
-        #    len(self.running_jobs))
-        return "Scheduler(%s waiting; %s scheduled; %s running;)" % (
-            self.wait_list, self.scheduled_jobs, self.running_jobs)
+        return "Scheduler(%d waiting; %d scheduled; %d running)" % (
+            len(self.wait_list), len(self.scheduled_jobs),
+            len(self.running_jobs))
 
     def __repr__(self):
-        return 'Scheduler(Queued jobs: %d; Running: %d)' % (
-            len(self.waiting_queue.total_jobs()),
-            len(self.running_jobs))
+        return 'Scheduler(Total jobs: %d; Running: %d)' % (
+            len(self.running_jobs) + len(self.wait_list) +
+            len(self.scheduled_jobs), len(self.running_jobs))
 
     def __sort_job_list(self, job_list):
         sort_list = [job for job in job_list]
@@ -696,7 +695,7 @@ class Scheduler(object):
         job_list = self.__sort_job_list(self.wait_list)
         # keep track of all jobs ready to be executed
         start_list = []
-        del_list = []
+        del_list = set()
         for job in job_list:
             # find earliest start time in the schedule
             ts = self.__fit_in_schedule(
@@ -705,22 +704,27 @@ class Scheduler(object):
             if ts == current_time:
                 # mark job ready for execution
                 start_list.append((ts, job))
+                self.logger.debug(
+                        "Found placement for job %s: %d" %(job, ts))
                 # move from wait time to scheduled list
                 self.scheduled_jobs[job] = ts
-                del_list.append(job)
+                del_list.add(job)
                 # add job to the schedule
                 current_schedule.add({job: ts})
             else:
-                # if conservativeBF we add the job to the schedule
-                # regardless if we execute the job now or not
-                if self.backfill_policy == SchedulingBackfillPolicy.Conservative:
+                # if all jobs scheduled for execution will
+                # be started now
+                scheduled_start = max([self.scheduled_jobs[j]
+                                       for j in self.scheduled_jobs])
+                if scheduled_start == current_time:
+                    # schedule the current job but do not mark it for start
+                    self.scheduled_jobs[job] = ts
+                    del_list.add(job)
                     current_schedule.add({job: ts})
-            # if there is no job scheduled for execution
-            if len(self.scheduled_jobs) == 0:
-                # schedule the current job but do not mark it for start
-                self.scheduled_jobs[job] = ts
-                del_list.append(job)
-                current_schedule.add({job: ts})
+                elif self.backfill_policy == SchedulingBackfillPolicy.Conservative:
+                    # if conservativeBF we add the job to the schedule
+                    # regardless if we execute the job now or not
+                    current_schedule.add({job: ts})
         for job in del_list:
             self.wait_list.remove(job)
         return start_list
