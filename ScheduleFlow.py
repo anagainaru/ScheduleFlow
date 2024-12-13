@@ -239,7 +239,7 @@ class Simulator():
         stats.set_metrics(metrics)
         return stats.get_metric_values()
 
-    def run(self, metrics=["all"]):
+    def run(self, metrics=["all"], simulation_duration=-1):
         ''' Main method of the simulator that triggers the start of
         a given simulation scenario '''
 
@@ -247,9 +247,23 @@ class Simulator():
         check = 0
         average_stats = {}
         for i in range(self.__loops):
-            runtime = _intScheduleFlow.Runtime(self.job_list)
+            runtime = _intScheduleFlow.Runtime(
+                    self.job_list, logger=self.logger,
+                    simulation_duration=simulation_duration)
             runtime(self.__scheduler)
+
             self.__execution_log = runtime.get_stats()
+            # if the simulation was stopped before it finished
+            if simulation_duration > 0:
+                # remove the jobs that did not finish
+                # i.e. have end ts equal to -1
+                execution_log = {}
+                for job in self.__execution_log:
+                    valid_runs = [run for run in self.__execution_log[job]
+                                  if run[1] != -1]
+                    if len(valid_runs) > 0:
+                        execution_log[job] = valid_runs
+                self.__execution_log = execution_log
 
             if self.__check_correctness:
                 check_loop = self.test_correctness()

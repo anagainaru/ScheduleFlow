@@ -533,13 +533,14 @@ class Runtime(object):
     ''' Runtime class responsible for coordinating the submission and
     execution process for all the jobs in a workload '''
 
-    def __init__(self, workload, logger=None):
+    def __init__(self, workload, simulation_duration=-1, logger=None):
         ''' Constructor method creates the job submission events for all
         jobs in the workload. It also requires a default facor value for
         increasing the request time of failed jobs (in case they do not
         contain a sequence of request walltimes '''
 
         self.__current_time = 0
+        self.__sim_duration = simulation_duration
         self.__finished_jobs = {}  # finish_jobs[job] = [(start, end)]
         self.__events = EventQueue()
         self.__logger = logger or logging.getLogger(__name__)
@@ -575,6 +576,8 @@ class Runtime(object):
             # get next set of events
             current_events = self.__events.pop_list()
             self.__current_time = current_events[0][0]
+            if self.__sim_duration > 0 and self.__current_time > self.__sim_duration:
+                break
 
             self.__logger.debug(r'[Timestamp %d] Receive events %s' % (
                 self.__current_time, current_events))
