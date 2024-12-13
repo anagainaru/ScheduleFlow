@@ -293,7 +293,8 @@ class Application(object):
     all its running instances '''
 
     def __init__(self, nodes, submission_time, walltime,
-                 requested_walltimes, resubmit_factor=-1, name="Unname"):
+                 requested_walltimes, priority=0, resubmit_factor=-1,
+                 name="NoName"):
         ''' Constructor method takes the number of nodes required by the job,
         the submission time, the actual walltime, the requested walltime, a
         job id and a sequence of request times in case the job fails '''
@@ -320,6 +321,7 @@ class Application(object):
         self.request_walltime = requested_walltimes[0]
         self.job_id = -1
         self.request_sequence = requested_walltimes
+        self.priority = priority
         # keep track of the number of submission
         self.submission_count = 0
 
@@ -346,12 +348,12 @@ class Application(object):
 
     def __str__(self):
         return 'Job(%s, Nodes: %d, Submission: %3.1f, Walltime: %3.1f' \
-               ', Request: %3.1f)' % (
+               ', Request: %3.1f, Priority %d)' % (
                        self.name, self.nodes, self.submission_time,
-                       self.walltime, self.request_walltime)
+                       self.walltime, self.request_walltime, self.priority)
 
     def __repr__(self):
-        return 'Job(%s:%d)' %(self.name, self.job_id)
+        return 'Job(%s:%d, pr %d)' %(self.name, self.job_id, self.priority)
 
     def __lt__(self, job):
         return self.job_id < job.job_id
@@ -617,15 +619,22 @@ class Scheduler(object):
     def __sort_job_list(self, job_list):
         sort_list = [job for job in job_list]
         if self.priority_policy == SchedulingPriorityPolicy.FCFS:
+            # sort based on priority, submission and job_id (ascending)
             sort_list = sorted(sort_list, key=lambda job:
-                              job.submission_time)
+                               (job.priority, job.submission_time,
+                               job.job_id))
         elif self.priority_policy == SchedulingPriorityPolicy.LJF:
+            # sort based on priority, volume (descending) and job_id
             sort_list = sorted(sort_list, key=lambda job:
-                              job.nodes * job.get_current_total_request_time(),
-                              reverse=True)
+                              (job.priority,
+                               -job.nodes * job.get_current_total_request_time(),
+                               job.job_id))
         elif self.priority_policy == SchedulingPriorityPolicy.SJF:
+            # sort based on priority, volume and job_id (ascending)
             sort_list = sorted(sort_list, key=lambda job:
-                              job.nodes * job.get_current_total_request_time())
+                              (job.priority,
+                               job.nodes * job.get_current_total_request_time(),
+                               job.job_id))
         return sort_list
 
     def __fit_in_schedule(self, job, current_schedule, current_time):
