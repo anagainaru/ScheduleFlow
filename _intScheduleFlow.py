@@ -533,13 +533,14 @@ class Runtime(object):
     ''' Runtime class responsible for coordinating the submission and
     execution process for all the jobs in a workload '''
 
-    def __init__(self, workload, logger=None):
+    def __init__(self, workload, simulation_end_time=-1, logger=None):
         ''' Constructor method creates the job submission events for all
         jobs in the workload. It also requires a default facor value for
         increasing the request time of failed jobs (in case they do not
         contain a sequence of request walltimes '''
 
         self.__current_time = 0
+        self.__sim_end_time = simulation_end_time
         self.__finished_jobs = {}  # finish_jobs[job] = [(start, end)]
         self.__events = EventQueue()
         self.__logger = logger or logging.getLogger(__name__)
@@ -549,13 +550,14 @@ class Runtime(object):
             self.__events.push(
                 (job.submission_time, EventType.Submit, job))
 
-        # initialize the progress bar
-        self.__progressbar_width = min(50, len(workload))
-        self.total_jobs = len(workload)
-        sys.stdout.write("[%s]" % ("." * self.__progressbar_width))
-        sys.stdout.flush()
-        sys.stdout.write("\b" * (self.__progressbar_width + 1))
-        self.__progressbar_step = 1
+        # initialize the progress bar if we don't print anything else
+        if self.__logger == None:
+            self.__progressbar_width = min(50, len(workload))
+            self.total_jobs = len(workload)
+            sys.stdout.write("[%s]" % ("." * self.__progressbar_width))
+            sys.stdout.flush()
+            sys.stdout.write("\b" * (self.__progressbar_width + 1))
+            self.__progressbar_step = 1
 
     def update_progressbar(self):
         progress = int((self.total_jobs * self.__progressbar_step) /
@@ -575,6 +577,8 @@ class Runtime(object):
             # get next set of events
             current_events = self.__events.pop_list()
             self.__current_time = current_events[0][0]
+            if self.__sim_end_time > 0 and self.__current_time > self.__sim_end_time:
+                break
 
             self.__logger.debug(r'[Timestamp %d] Receive events %s' % (
                 self.__current_time, current_events))
@@ -635,7 +639,7 @@ class Runtime(object):
                 if job.walltime > job.request_walltime:
                     execution = job.get_current_total_request_time()
                 self.__logger.info("[Timestamp %d] Job %s set to"
-                                   "end at time %d" % (
+                                   " end at time %d" % (
                     self.__current_time, job, self.__current_time + execution))
                 self.__events.push(
                     (self.__current_time + execution, EventType.JobEnd, job))
@@ -672,7 +676,8 @@ class Runtime(object):
                                     EventType.Submit, job))
             else:
                 # if successful update the progress bar
-                self.update_progressbar()
+                if self.__logger == None:
+                    self.update_progressbar()
                 self.__log_end(job)
 
         # handle backfilling jobs and new jobs ready to be executed

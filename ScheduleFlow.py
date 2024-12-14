@@ -15,20 +15,28 @@ from _intScheduleFlow import JobChangeType
 from enum import IntEnum
 
 
-class SchedulingPriorityPolicy(IntEnum):
+class PriorityPolicy(IntEnum):
     ''' Enumeration class to hold the policy types 
-    for scheduling '''
+    for ordering the jobs in the waiting queue '''
 
     LJF = 0
     SJF = 1
     FCFS = 2
 
-class SchedulingBackfillPolicy(IntEnum):
+class BackfillPolicy(IntEnum):
     ''' Enumeration class to hold the policy types
-    for scheduling '''
+    for the backfilling strategy '''
 
     Easy = 0
     Conservative = 1
+
+class DiscardPolicy(IntEnum):
+    ''' Enumeration class to hold the policy types
+    for discarding jobs in a simulation at the end of a run '''
+
+    ALL = 0         # Discard all jobs
+    LowPriority = 1 # Discard only the low priority jobs
+    NONE = 2        # Do not discard any jobs
 
 
 class Simulator():
@@ -46,11 +54,13 @@ class Simulator():
         self.__execution_log = {}
         self.job_list = []
         self.logger = logging.getLogger(__name__)
+        # in case there are multiple runs in the same scenario
+        self.__run_id = 0
+        self.__run_start_time = 0
 
         self.__fp = output_file_handler
 
         if generate_gif:
-            self.horizontal_ax = -1
             if self.__loops != 1:
                 self.logger.warning("Number of loops in the Simulator "
                                     "needs to be 1 if the generate_gif "
@@ -71,6 +81,12 @@ class Simulator():
         return 'Simulator(Loops: %s, Output: %s, Jobs: %d)' % (
                         self.__loops, self.__fp, len(self.job_list))
 
+    def clean_history(self):
+        self.__execution_log = {}
+        self.job_list = []
+        self.__run_id = 0
+        self.__run_start_time = 0
+
     def run_scenario(self, scheduler, job_list, scenario_name="ScheduleFlow",
                      metrics=["all"]):
         ''' Method for directly runnning a scenario (includes creating
@@ -87,16 +103,20 @@ class Simulator():
 
         self.__scheduler = scheduler
         self.__system = scheduler.system
+        # remove all previous jobs in the job list if the scenario
+        # sets a new job list, otherwise keep the added jobs
         if len(job_list) > 0:
             self.job_list = []
         self.__execution_log = {}
         self.__scenario_name = scenario_name
+        # reset the previous runs to overwrite the stats and viz
+        self.__run_id = 0
+        self.__run_start_time = 0
 
         self.stats = _intScheduleFlow.StatsEngine(
                 self.__system.get_total_nodes())
-        if self.__generate_gif:
-            self.__viz_handler = _intScheduleFlow.VizualizationEngine(
-                    self.__system.get_total_nodes())
+        self.__viz_handler = _intScheduleFlow.VizualizationEngine(
+                self.__system.get_total_nodes())
 
         return self.add_applications(job_list)
 
@@ -239,17 +259,68 @@ class Simulator():
         stats.set_metrics(metrics)
         return stats.get_metric_values()
 
-    def run(self, metrics=["all"]):
+    def __discard_jobs(self, interrupted_jobs, discard_policy):
+        if discard_policy == DiscardPolicy.ALL:
+            # discard all running jobs
+            self.job_list = []
+            return
+        # keep only the jobs that did not finish running
+        discard_list = [job for job in self.job_list
+                        if job not in interrupted_jobs]
+        for job in discard_list:
+            self.job_list.remove(job)
+        if discard_policy == DiscardPolicy.LowPriority:
+            # discard running jobs with low priority
+            discarded_list = [job for job in self.job_list if
+                              job.priority > 0]
+            for job in discarded_list:
+                self.job_list.remove(job)
+        # update the submission time for the kept jobs
+        for job in self.job_list:
+            job.submission_time = interrupted_jobs[job]
+
+    def generate_gif(self, execution_log, scenario_name):
+        self.__viz_handler.set_execution_log(execution_log)
+        self.horizontal_ax = self.__viz_handler.generate_scenario_gif(
+            scenario_name)
+        self.logger.info(r"GIF generated draw/%s" % (scenario_name))
+
+    def run(self, metrics=["all"], simulation_duration=-1,
+            discard_policy=DiscardPolicy.ALL):
         ''' Main method of the simulator that triggers the start of
         a given simulation scenario '''
 
         assert (len(self.job_list) > 0), "Cannot run an empty scenario"
         check = 0
         average_stats = {}
+        interrupted_jobs = {}
         for i in range(self.__loops):
-            runtime = _intScheduleFlow.Runtime(self.job_list)
+            # run the simulation
+            stop_time = -1
+            if simulation_duration != -1:
+                stop_time = simulation_duration + self.__run_start_time
+            runtime = _intScheduleFlow.Runtime(
+                    self.job_list, logger=self.logger,
+                    simulation_end_time=stop_time)
             runtime(self.__scheduler)
+
             self.__execution_log = runtime.get_stats()
+            # if the simulation was stopped before it finished
+            if simulation_duration > 0:
+                # remove the jobs that did not finish
+                # i.e. have end ts equal to -1
+                execution_log = {}
+                for job in self.__execution_log:
+                    valid_runs = [run for run in self.__execution_log[job]
+                                  if run[1] != -1]
+                    # if some of the runs have an end time of -1
+                    if len(valid_runs) < len(self.__execution_log[job]):
+                        # the job was interrupted mid run
+                        interrupted_jobs[job] = self.__execution_log[job][-1][0]
+                    # keep in the log only the valid runs
+                    if len(valid_runs) > 0:
+                        execution_log[job] = valid_runs
+                self.__execution_log = execution_log
 
             if self.__check_correctness:
                 check_loop = self.test_correctness()
@@ -262,7 +333,8 @@ class Simulator():
             self.stats.set_metrics(metrics)
             self.logger.info("Stats in loop %d: %s" %(i, self.stats))
             if self.__fp is not None:
-                self.stats.print_to_file(self.__fp, self.__scenario_name, i)
+                scenario = self.__scenario_name + str(self.__run_id)
+                self.stats.print_to_file(self.__fp, scenario, i)
             if len(average_stats) == 0:
                 average_stats = self.stats.get_metric_values()
             else:
@@ -274,14 +346,16 @@ class Simulator():
             self.logger.info("PASS correctness test")
 
         if self.__generate_gif and check == 0:
-            if self.horizontal_ax != -1:
-                self.__viz_handler.set_horizontal_ax_limit(
-                    self.horizontal_ax)
-            self.__viz_handler.set_execution_log(self.__execution_log)
-            self.horizontal_ax = self.__viz_handler.generate_scenario_gif(
-                self.__scenario_name)
-            self.logger.info(r"GIF generated draw/%s" % (
-                self.__scenario_name))
+            self.generate_gif(
+                    self.__execution_log,
+                    self.__scenario_name + str(self.__run_id))
+
+        # if the simulator will be used to run another scenario
+        # update the run start time and id and scheduling information
+        self.__run_id += 1
+        self.__run_start_time += simulation_duration
+        self.__scheduler.clean_history()
+        self.__discard_jobs(interrupted_jobs, discard_policy)
 
         if metrics == "execution_log":
             return self.__execution_log
@@ -347,9 +421,9 @@ class Application(object):
         self.system = None
 
     def __str__(self):
-        return 'Job(%s, Nodes: %d, Submission: %3.1f, Walltime: %3.1f' \
+        return 'Job(%s:%d, Nodes: %d, Submission: %3.1f, Walltime: %3.1f' \
                ', Request: %3.1f, Priority %d)' % (
-                       self.name, self.nodes, self.submission_time,
+                       self.name, self.job_id, self.nodes, self.submission_time,
                        self.walltime, self.request_walltime, self.priority)
 
     def __repr__(self):
@@ -594,15 +668,13 @@ class Scheduler(object):
         what are the jobs scheduled to run and backfillinf jobs) '''
 
     def __init__(self, system, logger=None,
-                 priority_policy=SchedulingPriorityPolicy.FCFS,
-                 backfill_policy=SchedulingBackfillPolicy.Easy):
+                 priority_policy=PriorityPolicy.FCFS,
+                 backfill_policy=BackfillPolicy.Easy):
         self.system = system
         self.wait_list = set()
         self.running_jobs = {}
         self.scheduled_jobs = {}
         self.logger = logger or logging.getLogger(__name__)
-        self.gaps_in_schedule = _intScheduleFlow.ScheduleGaps(
-            system.get_total_nodes())
         self.priority_policy = priority_policy
         self.backfill_policy = backfill_policy
 
@@ -618,18 +690,18 @@ class Scheduler(object):
 
     def __sort_job_list(self, job_list):
         sort_list = [job for job in job_list]
-        if self.priority_policy == SchedulingPriorityPolicy.FCFS:
+        if self.priority_policy == PriorityPolicy.FCFS:
             # sort based on priority, submission and job_id (ascending)
             sort_list = sorted(sort_list, key=lambda job:
                                (job.priority, job.submission_time,
                                job.job_id))
-        elif self.priority_policy == SchedulingPriorityPolicy.LJF:
+        elif self.priority_policy == PriorityPolicy.LJF:
             # sort based on priority, volume (descending) and job_id
             sort_list = sorted(sort_list, key=lambda job:
                               (job.priority,
                                -job.nodes * job.get_current_total_request_time(),
                                job.job_id))
-        elif self.priority_policy == SchedulingPriorityPolicy.SJF:
+        elif self.priority_policy == PriorityPolicy.SJF:
             # sort based on priority, volume and job_id (ascending)
             sort_list = sorted(sort_list, key=lambda job:
                               (job.priority,
@@ -722,15 +794,17 @@ class Scheduler(object):
                 current_schedule.add({job: ts})
             else:
                 # if all jobs scheduled for execution will
-                # be started now
-                scheduled_start = max([self.scheduled_jobs[j]
-                                       for j in self.scheduled_jobs])
+                # be started now or if there is no job scheduled
+                scheduled_start = current_time
+                if len(self.scheduled_jobs) > 0:
+                    scheduled_start = max([self.scheduled_jobs[j]
+                                           for j in self.scheduled_jobs])
                 if scheduled_start == current_time:
                     # schedule the current job but do not mark it for start
                     self.scheduled_jobs[job] = ts
                     del_list.add(job)
                     current_schedule.add({job: ts})
-                elif self.backfill_policy == SchedulingBackfillPolicy.Conservative:
+                elif self.backfill_policy == BackfillPolicy.Conservative:
                     # if conservativeBF we add the job to the schedule
                     # regardless if we execute the job now or not
                     current_schedule.add({job: ts})
@@ -778,3 +852,8 @@ class Scheduler(object):
         start_jobs = self.trigger_schedule(current_time)
         end_jobs.extend(start_jobs)
         return end_jobs
+
+    def clean_history(self):
+        self.wait_list = set()
+        self.scheduled_jobs = {}
+        self.running_jobs = {}
