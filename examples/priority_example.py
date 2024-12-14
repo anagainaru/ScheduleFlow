@@ -18,10 +18,10 @@ def priority_analysis_list():
     return job_list
 
 # create scheduler jobs from a priority analysis list
-def create_job_list(analysis_list, sim):
+def add_jobs(analysis_list, current_time, sim):
     for job in analysis_list:
         processing_units = analysis_list[job][1]
-        submission_time = 0
+        submission_time = current_time
         execution_time = analysis_list[job][2]
         request_time = analysis_list[job][2] + 10
         priority = analysis_list[job][0]
@@ -31,8 +31,12 @@ def create_job_list(analysis_list, sim):
                 execution_time,
                 [request_time],
                 priority=priority, name=job)
+        print("ADD job", job)
         sim.add_application(job)
     return sim
+
+def update_priority(analysis_list, execution_log):
+    return analysis_list
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
@@ -46,32 +50,40 @@ if __name__ == '__main__':
         exit()
 
     os.environ["ScheduleFlow_PATH"] = ".."
-    analysis_list = priority_analysis_list()
-
-    number_loops = 1
+    number_loops = 2
     loop_duration = 250
     num_processing_units = 4
-    for loop in range(number_loops):
-        # create the simulator
-        simulator = ScheduleFlow.Simulator(check_correctness=True,
-                                           generate_gif=True,
-                                           output_file_handler=sys.stdout,
-                                           loops = 1)
-        simulator = create_job_list(analysis_list, simulator)
-        print("List of jobs", simulator.job_list)
 
-        sch = ScheduleFlow.Scheduler(
-                ScheduleFlow.System(num_processing_units),
-                priority_policy=ScheduleFlow.SchedulingPriorityPolicy.FCFS,
-                backfill_policy=ScheduleFlow.SchedulingBackfillPolicy.Easy)
-                logger=logging.getLogger(__name__))
-        logging.basicConfig(level=logging.INFO)
-        simulator.create_scenario(sch)
-        execution_log = simulator.run(metrics="execution_log")
-        success = []
-        for job in execution_log:
-            execution = execution_log[job]
-            # check that the last execution window did not exceed the loop time
-            if execution[-1][1] < loop_duration:
-                success.append(job.name)
-        print("Jobs finishing in loop %d: %s" % (loop, success))
+    # create the analysis jobs that need to be scheduled
+    # during each simulation loop
+    analysis_list = priority_analysis_list()
+
+    # create the simulator
+    simulator = ScheduleFlow.Simulator(check_correctness=True,
+                                       generate_gif=False,
+                                       output_file_handler=sys.stdout,
+                                       loops = 1)
+    # create the scheduler
+    sch = ScheduleFlow.Scheduler(
+            ScheduleFlow.System(num_processing_units),
+            priority_policy=ScheduleFlow.PriorityPolicy.FCFS,
+            backfill_policy=ScheduleFlow.BackfillPolicy.Easy,
+            logger=logging.getLogger(__name__))
+    logging.basicConfig(level=logging.DEBUG)
+
+    simulator.create_scenario(sch)
+    execution_log = {}
+    for loop in range(number_loops):
+        simulator = add_jobs(analysis_list, loop * loop_duration, simulator)
+        print("Loop %d: List of jobs %s" %(loop, simulator.job_list))
+
+        # run the scenario for the duration of the loop
+        loop_exec_log = simulator.run(
+                simulation_duration=loop_duration,
+                discard_policy=ScheduleFlow.DiscardPolicy.NONE,
+                metrics="execution_log")
+        execution_log.update(loop_exec_log)
+        print("Execution log at loop", loop, loop_exec_log)
+        analysis_list = update_priority(analysis_list, loop_exec_log)
+
+    simulator.generate_gif(execution_log, "test")
