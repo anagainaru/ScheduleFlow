@@ -283,7 +283,8 @@ class Simulator():
         self.__viz_handler.set_execution_log(execution_log)
         self.horizontal_ax = self.__viz_handler.generate_scenario_gif(
             scenario_name)
-        self.logger.info(r"GIF generated draw/%s" % (scenario_name))
+        self.logger.info(r"GIF generated in %s/draw/%s" % (
+            os.environ["ScheduleFlow_PATH"], scenario_name))
 
     def run(self, metrics=["all"], simulation_duration=-1,
             discard_policy=DiscardPolicy.ALL):

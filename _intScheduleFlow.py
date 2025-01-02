@@ -626,7 +626,7 @@ class Runtime(object):
             job = job_event[1]
             if tm != -1:
                 self.__logger.info(
-                    r'[Timestamp %d] Job %s set to start at time %d' %
+                    r'[Timestamp %d] %s set to start at time %d' %
                     (self.__current_time, job, tm))
                 self.__events.push((tm, EventType.JobStart, job))
             else:
@@ -638,7 +638,7 @@ class Runtime(object):
                 # in case of successful run or the total request time
                 if job.walltime > job.request_walltime:
                     execution = job.get_current_total_request_time()
-                self.__logger.info("[Timestamp %d] Job %s set to"
+                self.__logger.info("[Timestamp %d] %s set to"
                                    " end at time %d" % (
                     self.__current_time, job, self.__current_time + execution))
                 self.__events.push(
