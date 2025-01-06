@@ -286,6 +286,12 @@ class Simulator():
         self.logger.info(r"GIF generated in %s/draw/%s" % (
             os.environ["ScheduleFlow_PATH"], scenario_name))
 
+    def generate_statistics(self, execution_log, metrics=["all"]):
+        self.stats.set_execution_output(execution_log)
+        self.stats.set_metrics(metrics)
+        average_stats = self.stats.get_metric_values()
+        return average_stats
+
     def run(self, metrics=["all"], simulation_duration=-1,
             discard_policy=DiscardPolicy.ALL):
         ''' Main method of the simulator that triggers the start of
