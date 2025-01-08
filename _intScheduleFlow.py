@@ -936,8 +936,8 @@ class VizualizationEngine():
                     if job_slices[i][6] == job_slices[i - 1][6]:
                         del_list.append(i)
                         job_slices[last_keep_index][1] = job_slices[i][1]
-                else:
-                    last_keep_index += 1
+                        continue
+                last_keep_index = i
 
             del_list.sort(reverse=True)
             for i in del_list:
