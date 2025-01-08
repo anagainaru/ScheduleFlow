@@ -725,15 +725,9 @@ class Scheduler(object):
         if len(gap_list) > 0: # if one is found return it
             return max(gap_list[0][0], start_time)
 
-       # check for the end of the schedule for a fit (the earliest
-       # job end between all jobs at the end of the schedule)
-        (start_last_gap, end_last_gap) = current_schedule.get_ending_gap(current_time)
-        gap_list = current_schedule.get_gaps(
-                max(job.submission_time, start_last_gap), 0, job.nodes)
-        if len(gap_list) > 0:
-            # return the earliest time found
-            return min([gap[0] for gap in gap_list])
-        return end_last_gap
+        # check for the end of the schedule for a fit (the earliest
+        # job end between all jobs at the end of the schedule)
+        return current_schedule.fit_at_the_end(start_time, job.nodes)
 
     def __get_scheduled_jobs(self):
         active_jobs = {}
