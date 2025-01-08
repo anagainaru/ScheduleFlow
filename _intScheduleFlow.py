@@ -444,8 +444,8 @@ class ScheduleGaps(object):
             # identify the gaps that are affected by the new job
             # gap start < job end and gap end > job start
             affected_gaps_idx = [idx for idx in range(len(self.gaps_list))
-                                 if self.gaps_list[idx][0] < end and
-                                 self.gaps_list[idx][1] > start]
+                                 if self.gaps_list[idx][0] <= end and
+                                 self.gaps_list[idx][1] >= start]
             new_gaps = []
             if len(affected_gaps_idx) == 0:
                 # add empty gap between current job and the neighbors
@@ -503,22 +503,29 @@ class ScheduleGaps(object):
         job_list[job] = self.__reserved_jobs[job]
         return self.update(job_list, 2)
 
-    #  ___
+    #  _____________
     # |   |__
     # |      |__
     # |         |
-    # t1 t2 t3 t4 The function returns (t2, t4)
-    def get_ending_gap(self, current_time):
+    # t1 t2 t3 t4 The function returns (t2, t4, 1) and (t3 t4, 2)
+    def get_ending_gaps(self, current_time):
         if len(self.gaps_list) == 0:
-            return (current_time, current_time)
-        # find the end of the last gap that has no processors available
-        last_full_gap = [gap[1] for gap in self.gaps_list if gap[2]==0]
-        start_gap = current_time
-        if len(last_full_gap) > 0:
-            start_gap = max(last_full_gap)
-        # find the end of the latest gap
-        end_gap = max([gap[1] for gap in self.gaps_list])
-        return (start_gap, end_gap)
+            return []
+        # find the end of the last gap
+        last_end = max([gap[1] for gap in self.gaps_list])
+        # return all the gaps that extend to the end
+        return [gap for gap in self.gaps_list if gap[1] == last_end]
+
+    def fit_at_the_end(self, start_time, nodes):
+        if len(self.gaps_list) == 0:
+            return start_time
+        end_gaps = self.get_ending_gaps(start_time)
+        # find all gaps (start, end, procs) that have enough space
+        gap_list = [gap for gap in end_gaps if gap[2] > nodes]
+        if len(gap_list) == 0:
+            # return the latest end time
+            return max([gap[1] for gap in self.gaps_list])
+        return min([gap[0] for gap in gap_list])
 
     def get_gaps(self, start_time, length, nodes):
         ''' Return all the gaps that can fit a job using a given number of
