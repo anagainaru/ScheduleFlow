@@ -525,7 +525,8 @@ class ScheduleGaps(object):
         if len(gap_list) == 0:
             # return the latest end time
             return max([gap[1] for gap in self.gaps_list])
-        return min([gap[0] for gap in gap_list])
+        earliest_gap = min([gap[0] for gap in gap_list])
+        return max(earliest_gap, start_time)
 
     def get_gaps(self, start_time, length, nodes):
         ''' Return all the gaps that can fit a job using a given number of
@@ -947,9 +948,9 @@ class VizualizationEngine():
 
     def __get_sliced_list(self, run_list):
         ''' Generate a list of (start, end, procs, request_end,
-        job_id, failure_count, starty) for each job instance for
-        each slice (a slice is a unit execution time not containing
-        any job starts or ends)'''
+        job_id, failure_count, starty, priority) for each job
+        instance for each slice (a slice is a unit execution time
+        not containing any job starts or ends)'''
 
         event_list = list(set([i[0] for i in run_list] +
                               [i[1] for i in run_list]))
