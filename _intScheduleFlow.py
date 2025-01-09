@@ -784,16 +784,20 @@ class TexGenerator():
     def __print_execution(self, execution, outf, last_frame):
         ''' Method for ploting a jobs execution represented by a rectagle.
         Yellow color represents a sucessfull execution, shades of orange
-        consecutive failed instances '''
+        consecutive failed instances (blue represents low priority) '''
 
         start = float(execution[0]) * self.__scalex
         end = float(execution[1]) * self.__scalex
         procs = execution[2] * self.__scaley
         offset = execution[6] * self.__scaley
         job_id = execution[4]
+        priority = execution[7]
         color = 2 * min(execution[5], 5)
         color_text = r"{rgb:red,%d;yellow,%d}" % (
             color, 10 - color)
+        # if successful execution of a low priority job
+        if priority > 0 and execution[5]==0:
+            color_text = "{rgb:blue,25;green,25}"
         if last_frame and color != 0:
             color_text = "white"
             job_id = ' '
@@ -966,7 +970,7 @@ class VizualizationEngine():
                     [event_list[i], event_list[i + 1],
                      run_list[idx][2], run_list[idx][3] +
                      run_list[idx][0], run_list[idx][4],
-                     run_list[idx][5], starty])
+                     run_list[idx][5], starty, run_list[idx][6]])
                 starty += run_list[idx][2]
 
         return self.__merge_slices(sliced_list)
@@ -981,12 +985,13 @@ class VizualizationEngine():
             # check failed executions
             start = execution_list[i][0]
             end = execution_list[i][1]
+            priority = job.priority
             fig_text = job.name
             if fig_text == "Unname":
                 fig_text = job.job_id
             run_list.append((start, end, job.nodes,
                              requested_time, fig_text,
-                             i + 1))
+                             i + 1, priority))
             requested_time = job.get_total_request_time(i + 1)
 
         # check succesful execution (last run)
@@ -995,8 +1000,10 @@ class VizualizationEngine():
             fig_text = job.job_id
         start = execution_list[len(execution_list) - 1][0]
         end = execution_list[len(execution_list) - 1][1]
+        priority = job.priority
         run_list.append((start, end, job.nodes,
-                         requested_time, fig_text, 0))
+                         requested_time, fig_text, 0,
+                         priority))
         return run_list
 
 
