@@ -18,5 +18,4 @@
 \draw[->, very thick] (0,-2.5) -- (0,170) node [pos=1, left] {$\scriptstyle{\text{Procs}}$};
 \draw[->, very thick] (0,-1.5) -- (105,-1.5) node [pos=1, below] {$\scriptstyle{\text{Time}}$};
 
-\draw[-, very thick] (-1, 151) -- (1, 151) node [pos=0, left] {$\scriptstyle{10}$};
 \draw[ultra thin] (0.5,151) -- (105,151);

@@ -724,12 +724,13 @@ class TexGenerator():
     latex files that will be compiled into a GIF animation '''
 
     def __init__(self, execution_slices_list, execution_job_list,
-                 scalex, scaley):
+                 scalex, scaley, labely):
         ''' The constructor takes a division of the space into slices,
         the execution log for each job and the vertical and horizontal
         scale factors to fit the simulation to the figure size '''
         self.__scalex = scalex
         self.__scaley = scaley
+        self.__labely = labely
         self.__slices = execution_slices_list
         self.__run_list = execution_job_list
         self.__total_runs = len(execution_job_list)
@@ -744,6 +745,9 @@ class TexGenerator():
             outf.writelines(
                 [l for l in open(os.environ["ScheduleFlow_PATH"] +
                                  "/draw/tex_header").readlines()])
+            # add legend on the vertical axes, needs to be out of the header
+            # since the total number of procs is not known in the tex file
+            outf.write("\draw[-, very thick] (-1, 151) -- (1, 151) node [pos=0, left] {$\scriptstyle{%d}$};" %(self.__labely))
             self.__print_execution_list(i + 1, outf)
             if i < self.__total_runs:
                 # write last job start and end times
@@ -848,6 +852,7 @@ class VizualizationEngine():
     def __init__(self, procs, execution_log=[], horizontal_ax_limit=0,
                  keep_intermediate_pdf=False):
         self.__scaley = 150 / procs
+        self.__labely = procs
         self.__limitx = horizontal_ax_limit
         self.__execution_log = execution_log
         self.__keep_pdf = keep_intermediate_pdf
@@ -916,7 +921,8 @@ class VizualizationEngine():
         sliced_list = self.__get_sliced_list(run_list)
 
         tex_generator = TexGenerator(sliced_list, run_list,
-                                     self.__scalex, self.__scaley)
+                                     self.__scalex, self.__scaley,
+                                     self.__labely)
         tex_generator.write_to_file(filename)
 
     def __find_running_jobs(self, run_list, start, end):
