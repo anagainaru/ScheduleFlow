@@ -521,7 +521,7 @@ class ScheduleGaps(object):
             return start_time
         end_gaps = self.get_ending_gaps(start_time)
         # find all gaps (start, end, procs) that have enough space
-        gap_list = [gap for gap in end_gaps if gap[2] > nodes]
+        gap_list = [gap for gap in end_gaps if gap[2] >= nodes]
         if len(gap_list) == 0:
             # return the latest end time
             return max([gap[1] for gap in self.gaps_list])

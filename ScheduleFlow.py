@@ -674,7 +674,7 @@ class Scheduler(object):
     ''' Class that implements the scheduler functionality (i.e. choosing
         what are the jobs scheduled to run and backfillinf jobs) '''
 
-    def __init__(self, system, logger=None,
+    def __init__(self, system, priorityLevels, logger=None,
                  priority_policy=PriorityPolicy.FCFS,
                  backfill_policy=BackfillPolicy.Easy):
         self.system = system
@@ -684,6 +684,7 @@ class Scheduler(object):
         self.logger = logger or logging.getLogger(__name__)
         self.priority_policy = priority_policy
         self.backfill_policy = backfill_policy
+        self.priorityLevels = priorityLevels
 
     def __str__(self):
         return "Scheduler(%d waiting; %d scheduled; %d running)" % (
@@ -747,6 +748,10 @@ class Scheduler(object):
         current_schedule.add(active_jobs)
         return current_schedule
 
+    def __add_to_schedules(self, job, ts, level, current_schedules):
+        for level in range(level, self.priorityLevels):
+            current_schedules[level].add({job: ts})
+
     def __update_schedule(self, current_time):
         ''' Update the start time for the scheduling jobs based
         on where jobs actually finished '''
@@ -766,22 +771,25 @@ class Scheduler(object):
                 # update time in the scheduled list
                 self.scheduled_jobs[job] = ts
                 current_schedule.add({job: ts})
-            if ts == current_time:
-                start_jobs.append((ts, job))
+            if self.scheduled_jobs[job] == current_time:
+                start_jobs.append((self.scheduled_jobs[job], job))
         return start_jobs
 
     def trigger_schedule(self, current_time):
         # create current schedule (ScheduleGaps object)
-        current_schedule = self.__create_curent_schedule()
+        current_schedules = [self.__create_curent_schedule()
+                            for _ in range(self.priorityLevels)]
         # sort wait list based on policy
         job_list = self.__sort_job_list(self.wait_list)
         # keep track of all jobs ready to be executed
         start_list = []
         del_list = set()
+        #print(current_time, "queues", self.scheduled_jobs, "running", self.running_jobs)
+        #print(current_time, "schedule", current_schedule)
         for job in job_list:
             # find earliest start time in the schedule
             ts = self.__fit_in_schedule(
-                    job, current_schedule, current_time)
+                    job, current_schedules[job.priority], current_time)
             # if the earliest start is the current time
             if ts == current_time:
                 # mark job ready for execution
@@ -791,8 +799,8 @@ class Scheduler(object):
                 # move from wait time to scheduled list
                 self.scheduled_jobs[job] = ts
                 del_list.add(job)
-                # add job to the schedule
-                current_schedule.add({job: ts})
+                # add job to all the schedules
+                self.__add_to_schedules(job, ts, 0, current_schedules)
             else:
                 # if all jobs scheduled for execution will
                 # be started now or if there is no job scheduled
@@ -804,11 +812,16 @@ class Scheduler(object):
                     # schedule the current job but do not mark it for start
                     self.scheduled_jobs[job] = ts
                     del_list.add(job)
-                    current_schedule.add({job: ts})
+                    self.__add_to_schedules(job, ts, 0, current_schedules)
                 elif self.backfill_policy == BackfillPolicy.Conservative:
                     # if conservativeBF we add the job to the schedule
                     # regardless if we execute the job now or not
-                    current_schedule.add({job: ts})
+                    self.__add_to_schedules(job, ts, 0, current_schedules)
+                else:
+                    # add only to the schedules for higher levels of priority
+                    self.__add_to_schedules(job, ts, job.priority + 1,
+                                            current_schedules)
+
         for job in del_list:
             self.wait_list.remove(job)
         return start_list
