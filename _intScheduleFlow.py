@@ -11,7 +11,7 @@ import subprocess
 import logging
 import heapq
 import os
-from distutils.spawn import find_executable
+import shutil
 from enum import IntEnum
 import sys
 if sys.version_info[0] < 3:
@@ -859,9 +859,9 @@ class VizualizationEngine():
         self.__set_scalex(execution_log)
 
         # check if pdflatex and convert from ImageMagik are installed
-        assert (find_executable('pdflatex')), \
+        assert (shutil.which('pdflatex')), \
             'Pdflatex needs to be installed to create GIFs'
-        assert (find_executable('convert')), \
+        assert (shutil.which('convert')), \
             'Convert from ImageMagik needs to be installed to create GIFs'
 
     def __set_scalex(self, execution_log):
