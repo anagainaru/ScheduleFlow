@@ -444,8 +444,8 @@ class ScheduleGaps(object):
             # identify the gaps that are affected by the new job
             # gap start < job end and gap end > job start
             affected_gaps_idx = [idx for idx in range(len(self.gaps_list))
-                                 if self.gaps_list[idx][0] <= end and
-                                 self.gaps_list[idx][1] >= start]
+                                 if self.gaps_list[idx][0] < end and
+                                 self.gaps_list[idx][1] > start]
             new_gaps = []
             if len(affected_gaps_idx) == 0:
                 # add empty gap between current job and the neighbors

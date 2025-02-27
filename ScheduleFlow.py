@@ -297,7 +297,11 @@ class Simulator():
         ''' Main method of the simulator that triggers the start of
         a given simulation scenario '''
 
-        assert (len(self.job_list) > 0), "Cannot run an empty scenario"
+        assert (len(self.job_list) > 0), ("Cannot run an empty scenario"
+                "set in the Scheduler")
+        assert (max([job.priority for job in self.job_list]) <=
+                self.__scheduler.priorityLevels), ("There are jobs with higher"
+                " priority than the priority levels")
         check = 0
         average_stats = {}
         interrupted_jobs = {}
@@ -751,6 +755,7 @@ class Scheduler(object):
     def __add_to_schedules(self, job, ts, level, current_schedules):
         for level in range(level, self.priorityLevels):
             current_schedules[level].add({job: ts})
+        return current_schedules
 
     def __update_schedule(self, current_time):
         ''' Update the start time for the scheduling jobs based
@@ -800,7 +805,8 @@ class Scheduler(object):
                 self.scheduled_jobs[job] = ts
                 del_list.add(job)
                 # add job to all the schedules
-                self.__add_to_schedules(job, ts, 0, current_schedules)
+                current_schedules = self.__add_to_schedules(
+                        job, ts, 0, current_schedules)
             else:
                 # if all jobs scheduled for execution will
                 # be started now or if there is no job scheduled
@@ -812,14 +818,16 @@ class Scheduler(object):
                     # schedule the current job but do not mark it for start
                     self.scheduled_jobs[job] = ts
                     del_list.add(job)
-                    self.__add_to_schedules(job, ts, 0, current_schedules)
+                    current_schedules = self.__add_to_schedules(
+                            job, ts, 0, current_schedules)
                 elif self.backfill_policy == BackfillPolicy.Conservative:
                     # if conservativeBF we add the job to the schedule
                     # regardless if we execute the job now or not
-                    self.__add_to_schedules(job, ts, 0, current_schedules)
+                    current_schedules = self.__add_to_schedules(
+                            job, ts, 0, current_schedules)
                 else:
                     # add only to the schedules for higher levels of priority
-                    self.__add_to_schedules(job, ts, job.priority + 1,
+                    current_schedules = self.__add_to_schedules(job, ts, job.priority + 1,
                                             current_schedules)
 
         for job in del_list:
