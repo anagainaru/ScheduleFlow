@@ -427,8 +427,8 @@ class ScheduleGaps(object):
 
         # reserved_jobs[job] = time
         for job in reserved_jobs:
-            assert(job not in self.__reserved_jobs, "ERR Cannot add"
-                   "a job that is already part of a schedule")
+            assert job not in self.__reserved_jobs, "ERR Cannot add "\
+                   "a job that is already part of a schedule"
             self.__update_reserved_list(job, reserved_jobs[job], ops)
             start = reserved_jobs[job]
             request_walltime = job.get_current_total_request_time()
@@ -686,7 +686,8 @@ class Runtime(object):
                 # if successful update the progress bar
                 if self.__logger == None:
                     self.update_progressbar()
-                self.__log_end(job)
+            # mark the end of the submission
+            self.__log_end(job)
 
         # handle backfilling jobs and new jobs ready to be executed
         ret = self.scheduler.stop_job(self.__current_time, job_list)
@@ -747,7 +748,7 @@ class TexGenerator():
                                  "/draw/tex_header").readlines()])
             # add legend on the vertical axes, needs to be out of the header
             # since the total number of procs is not known in the tex file
-            outf.write("\draw[-, very thick] (-1, 151) -- (1, 151) node [pos=0, left] {$\scriptstyle{%d}$};" %(self.__labely))
+            outf.write("\\draw[-, very thick] (-1, 151) -- (1, 151) node [pos=0, left] {$\\scriptstyle{%d}$};" %(self.__labely))
             self.__print_execution_list(i + 1, outf)
             if i < self.__total_runs:
                 # write last job start and end times
