@@ -145,7 +145,7 @@ class Simulator():
         ''' Method for sending additional applications to the simulation '''
 
         for new_job in job_list:
-            add_application(new_job)
+            self.add_application(new_job)
         return len(self.job_list)
 
     def __sanity_check_job_execution(self, execution_list, job):
@@ -283,7 +283,7 @@ class Simulator():
         self.__viz_handler.set_execution_log(execution_log)
         self.horizontal_ax = self.__viz_handler.generate_scenario_gif(
             scenario_name)
-        self.logger.info(r"GIF generated in %s/draw/%s" % (
+        self.logger.info(r"GIF generated in %s/draw/%s.gif" % (
             os.environ["ScheduleFlow_PATH"], scenario_name))
 
     def generate_statistics(self, execution_log, metrics=["all"]):
@@ -678,7 +678,7 @@ class Scheduler(object):
     ''' Class that implements the scheduler functionality (i.e. choosing
         what are the jobs scheduled to run and backfillinf jobs) '''
 
-    def __init__(self, system, priorityLevels, logger=None,
+    def __init__(self, system, priorityLevels=1, logger=None,
                  priority_policy=PriorityPolicy.FCFS,
                  backfill_policy=BackfillPolicy.Easy):
         self.system = system

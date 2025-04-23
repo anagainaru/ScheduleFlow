@@ -8,19 +8,13 @@ def run_scenario(num_processing_units, job_list):
     simulator = ScheduleFlow.Simulator(check_correctness=True,
                                        generate_gif=True,
                                        output_file_handler=sys.stdout)
-    sch = ScheduleFlow.BatchScheduler(
+    sch = ScheduleFlow.Scheduler(
         ScheduleFlow.System(num_processing_units))
     simulator.create_scenario(sch, job_list=job_list,
                               scenario_name="test_batch")
-    simulator.run()
+    execution = simulator.run(metrics="execution_log")
+    print(execution)
     
-    sch = ScheduleFlow.BatchScheduler(
-        ScheduleFlow.System(num_processing_units),
-        total_queues=2)
-    simulator.create_scenario(sch, job_list=job_list,
-                              scenario_name="test_batch")
-    simulator.run()
-
 if __name__ == '__main__':
     os.environ["ScheduleFlow_PATH"] = ".."
     num_processing_units = 10
@@ -37,9 +31,9 @@ if __name__ == '__main__':
             processing_units,
             submission_time,
             execution_time,
-            [request_time]))
+            [request_time], name="J"+str(i)))
     # add a job that request less time than required for its first run
     job_list.add(ScheduleFlow.Application(np.random.randint(9, 11), 0,
-                                          5000, [4000, 5500]))
+                                          5000, [4000, 5500], name="J10"))
 
     run_scenario(num_processing_units, job_list)
