@@ -15,3 +15,4 @@ rm $ScheduleFlow_PATH/draw/$1_*.pdf
 if [ $2 == "delete" ]; then
 	rm $ScheduleFlow_PATH/draw/$1_*.tex
 fi
+mv $ScheduleFlow_PATH/draw/$1.gif .

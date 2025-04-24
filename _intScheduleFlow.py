@@ -18,6 +18,13 @@ if sys.version_info[0] < 3:
     import collections as col
 else:
     import collections.abc as col
+try:
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from matplotlib.lines import Line2D
+    canCreateJPG = True
+except:
+    canCreateJPG = False
 
 
 class JobChangeType(IntEnum):
@@ -859,6 +866,8 @@ class VizualizationEngine():
         self.__keep_pdf = keep_intermediate_pdf
         self.__set_scalex(execution_log)
 
+        self.__job_color = {0: '#1f2f98', 1: '#1ca7ec', 2: '#4adede'}
+
         # check if pdflatex and convert from ImageMagik are installed
         assert (shutil.which('pdflatex')), \
             'Pdflatex needs to be installed to create GIFs'
@@ -887,6 +896,17 @@ class VizualizationEngine():
         self.__limitx = horizontal_ax_limit
         self.__scalex = 90/horizontal_ax_limit
 
+    def generate_scenario_jpg(self, name_scenario):
+        ''' Method that generates the JPG image with the schedule '''
+
+        assert (len(self.__execution_log) > 0),\
+            'ERR - Trying to create an image for an empty execution log'
+
+        if canCreateJPG:
+            self.__generate_jpg_image(name_scenario)
+        else:
+            print("Warning: JPG not generated, error importing matplotlib")
+
     def generate_scenario_gif(self, name_scenario):
         ''' Method that generates the animation latex files, creates the
         PDF and calls convert from ImageMagik to convert the PDFs into a
@@ -906,6 +926,67 @@ class VizualizationEngine():
         sort_list = sorted(
             run_list, key=lambda i: (-i[0], i[1]-i[0]), reverse=True)
         return sort_list
+
+    def __consecutive(self, data, stepsize=1):
+        return np.split(data, np.where(np.diff(data) != stepsize)[0]+1)
+
+    def __generate_jpg_image(self, name_scenario):
+        # horizontal line goes to the highest end time for all jobs
+        x_max = max([self.__execution_log[job][-1][1]/3600 for
+                     job in self.__execution_log])
+        plt.rcParams.update({'font.size': 18})
+        fig, ax = plt.subplots(figsize=(25, 10))
+        plt.xlabel('Time (Hours)')
+        plt.ylabel('Cores')
+
+        st = np.array([self.__execution_log[job][-1][0]
+                       for job in self.__execution_log], dtype=float)
+        ft = np.array([self.__execution_log[job][-1][1]
+                       for job in self.__execution_log], dtype=float)
+        cr = np.array([job.nodes for job in self.__execution_log])
+        pr = np.array([job.priority for job in self.__execution_log])
+
+        sorted_arguments = np.argsort(st)
+        st = st[sorted_arguments]
+        ft = ft[sorted_arguments]
+        cr = cr[sorted_arguments]
+        pr = pr[sorted_arguments]
+        ft /= 3600
+        st /= 3600
+
+        min_start_time = np.amin(st)
+        max_finish_time = np.amax(ft)
+        plt.xlim(left = 0, right = x_max)
+        plt.ylim(bottom = 0, top = self.__labely)
+
+        nb_cores = self.__labely
+        timestamps = np.unique(np.concatenate((ft, st)))
+        cores_used = -np.ones(shape=(len(timestamps), nb_cores), dtype = int)
+
+        # Create a Line2D object
+        line = Line2D([0, 100], [nb_cores, nb_cores], color='green',
+                      linewidth=2)
+        # Add the line to the axes
+        ax.add_line(line)
+
+        for i in range(len(cr)):
+            position_of_concerned_timestamps = np.logical_and(
+                    st[i] <= timestamps, timestamps < ft[i] )
+            concerned_timestamps = cores_used[position_of_concerned_timestamps]
+            free_cores = np.all(concerned_timestamps == -1, axis = 0)
+            ind_free_cores = np.argwhere(free_cores)[:,0]
+            affected_cores = ind_free_cores[:cr[i]]
+            cores_used[np.ix_(
+                position_of_concerned_timestamps, affected_cores)] = i
+
+            splitted_cores_list = self.__consecutive(affected_cores)
+            for ccores in splitted_cores_list:
+                ax.add_patch(plt.Rectangle((st[i] - min_start_time, ccores[0]),
+                                           ft[i] - st[i], len(ccores),
+                                           edgecolor = 'red',
+                                           facecolor = self.__job_color[pr[i]]))
+
+        plt.savefig("%s.jpg" %(name_scenario))
 
     def __generate_animation_files(self, filename):
         ''' Generate a temp list of (start, end, procs,
