@@ -7,7 +7,8 @@ The ScheduleFlow software consists of a series of scripts and classes that offer
 
 ### Citation
 
-If you use the package available here in your work, please refer to the latest release. 
+If you use the package available here in your work, please refer to the latest release.
+
 [![DOI](https://zenodo.org/badge/179132255.svg)](https://zenodo.org/badge/latestdoi/179132255)
 
 Or cite using APA style:
