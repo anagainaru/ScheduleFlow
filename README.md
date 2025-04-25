@@ -1,18 +1,18 @@
 
-<img src="./docs/logo.png" align="right" alt="Logo" width="250"/>
+# A simple simulator for HPC schedulers
 
-# Simulator for HPC schedulers
-
-![Codefresh build status](https://g.codefresh.io/api/badges/pipeline/anagainaru_marketplace/anagainaru%2FScheduleFlow%2FScheduleFlow?branch=master&key=eyJhbGciOiJIUzI1NiJ9.NWNhN2U1ZWJjMGZmNGFhM2Q4N2ZhOThl.QvetofY-BjCzTRlUTShnmtZIYGiAGByySEglj9BIIbs&type=cf-1)
-[![codecov](https://codecov.io/gh/anagainaru/SchedulerSimulator/branch/master/graph/badge.svg)](https://codecov.io/gh/anagainaru/SchedulerSimulator)
+<img src="./docs/logo.png" align="left" alt="Logo" width="250"/>
 
 The ScheduleFlow software consists of a series of scripts and classes that offer an API allowing users to create simulation scenarios for online and reservation-based batch schedulers.
 
 ### Citation
 
 If you use the package available here in your work, please refer to the latest release. 
-
 [![DOI](https://zenodo.org/badge/179132255.svg)](https://zenodo.org/badge/latestdoi/179132255)
+
+Or cite using APA style:
+
+*[1] A. Gainaru. ScheduleFlow: A Simple simulator for HPC schedulers. (2020) [Online]. Available: https:// github.com/anagainaru/ScheduleFlow*
 
 ## Documentation
 
