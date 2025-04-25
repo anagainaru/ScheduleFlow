@@ -42,14 +42,15 @@ class DiscardPolicy(IntEnum):
 class Simulator():
     ''' Main class of the simulation '''
 
-    def __init__(self, loops=1, generate_gif=False, check_correctness=False,
-                 output_file_handler=None):
+    def __init__(self, loops=1, generate_gif=False, generate_jpg=False,
+                 check_correctness=False, output_file_handler=None):
         ''' Constructor defining the main properties of a simulation '''
 
         assert (loops > 0), "Number of loops has to be a positive integer"
 
         self.__loops = loops
         self.__generate_gif = generate_gif
+        self.__generate_jpg = generate_jpg
         self.__check_correctness = check_correctness
         self.__execution_log = {}
         self.job_list = []
@@ -279,6 +280,13 @@ class Simulator():
         for job in self.job_list:
             job.submission_time = interrupted_jobs[job]
 
+    def generate_jpg(self, execution_log, scenario_name):
+        self.__viz_handler.set_execution_log(execution_log)
+        self.horizontal_ax = self.__viz_handler.generate_scenario_jpg(
+            scenario_name)
+        self.logger.info(r"JPG generated in %s/draw/%s.jpg" % (
+            os.environ["ScheduleFlow_PATH"], scenario_name))
+
     def generate_gif(self, execution_log, scenario_name):
         self.__viz_handler.set_execution_log(execution_log)
         self.horizontal_ax = self.__viz_handler.generate_scenario_gif(
@@ -355,6 +363,11 @@ class Simulator():
 
         if check == 0:
             self.logger.info("PASS correctness test")
+
+        if self.__generate_jpg and check == 0:
+            self.generate_jpg(
+                    self.__execution_log,
+                    self.__scenario_name + str(self.__run_id))
 
         if self.__generate_gif and check == 0:
             self.generate_gif(
