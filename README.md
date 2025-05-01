@@ -85,7 +85,7 @@ To start a simulation a scenario needs to be created for a
 given simulation:
 
 ```python
-scheduler = Scheduler.BatchScheduler(system)
+scheduler = Scheduler.Scheduler(system)
 simulator.create_scenario(scenario_name,
                           scheduler,
                           job_list=job_list)

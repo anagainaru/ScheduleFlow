@@ -14,7 +14,7 @@ ScheduleFlow.Application(
    - The priority policy defines the order in which the scheduler chooses the jobs for scheduling (first come first served FCFS, largest job first LJF, shortest job first SJF)
    - The backfilling policy defines the order in which the scheduler chooses jobs for backfilling (easy and conservative)
 ```python
-ScheduleFlow.BatchScheduler(
+ScheduleFlow.Scheduler(
        ScheduleFlow.System(num_processing_units),
        total_queues=1,
        priority_policy=ScheduleFlow.SchedulingPolicy.FCFS,

@@ -21,12 +21,8 @@ python -m unittest test_unittest.TestScheduleGaps $1
 python -m unittest test_unittest.TestScheduler $1
 
 echo "---------------------------------"
-echo "Test Online Scheduler"
-python -m unittest test_unittest.TestOnlineScheduler $1
-
-echo "---------------------------------"
 echo "Test Batch Scheduler"
-python -m unittest test_unittest.TestBatchScheduler $1
+python -m unittest test_unittest.TestScheduler $1
 
 echo "---------------------------------"
 echo "Test Runtime"
