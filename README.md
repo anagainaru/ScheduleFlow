@@ -9,7 +9,7 @@ The ScheduleFlow software consists of a series of scripts and classes that offer
 
 If you use the package available here in your work, please refer to the latest release.
 
-[![DOI](https://zenodo.org/badge/179132255.svg)](https://zenodo.org/badge/latestdoi/179132255)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15318879.svg)](https://zenodo.org/records/15318879)
 
 Or cite using APA style:
 
